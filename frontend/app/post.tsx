@@ -63,7 +63,9 @@ export default function Post() {
     try {
       const response = await fetch(`${endpoint}?${query}`, {
         method: "POST",
-        headers: { "Content-Type": "multipart/form-data" },
+        headers: {
+          "ngrok-skip-browser-warning": "true",
+        },
         body: formData,
       });
 
