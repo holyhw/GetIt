@@ -1,7 +1,16 @@
 import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
-import { ActivityIndicator, Alert, FlatList, Image, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Alert, FlatList, Image, Platform, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
+
+const showAlert = (title: string, message: string, onConfirm?: () => void) => {
+  if (Platform.OS === "web") {
+    window.alert(`${title}\n${message}`);
+    onConfirm?.();
+  } else {
+    Alert.alert(title, message, onConfirm ? [{ text: "확인", onPress: onConfirm }] : undefined);
+  }
+};
 
 const BASE_URL = "https://538a-54-116-116-211.ngrok-free.app";
 
@@ -41,8 +50,12 @@ export default function Post() {
   };
 
   const handleSubmit = async () => {
-    if (images.length === 0) {
-      Alert.alert("사진 필요", "사진을 최소 1장 선택해 주세요.");
+    if (isFinder && images.length === 0) {
+      showAlert("사진 필요", "사진을 최소 1장 선택해 주세요.");
+      return;
+    }
+    if (!isFinder && content.trim() === "") {
+      showAlert("내용 필요", "잃어버린 물건의 내용을 입력해 주세요.");
       return;
     }
 
@@ -72,7 +85,7 @@ export default function Post() {
       if (!response.ok) throw new Error(`서버 오류 (${response.status})`);
 
       if (isFinder) {
-        Alert.alert("등록 완료", "등록이 완료되었습니다.", [{ text: "확인", onPress: () => router.replace("/") }]);
+        showAlert("등록 완료", "등록이 완료되었습니다.", () => router.replace("/"));
       } else {
         const data = await response.json();
         router.push({
@@ -81,7 +94,7 @@ export default function Post() {
         });
       }
     } catch (e: any) {
-      Alert.alert("전송 실패", e.message ?? "알 수 없는 오류가 발생했습니다.");
+      showAlert("전송 실패", e.message ?? "알 수 없는 오류가 발생했습니다.");
     } finally {
       setLoading(false);
     }
@@ -119,6 +132,13 @@ export default function Post() {
         )}
 
         {/* 사진 버튼 */}
+        <View className="flex-row items-center mb-2">
+          <Text className="text-sm font-semibold text-gray-600">사진</Text>
+          {isFinder
+            ? <Text className="ml-1 text-xs text-red-400">필수</Text>
+            : <Text className="ml-1 text-xs text-gray-400">선택</Text>
+          }
+        </View>
         <View className="flex-row gap-3">
           <TouchableOpacity onPress={takePhoto} className="flex-1 h-20 bg-gray-100 rounded-xl items-center justify-center border border-dashed border-gray-300">
             <Text className="text-2xl">📷</Text>
@@ -132,8 +152,15 @@ export default function Post() {
         </View>
 
         {/* 내용 입력 */}
+        <View className="flex-row items-center mt-4 mb-2">
+          <Text className="text-sm font-semibold text-gray-600">내용</Text>
+          {!isFinder
+            ? <Text className="ml-1 text-xs text-red-400">필수</Text>
+            : <Text className="ml-1 text-xs text-gray-400">선택</Text>
+          }
+        </View>
         <TextInput
-          className="mt-4 w-full h-40 bg-gray-100 rounded-xl p-4 text-gray-800"
+          className="w-full h-40 bg-gray-100 rounded-xl p-4 text-gray-800"
           placeholder={placeholder}
           placeholderTextColor="#9ca3af"
           multiline
