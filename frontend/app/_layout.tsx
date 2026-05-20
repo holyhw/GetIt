@@ -1,66 +1,45 @@
 import "../global.css";
-import { Stack, useRouter } from "expo-router";
-import { Platform, Text, TouchableOpacity, View } from "react-native";
+import { Stack } from "expo-router";
+import { Platform, View } from "react-native";
 
-function BackButton({ to }: { to: "/" | "/post" }) {
-  const router = useRouter();
+function PhoneFrame({ children }: { children: React.ReactNode }) {
+  if (Platform.OS !== "web") return <>{children}</>;
   return (
-    <TouchableOpacity onPress={() => router.replace(to)} style={{ paddingHorizontal: 12 }}>
-      <Text style={{ fontSize: 30 }}>←</Text>
-    </TouchableOpacity>
+    <View style={{ flex: 1, backgroundColor: "#e5e7eb", alignItems: "center", justifyContent: "center" }}>
+      <View
+        style={
+          {
+            width: 393,
+            height: "100%",
+            maxHeight: 852,
+            backgroundColor: "#fff",
+            overflow: "hidden",
+            boxShadow: "0 8px 40px rgba(0,0,0,0.18)",
+            borderRadius: 40,
+          } as any
+        }
+      >
+        {children}
+      </View>
+    </View>
   );
 }
 
-const screenOptions = {
-  post: {
-    title: "물건 정보 입력",
-    headerLeft: () => <BackButton to="/" />,
-  },
-  result: {
-    title: "결과",
-    headerLeft: () => <BackButton to="/" />,
-  },
-};
-
 export default function RootLayout() {
-  if (Platform.OS === "web") {
-    return (
-      <View
-        style={{
-          flex: 1,
-          backgroundColor: "#e5e7eb",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <View
-          style={
-            {
-              width: 390,
-              height: "100%",
-              maxHeight: 844,
-              backgroundColor: "#fff",
-              overflow: "hidden",
-              boxShadow: "0 8px 40px rgba(0,0,0,0.18)",
-              borderRadius: 40,
-            } as any
-          }
-        >
-          <Stack>
-            <Stack.Screen name="index" options={{ title: "분실물 신고" }} />
-            <Stack.Screen name="post" options={screenOptions.post} />
-            <Stack.Screen name="result" options={screenOptions.result} />
-          </Stack>
-        </View>
-      </View>
-    );
-  }
-
   return (
-    <Stack>
-      <Stack.Screen name="index" options={{ title: "분실물 신고" }} />
-      <Stack.Screen name="post" options={screenOptions.post} />
-      <Stack.Screen name="result" options={screenOptions.result} />
-    </Stack>
+    <PhoneFrame>
+      <Stack>
+        <Stack.Screen name="index" options={{ headerShown: false }} />
+        <Stack.Screen name="splash" options={{ headerShown: false }} />
+        <Stack.Screen name="login" options={{ headerShown: false }} />
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="detail" options={{ headerShown: false }} />
+        <Stack.Screen name="myinfo" options={{ headerShown: false }} />
+        <Stack.Screen name="myitems" options={{ headerShown: false }} />
+        <Stack.Screen name="chatroom" options={{ headerShown: false }} />
+        <Stack.Screen name="top5" options={{ headerShown: false }} />
+        <Stack.Screen name="notification" options={{ headerShown: false }} />
+      </Stack>
+    </PhoneFrame>
   );
 }
