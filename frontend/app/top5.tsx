@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, Image, Animated, ScrollView, Dimensions, Platform } from "react-native";
 import { useRouter } from "expo-router";
 import Svg, { Circle } from "react-native-svg";
@@ -11,7 +11,7 @@ import CalendarIcon from "../assets/reg-calendar.svg";
 
 const capImage = require("../assets/cap.jpg");
 
-const SCREEN_WIDTH = Dimensions.get("window").width;
+const SCREEN_WIDTH = Platform.OS === "web" ? 393 : Dimensions.get("window").width;
 const CARD_WIDTH = 273;
 const CARD_SPACING = 20;
 const ITEM_SIZE = CARD_WIDTH + CARD_SPACING;
@@ -26,7 +26,13 @@ const MOCK_DATA = [
   { rank: 5, similarity: 52, title: "검은 볼캡", location: "강남역 2번출구", date: "2026.04.18" },
 ];
 
-const AI_REASON = `입력된 분실물의 이미지와 텍스트 설명을 기반으로, 후보 이미지 및 설명과의 복합 유사도를 분석했습니다. 이미지 측면에서는 검은색 모자 바탕 위에 전면 중앙에 위치한 노란색 패치와, 그 위에 빨간색으로 표기된 "Kodak" 로고의 색상 대비 및 배치 구조가 높은 수준으로 일치했습니다. 또한 캡 형태의 기본 실루엣과 챙의 곡률, 전체 비율 등 형태적 특징 역시 유사한 패턴을 보였습니다. 텍스트 설명 비교에서는 "검은색 모자", "전면 노란색 패치", "빨간색 Kodak 로고"와 같은 핵심 키워드가 후보 정보와 직접적으로 대응되며, 색상·브랜드·위치 정보가 모두 일관되게 매칭되었습니다.`;
+const AI_REASONS = [
+  `이미지 측면에서 검은색 모자 바탕 위에 전면 중앙의 노란색 패치와 빨간색 "Kodak" 로고의 색상 대비 및 배치 구조가 92% 수준으로 일치했습니다. 캡 형태의 실루엣과 챙의 곡률, 전체 비율 등 형태적 특징도 매우 유사합니다. 텍스트 비교에서 "검은색 모자", "전면 노란색 패치", "빨간색 Kodak 로고" 키워드가 직접적으로 대응되며 색상·브랜드·위치 정보가 모두 일관되게 매칭되었습니다.`,
+  `이미지에서 검은색 볼캡 형태와 전면 패치의 위치가 87% 수준으로 유사합니다. Kodak 로고의 서체와 색상 배치가 거의 동일하며, 모자 챙의 곡률과 뒷면 스트랩 구조도 일치합니다. 텍스트 설명에서 브랜드명과 색상 정보가 일치하지만 패치 색상에서 미세한 차이가 감지되어 1위 대비 낮은 유사도를 보입니다.`,
+  `검은색 모자의 전반적인 형태와 실루엣이 78% 수준으로 유사합니다. 전면 패치의 존재와 브랜드 로고는 확인되지만, 이미지 해상도 차이로 인해 로고 색상의 정확한 대조가 어렵습니다. 습득 장소가 동일 역사 내로 위치 정보가 일치하며, 습득 시간대가 분실 시간과 근접해 있어 연관성이 높습니다.`,
+  `모자의 기본 형태(볼캡)와 색상(검정)이 65% 수준으로 일치합니다. 전면에 패치가 있는 구조는 동일하나 Kodak 특유의 노란색 배경이 이미지에서 명확히 확인되지 않습니다. 텍스트 설명에 브랜드 정보가 누락되어 있어 동일 물건 여부를 확정하기 어렵지만, 색상과 형태 기준으로 후보군에 포함되었습니다.`,
+  `검은색 볼캡이라는 공통 특성으로 52% 유사도를 보입니다. 전면 패치나 로고에 대한 설명이 없어 이미지 매칭 신뢰도가 낮습니다. 습득 장소가 동일 역 인근이지만 출구 번호가 달라 거리 차이가 있습니다. 형태적 특징만으로 후보군에 포함되었으며, 추가 확인이 필요한 항목입니다.`,
+];
 
 // ── 유사도 원형 프로그레스 배지 ──────────────────────────
 function SimilarityBadge({ percentage }: { percentage: number }) {
@@ -49,12 +55,14 @@ function SimilarityBadge({ percentage }: { percentage: number }) {
         }}
       />
       {/* SVG 프로그레스 링 */}
-      <Svg width={SIZE} height={SIZE} style={{ position: "absolute", transform: [{ rotate: "-90deg" }] }}>
+      <View style={{ position: "absolute", width: SIZE, height: SIZE, transform: [{ rotate: "-90deg" }] }}>
+        <Svg width={SIZE} height={SIZE}>
         {/* 트랙 */}
         <Circle cx={SIZE / 2} cy={SIZE / 2} r={RADIUS} stroke="#E5E7EB" strokeWidth={STROKE} fill="none" />
         {/* 진행 호 */}
         <Circle cx={SIZE / 2} cy={SIZE / 2} r={RADIUS} stroke="#3B82F6" strokeWidth={STROKE} fill="none" strokeDasharray={CIRCUMFERENCE} strokeDashoffset={strokeDashoffset} strokeLinecap="round" />
-      </Svg>
+        </Svg>
+      </View>
       {/* 텍스트 */}
       <View style={{ alignItems: "center" }}>
         <View style={{ flexDirection: "row", alignItems: "baseline" }}>
@@ -70,8 +78,10 @@ function SimilarityBadge({ percentage }: { percentage: number }) {
 // ── 순위 배지 ────────────────────────────────────────────
 function RankBadge({ rank }: { rank: number }) {
   return (
-    <View style={{ opacity: 0.75 }}>
-      <RankBg width={43} height={24} style={{ position: "absolute" }} />
+    <View style={{ width: 43, height: 24, opacity: 0.75 }}>
+      <View style={{ position: "absolute", width: 43, height: 24 }}>
+        <RankBg width={43} height={24} />
+      </View>
       <View
         style={{
           width: 43,
@@ -111,17 +121,22 @@ function CardItem({ item, index, scrollX }: CardProps) {
     extrapolate: "clamp",
   });
 
+  const isWeb = Platform.OS === "web";
+
   return (
     <Animated.View
       style={{
         width: CARD_WIDTH,
         marginRight: CARD_SPACING,
-        transform: [{ scale }, { perspective: 1000 }, { rotateY }],
+        transform: isWeb
+          ? [{ scale }]
+          : [{ scale }, { perspective: 1000 }, { rotateY }],
         opacity,
       }}
     >
       <View
         style={{
+          width: CARD_WIDTH,
           backgroundColor: "#fff",
           borderRadius: 10,
           shadowColor: "#000",
@@ -133,8 +148,8 @@ function CardItem({ item, index, scrollX }: CardProps) {
         }}
       >
         {/* 이미지 영역: 265×255, borderRadius=10, 4px 안쪽 여백 */}
-        <View style={{ margin: 4, borderRadius: 10, overflow: "hidden" }}>
-          <Image source={capImage} style={{ width: 265, height: 255, borderRadius: 10 }} resizeMode="cover" />
+        <View style={{ margin: 4, borderRadius: 10, overflow: "hidden", width: CARD_WIDTH - 8, height: 255 }}>
+          <Image source={capImage} style={{ width: CARD_WIDTH - 8, height: 255, borderRadius: 10 }} resizeMode="cover" />
           {/* 순위 배지: top-left */}
           <View style={{ position: "absolute", top: 8, left: 8 }}>
             <RankBadge rank={item.rank} />
@@ -186,11 +201,42 @@ export default function Top5Screen() {
   const router = useRouter();
   const scrollX = useRef(new Animated.Value(0)).current;
   const [currentIndex, setCurrentIndex] = useState(0);
+  const flatListRef = useRef<any>(null);
 
-  const onScrollEnd = (e: any) => {
-    const index = Math.round(e.nativeEvent.contentOffset.x / ITEM_SIZE);
-    setCurrentIndex(Math.max(0, Math.min(index, MOCK_DATA.length - 1)));
-  };
+  useEffect(() => {
+    if (Platform.OS !== "web") return;
+    const timer = setTimeout(() => {
+      const scrollEl = flatListRef.current?.getScrollableNode?.();
+      if (!scrollEl) return;
+      let isDragging = false;
+      let startX = 0;
+      let startScrollLeft = 0;
+      const onMouseDown = (e: MouseEvent) => {
+        isDragging = true;
+        startX = e.clientX;
+        startScrollLeft = scrollEl.scrollLeft;
+        scrollEl.style.cursor = "grabbing";
+      };
+      const onMouseMove = (e: MouseEvent) => {
+        if (!isDragging) return;
+        e.preventDefault();
+        scrollEl.scrollLeft = startScrollLeft - (e.clientX - startX);
+      };
+      const onMouseUp = () => {
+        isDragging = false;
+        scrollEl.style.cursor = "grab";
+        const index = Math.round(scrollEl.scrollLeft / ITEM_SIZE);
+        setCurrentIndex(Math.max(0, Math.min(index, MOCK_DATA.length - 1)));
+      };
+      scrollEl.style.cursor = "grab";
+      scrollEl.addEventListener("mousedown", onMouseDown);
+      window.addEventListener("mousemove", onMouseMove);
+      window.addEventListener("mouseup", onMouseUp);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const currentIndexRef = useRef(0);
 
   return (
     <View style={{ flex: 1, backgroundColor: "#F5F7FA" }}>
@@ -235,6 +281,7 @@ export default function Top5Screen() {
         {/* ── 카드 캐러셀 ─────────────────────────── */}
         {/* Figma: 카드 w=273, h=354, 좌우 카드 visible with rotation */}
         <Animated.FlatList
+          ref={flatListRef}
           data={MOCK_DATA}
           keyExtractor={(_, i) => String(i)}
           horizontal
@@ -243,8 +290,24 @@ export default function Top5Screen() {
           decelerationRate="fast"
           // 첫/마지막 카드가 화면 중앙에 오도록
           contentContainerStyle={{ paddingLeft: SIDE_OFFSET, paddingRight: SIDE_OFFSET - CARD_SPACING }}
-          onScroll={Animated.event([{ nativeEvent: { contentOffset: { x: scrollX } } }], { useNativeDriver: true })}
-          onMomentumScrollEnd={onScrollEnd}
+          onScroll={Animated.event(
+            [{ nativeEvent: { contentOffset: { x: scrollX } } }],
+            {
+              useNativeDriver: Platform.OS !== "web",
+              listener: (e: any) => {
+                const index = Math.round(e.nativeEvent.contentOffset.x / ITEM_SIZE);
+                const clamped = Math.max(0, Math.min(index, MOCK_DATA.length - 1));
+                if (clamped !== currentIndexRef.current) {
+                  currentIndexRef.current = clamped;
+                  setCurrentIndex(clamped);
+                }
+              },
+            }
+          )}
+          onMomentumScrollEnd={(e) => {
+            const index = Math.round(e.nativeEvent.contentOffset.x / ITEM_SIZE);
+            setCurrentIndex(Math.max(0, Math.min(index, MOCK_DATA.length - 1)));
+          }}
           scrollEventThrottle={16}
           renderItem={({ item, index }) => <CardItem item={item} index={index} scrollX={scrollX} />}
         />
@@ -311,7 +374,7 @@ export default function Top5Screen() {
             }}
           >
             <ScrollView showsVerticalScrollIndicator={false} nestedScrollEnabled>
-              <Text style={{ fontSize: 12, color: "#000", lineHeight: 16 }}>{AI_REASON}</Text>
+              <Text style={{ fontSize: 12, color: "#000", lineHeight: 16 }}>{AI_REASONS[currentIndex]}</Text>
             </ScrollView>
           </View>
         </View>
@@ -336,6 +399,7 @@ export default function Top5Screen() {
         {/* 채팅하기: 흰색 bg, navy border, navy 텍스트 */}
         <TouchableOpacity
           activeOpacity={0.85}
+          onPress={() => router.push("/chatroom")}
           style={{
             flex: 1,
             height: 46,
@@ -356,6 +420,7 @@ export default function Top5Screen() {
         {/* 상세보기: navy bg, white 텍스트 */}
         <TouchableOpacity
           activeOpacity={0.85}
+          onPress={() => router.push("/detail")}
           style={{
             flex: 1,
             height: 46,
