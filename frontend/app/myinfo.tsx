@@ -1,4 +1,12 @@
-import { View, Text, ScrollView, TouchableOpacity, Image } from "react-native";
+import { useState, useRef } from "react";
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  Image,
+  TextInput,
+} from "react-native";
 import { useRouter } from "expo-router";
 import MyInfoBackIcon from "../assets/myinfo-back.svg";
 import MyInfoCameraIcon from "../assets/myinfo-camera.svg";
@@ -12,6 +20,16 @@ const profileImage = require("../assets/profile-placeholder.png");
 
 export default function MyInfoScreen() {
   const router = useRouter();
+  const [nickname, setNickname] = useState("홍길동");
+  const [editingNickname, setEditingNickname] = useState(false);
+  const [draftNickname, setDraftNickname] = useState(nickname);
+  const inputRef = useRef<TextInput>(null);
+
+  const handleSave = () => {
+    setNickname(draftNickname.trim() || nickname);
+    setEditingNickname(false);
+    router.back();
+  };
 
   return (
     <View style={{ flex: 1, backgroundColor: "#F5F7FA" }}>
@@ -46,6 +64,7 @@ export default function MyInfoScreen() {
         {/* 저장 버튼: w=46, h=26, bg=#1E3A5F, borderRadius=13 */}
         <TouchableOpacity
           activeOpacity={0.85}
+          onPress={handleSave}
           style={{
             backgroundColor: "#1E3A5F",
             width: 46,
@@ -55,11 +74,16 @@ export default function MyInfoScreen() {
             justifyContent: "center",
           }}
         >
-          <Text style={{ color: "#fff", fontSize: 12, fontWeight: "600" }}>저장</Text>
+          <Text style={{ color: "#fff", fontSize: 12, fontWeight: "600" }}>
+            저장
+          </Text>
         </TouchableOpacity>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 40 }}
+      >
         {/* 프로필 사진 + 이름 + 이메일 */}
         {/* Figma: avatar top=120 (header ~96 + gap 24), 120×120 centered */}
         <View style={{ alignItems: "center", marginTop: 16, marginBottom: 24 }}>
@@ -74,7 +98,6 @@ export default function MyInfoScreen() {
             </View>
           </View>
 
-          {/* 이름: 20px SemiBold, Figma center y=265 (name ~25px below avatar bottom) */}
           <Text
             style={{
               fontSize: 20,
@@ -83,7 +106,7 @@ export default function MyInfoScreen() {
               marginBottom: 8,
             }}
           >
-            홍길동
+            {nickname}
           </Text>
 
           {/* 이메일: 14px Regular, #757575 */}
@@ -107,13 +130,17 @@ export default function MyInfoScreen() {
             프로필
           </Text>
 
-          {/* 닉네임 입력 행: bg=white, border #D9D9D9, borderRadius=15, h=46 */}
           <TouchableOpacity
             activeOpacity={0.8}
+            onPress={() => {
+              setDraftNickname(nickname);
+              setEditingNickname(true);
+              setTimeout(() => inputRef.current?.focus(), 50);
+            }}
             style={{
               backgroundColor: "#fff",
               borderWidth: 1,
-              borderColor: "#D9D9D9",
+              borderColor: editingNickname ? "#1E3A5F" : "#D9D9D9",
               borderRadius: 15,
               height: 46,
               flexDirection: "row",
@@ -132,17 +159,36 @@ export default function MyInfoScreen() {
             >
               닉네임
             </Text>
-            <Text
-              style={{
-                fontSize: 14,
-                fontWeight: "600",
-                color: "#757575",
-                letterSpacing: -0.32,
-                marginRight: 8,
-              }}
-            >
-              홍길동
-            </Text>
+            {editingNickname ? (
+              <TextInput
+                ref={inputRef}
+                value={draftNickname}
+                onChangeText={(v) => setDraftNickname(v.slice(0, 6))}
+                maxLength={6}
+                style={{
+                  fontSize: 14,
+                  fontWeight: "600",
+                  color: "#000",
+                  letterSpacing: -0.32,
+                  marginRight: 8,
+                  width: 84,
+                  textAlign: "right",
+                  padding: 0,
+                }}
+              />
+            ) : (
+              <Text
+                style={{
+                  fontSize: 14,
+                  fontWeight: "600",
+                  color: "#757575",
+                  letterSpacing: -0.32,
+                  marginRight: 8,
+                }}
+              >
+                {nickname}
+              </Text>
+            )}
             <MyInfoArrowIcon width={6} height={10} />
           </TouchableOpacity>
         </View>
@@ -200,7 +246,9 @@ export default function MyInfoScreen() {
                 justifyContent: "center",
               }}
             >
-              <Text style={{ fontSize: 10, fontWeight: "600", color: "#1E3A5F" }}>
+              <Text
+                style={{ fontSize: 10, fontWeight: "600", color: "#1E3A5F" }}
+              >
                 주 계정
               </Text>
             </View>
@@ -233,7 +281,9 @@ export default function MyInfoScreen() {
               >
                 네이버
               </Text>
-              <Text style={{ fontSize: 10, color: "#757575" }}>연결되지 않음</Text>
+              <Text style={{ fontSize: 10, color: "#757575" }}>
+                연결되지 않음
+              </Text>
             </View>
           </View>
 
@@ -277,19 +327,23 @@ export default function MyInfoScreen() {
               >
                 Google
               </Text>
-              <Text style={{ fontSize: 10, color: "#757575" }}>연결되지 않음</Text>
+              <Text style={{ fontSize: 10, color: "#757575" }}>
+                연결되지 않음
+              </Text>
             </View>
           </View>
         </View>
 
         {/* 회원탈퇴: 우측 정렬, Figma: right:24, y=622 */}
         <View
-          style={{ alignItems: "flex-end", paddingHorizontal: 24, marginTop: 20 }}
+          style={{
+            alignItems: "flex-end",
+            paddingHorizontal: 24,
+            marginTop: 20,
+          }}
         >
           <TouchableOpacity>
-            <Text
-              style={{ fontSize: 12, fontWeight: "600", color: "#EF4444" }}
-            >
+            <Text style={{ fontSize: 12, fontWeight: "600", color: "#EF4444" }}>
               회원탈퇴
             </Text>
           </TouchableOpacity>

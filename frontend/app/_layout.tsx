@@ -1,6 +1,7 @@
 import "../global.css";
 import { Stack } from "expo-router";
 import { Platform, View } from "react-native";
+import { AuthProvider } from "../context/AuthContext";
 
 function PhoneFrame({ children }: { children: React.ReactNode }) {
   if (Platform.OS !== "web") return <>{children}</>;
@@ -27,6 +28,7 @@ function PhoneFrame({ children }: { children: React.ReactNode }) {
 
 export default function RootLayout() {
   return (
+    <AuthProvider>
     <PhoneFrame>
       <Stack>
         <Stack.Screen name="index" options={{ headerShown: false }} />
@@ -41,5 +43,6 @@ export default function RootLayout() {
         <Stack.Screen name="notification" options={{ headerShown: false }} />
       </Stack>
     </PhoneFrame>
+    </AuthProvider>
   );
 }

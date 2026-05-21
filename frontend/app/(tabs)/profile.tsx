@@ -1,5 +1,6 @@
 import { View, Text, ScrollView, TouchableOpacity, Image } from "react-native";
 import { useRouter } from "expo-router";
+import { useAuth } from "../../context/AuthContext";
 import Svg, { Circle, Path } from "react-native-svg";
 import BellIcon from "../../assets/bell-icon.svg";
 import ArrowRight from "../../assets/detail-arrow-right.svg";
@@ -42,6 +43,7 @@ function MenuItem({ label, onPress }: { label: string; onPress?: () => void }) {
 
 export default function ProfileScreen() {
   const router = useRouter();
+  const { isLoggedIn, logout } = useAuth();
   return (
     <View style={{ flex: 1, backgroundColor: "#F5F7FA" }}>
       {/* 헤더: "마이페이지" centered, 벨 아이콘 right */}
@@ -67,7 +69,7 @@ export default function ProfileScreen() {
           마이페이지
         </Text>
         <View style={{ flex: 1, alignItems: "flex-end" }}>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={() => isLoggedIn ? router.push("/notification") : router.push("/login")}>
             <BellIcon width={16} height={18} />
           </TouchableOpacity>
         </View>
@@ -135,7 +137,7 @@ export default function ProfileScreen() {
                 <Text style={{ fontSize: 16, fontWeight: "600", color: "#000" }}>
                   홍길동
                 </Text>
-                <TouchableOpacity>
+                <TouchableOpacity onPress={() => { logout(); router.replace("/(tabs)"); }}>
                   <Text style={{ fontSize: 12, color: "#464646" }}>로그아웃</Text>
                 </TouchableOpacity>
               </View>

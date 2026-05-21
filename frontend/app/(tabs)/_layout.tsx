@@ -1,11 +1,24 @@
-import { Tabs } from "expo-router";
+import { Tabs, useRouter } from "expo-router";
 import TabHomeIcon from "../../assets/tab-home.svg";
 import TabSearchIcon from "../../assets/tab-search.svg";
 import TabRegisterIcon from "../../assets/tab-register.svg";
 import TabChatIcon from "../../assets/tab-chat.svg";
 import TabProfileIcon from "../../assets/tab-profile.svg";
+import { useAuth } from "../../context/AuthContext";
+
+function useAuthGuard() {
+  const router = useRouter();
+  const { isLoggedIn } = useAuth();
+  return (e: { preventDefault: () => void }) => {
+    if (!isLoggedIn) {
+      e.preventDefault();
+      router.push("/login");
+    }
+  };
+}
 
 export default function TabsLayout() {
+  const authGuard = useAuthGuard();
   return (
     <Tabs
       screenOptions={{
@@ -52,6 +65,7 @@ export default function TabsLayout() {
           tabBarIcon: () => <TabRegisterIcon />,
           tabBarStyle: { display: "none" },
         }}
+        listeners={{ tabPress: authGuard }}
       />
       <Tabs.Screen
         name="chat"
@@ -59,6 +73,7 @@ export default function TabsLayout() {
           title: "채팅",
           tabBarIcon: () => <TabChatIcon />,
         }}
+        listeners={{ tabPress: authGuard }}
       />
       <Tabs.Screen
         name="profile"
@@ -66,6 +81,7 @@ export default function TabsLayout() {
           title: "프로필",
           tabBarIcon: () => <TabProfileIcon />,
         }}
+        listeners={{ tabPress: authGuard }}
       />
     </Tabs>
   );

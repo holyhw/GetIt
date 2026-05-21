@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { View, Text, ScrollView, TouchableOpacity, Image, TextInput, KeyboardAvoidingView, Platform } from "react-native";
 import { useRouter } from "expo-router";
 import BackIcon from "../assets/myinfo-back.svg";
@@ -113,6 +113,16 @@ function DateChip({ date }: { date: string }) {
 export default function ChatRoomScreen() {
   const router = useRouter();
   const [inputText, setInputText] = useState("");
+  const [messages, setMessages] = useState<{ id: number; text: string }[]>([]);
+  const scrollRef = useRef<ScrollView>(null);
+
+  const handleSend = () => {
+    const trimmed = inputText.trim();
+    if (!trimmed) return;
+    setMessages((prev) => [...prev, { id: Date.now(), text: trimmed }]);
+    setInputText("");
+    setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 50);
+  };
 
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "height"} keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}>
@@ -177,6 +187,7 @@ export default function ChatRoomScreen() {
 
         {/* ── 메시지 스크롤 영역 ────────────────────────── */}
         <ScrollView
+          ref={scrollRef}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{
             paddingHorizontal: 12,
@@ -262,6 +273,10 @@ export default function ChatRoomScreen() {
 
           {/* 보낸 메시지 2 + 읽음 + 시간 */}
           <SentBubble text="여기 챙 안쪽이에요. 이거 맞으실까요?" read time="오후 2:34" />
+
+          {messages.map((msg) => (
+            <SentBubble key={msg.id} text={msg.text} />
+          ))}
         </ScrollView>
 
         {/* ── 입력 바 ────────────────────────────────────── */}
@@ -301,6 +316,8 @@ export default function ChatRoomScreen() {
             <TextInput
               value={inputText}
               onChangeText={setInputText}
+              onSubmitEditing={handleSend}
+              returnKeyType="send"
               placeholder="메세지 입력"
               placeholderTextColor="#B2B6BD"
               style={{
@@ -313,8 +330,7 @@ export default function ChatRoomScreen() {
             />
           </View>
 
-          {/* 전송 버튼 */}
-          <TouchableOpacity>
+          <TouchableOpacity onPress={handleSend}>
             <SendIcon width={27} height={27} />
           </TouchableOpacity>
         </View>

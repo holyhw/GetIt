@@ -264,6 +264,7 @@ export default function MyItemsScreen() {
       >
         <TouchableOpacity
           activeOpacity={0.85}
+          onPress={() => router.push("/(tabs)/register")}
           style={{
             backgroundColor: ctaColor,
             height: 46,

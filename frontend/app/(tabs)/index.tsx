@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { View, Text, ScrollView, TouchableOpacity, Image } from "react-native";
 import { useRouter } from "expo-router";
+import { useAuth } from "../../context/AuthContext";
 
 const capImage = require("../../assets/cap.jpg");
 import LogoCircle from "../../assets/logo-text.svg";
@@ -52,6 +53,7 @@ type Item = (typeof MOCK_ITEMS)[0];
 
 export default function HomeScreen() {
   const router = useRouter();
+  const { isLoggedIn } = useAuth();
   const [filter, setFilter] = useState<FilterType>("습득물");
 
   return (
@@ -114,7 +116,10 @@ export default function HomeScreen() {
         </View>
 
         {/* 알림 벨: marginLeft 12 */}
-        <TouchableOpacity style={{ marginLeft: 12 }} onPress={() => router.push("/notification")}>
+        <TouchableOpacity
+          style={{ marginLeft: 12 }}
+          onPress={() => isLoggedIn ? router.push("/notification") : router.push("/login")}
+        >
           <BellIcon width={16} height={18} />
         </TouchableOpacity>
       </View>
@@ -129,7 +134,9 @@ export default function HomeScreen() {
           gap: 12,
         }}
       >
-        {MOCK_ITEMS.map((item, idx) => (
+        {MOCK_ITEMS.filter((item) =>
+          filter === "습득물" ? item.type === "found" : item.type === "lost"
+        ).map((item, idx) => (
           <ItemCard
             key={item.id}
             item={item}
