@@ -40,6 +40,6 @@ export const api = {
       body: JSON.stringify(body),
     }),
 
-  delete: <T>(path: string, token: string) =>
-    request<T>(path, token, { method: "DELETE" }),
+  delete: (path: string, token: string) =>
+    request<void>(path, token, { method: "DELETE" }),
 };

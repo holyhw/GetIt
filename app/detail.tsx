@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { View, Text, ScrollView, TouchableOpacity, Image, ActivityIndicator } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, Image, ActivityIndicator, Modal, Alert } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import DetailBackIcon from "../assets/detail-back.svg";
 import DetailShareIcon from "../assets/detail-share.svg";
@@ -54,6 +54,8 @@ export default function DetailScreen() {
 
   const [item, setItem] = useState<RegistrationDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showMore, setShowMore] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -79,6 +81,42 @@ export default function DetailScreen() {
   }
 
   const isLost = item.itemType === "LOST";
+
+  const handleMatchComplete = async () => {
+    if (!token) return;
+    setShowMore(false);
+    setActionLoading(true);
+    try {
+      const updated = await api.patch<RegistrationDetail>(`/api/registration/${item.id}/matched`, token, {});
+      setItem(updated);
+    } catch {
+      Alert.alert("오류", "처리 중 문제가 발생했습니다.");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleDelete = () => {
+    setShowMore(false);
+    Alert.alert("게시물 삭제", "정말 삭제하시겠습니까?", [
+      { text: "취소", style: "cancel" },
+      {
+        text: "삭제", style: "destructive",
+        onPress: async () => {
+          if (!token) return;
+          setActionLoading(true);
+          try {
+            await api.delete(`/api/registration/${item.id}`, token);
+            router.back();
+          } catch {
+            Alert.alert("오류", "삭제 중 문제가 발생했습니다.");
+          } finally {
+            setActionLoading(false);
+          }
+        },
+      },
+    ]);
+  };
   const ctaColor = isLost ? "#FF7A00" : "#1E3A5F";
   const ctaText = isLost ? "이 물건을 주운 것 같아요" : "이 물건 제 것 같아요";
   const dateLabel = `${item.occurredDate?.replace(/-/g, ".") ?? ""} ${isLost ? "분실" : "습득"}`;
@@ -92,9 +130,36 @@ export default function DetailScreen() {
       <OverlayButton left={293}>
         <DarkBtn><DetailShareIcon width={13} height={15} /></DarkBtn>
       </OverlayButton>
-      <OverlayButton left={339}>
+      <OverlayButton left={339} onPress={() => setShowMore(true)}>
         <DarkBtn><DetailMoreIcon width={14} height={4} /></DarkBtn>
       </OverlayButton>
+
+      {/* 더보기 모달 */}
+      <Modal visible={showMore} transparent animationType="fade" onRequestClose={() => setShowMore(false)}>
+        <TouchableOpacity style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.4)" }} onPress={() => setShowMore(false)} />
+        <View style={{ backgroundColor: "#fff", borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingBottom: 32 }}>
+          <View style={{ width: 40, height: 4, backgroundColor: "#D9D9D9", borderRadius: 2, alignSelf: "center", marginTop: 12, marginBottom: 8 }} />
+          {!item.matched && (
+            <TouchableOpacity
+              onPress={handleMatchComplete}
+              style={{ paddingVertical: 18, paddingHorizontal: 24, borderBottomWidth: 1, borderBottomColor: "#F0F0F0" }}
+            >
+              <Text style={{ fontSize: 16, color: "#1E3A5F", fontWeight: "600" }}>매칭 완료</Text>
+              <Text style={{ fontSize: 12, color: "#919191", marginTop: 2 }}>물건을 찾았어요</Text>
+            </TouchableOpacity>
+          )}
+          <TouchableOpacity onPress={handleDelete} style={{ paddingVertical: 18, paddingHorizontal: 24 }}>
+            <Text style={{ fontSize: 16, color: "#EF4444", fontWeight: "600" }}>게시물 삭제</Text>
+            <Text style={{ fontSize: 12, color: "#919191", marginTop: 2 }}>이 게시물을 삭제합니다</Text>
+          </TouchableOpacity>
+        </View>
+      </Modal>
+
+      {actionLoading && (
+        <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(0,0,0,0.2)", zIndex: 100 }}>
+          <ActivityIndicator size="large" color="#1E3A5F" />
+        </View>
+      )}
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
         {/* 히어로 이미지 */}
