@@ -41,6 +41,7 @@ export default function RootLayout() {
         <Stack.Screen name="chatroom" options={{ headerShown: false }} />
         <Stack.Screen name="top5" options={{ headerShown: false }} />
         <Stack.Screen name="notification" options={{ headerShown: false }} />
+        <Stack.Screen name="oauth/redirect" options={{ headerShown: false }} />
       </Stack>
     </PhoneFrame>
     </AuthProvider>

@@ -1,14 +1,40 @@
-import { Text, TouchableOpacity, View } from "react-native";
+import { Text, TouchableOpacity, View, Platform, Alert } from "react-native";
 import { useRouter } from "expo-router";
+import * as WebBrowser from "expo-web-browser";
 import GetItLogo from "../assets/getit-logo.svg";
 import KakaoIcon from "../assets/kakao-icon.svg";
 import NaverIcon from "../assets/naver-icon.svg";
 import GoogleIcon from "../assets/google-icon.svg";
 import BackArrow from "../assets/back-arrow.svg";
+import { useAuth } from "../context/AuthContext";
+
+const GOOGLE_OAUTH_URL = "https://api.getitsju.com/api/auth/oauth2/google";
 
 export default function Login() {
   const router = useRouter();
-  const handleLogin = () => { router.replace("/(tabs)"); };
+  const { login } = useAuth();
+
+  const handleGoogleLogin = async () => {
+    if (Platform.OS === "web") {
+      window.location.href = GOOGLE_OAUTH_URL;
+      return;
+    }
+
+    const result = await WebBrowser.openAuthSessionAsync(
+      GOOGLE_OAUTH_URL,
+      "getit://oauth/redirect"
+    );
+
+    if (result.type === "success" && result.url) {
+      const query = result.url.split("?")[1] ?? "";
+      const params = new URLSearchParams(query);
+      const token = params.get("accessToken");
+      if (token) {
+        await login(token);
+        router.replace("/(tabs)");
+      }
+    }
+  };
 
   return (
     <View style={{ flex: 1, backgroundColor: "#F5F7FA" }}>
@@ -38,7 +64,6 @@ export default function Login() {
 
         {/* 카카오 */}
         <TouchableOpacity
-          onPress={handleLogin}
           activeOpacity={0.85}
           style={{
             backgroundColor: "#FEE500",
@@ -56,7 +81,6 @@ export default function Login() {
 
         {/* 네이버 */}
         <TouchableOpacity
-          onPress={handleLogin}
           activeOpacity={0.85}
           style={{
             backgroundColor: "#03C75A",
@@ -74,7 +98,7 @@ export default function Login() {
 
         {/* 구글 */}
         <TouchableOpacity
-          onPress={handleLogin}
+          onPress={handleGoogleLogin}
           activeOpacity={0.85}
           style={{
             backgroundColor: "#fff",
