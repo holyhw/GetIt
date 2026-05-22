@@ -43,7 +43,7 @@ function MenuItem({ label, onPress }: { label: string; onPress?: () => void }) {
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { isLoggedIn, logout } = useAuth();
+  const { isLoggedIn, logout, userInfo } = useAuth();
   return (
     <View style={{ flex: 1, backgroundColor: "#F5F7FA" }}>
       {/* 헤더: "마이페이지" centered, 벨 아이콘 right */}
@@ -102,7 +102,7 @@ export default function ProfileScreen() {
             {/* 아바타 60×60 + 카메라 뱃지 (right:0, bottom:0) */}
             <View style={{ marginRight: 10 }}>
               <Image
-                source={profileImage}
+                source={userInfo?.profileImageUrl ? { uri: userInfo.profileImageUrl } : profileImage}
                 style={{ width: 60, height: 60, borderRadius: 30 }}
               />
               <View
@@ -135,14 +135,14 @@ export default function ProfileScreen() {
                 }}
               >
                 <Text style={{ fontSize: 16, fontWeight: "600", color: "#000" }}>
-                  홍길동
+                  {userInfo?.name ?? ""}
                 </Text>
                 <TouchableOpacity onPress={() => { logout(); router.replace("/(tabs)"); }}>
                   <Text style={{ fontSize: 12, color: "#464646" }}>로그아웃</Text>
                 </TouchableOpacity>
               </View>
               <Text style={{ fontSize: 14, color: "#000" }}>
-                baroyeogi@email.com
+                {userInfo?.email ?? ""}
               </Text>
             </View>
           </View>

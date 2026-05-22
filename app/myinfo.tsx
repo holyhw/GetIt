@@ -16,39 +16,20 @@ import MyInfoKakaoIcon from "../assets/myinfo-kakao.svg";
 import MyInfoGoogleIcon from "../assets/myinfo-google.svg";
 import MyInfoCheckIcon from "../assets/myinfo-check.svg";
 import MyInfoArrowIcon from "../assets/myinfo-arrow.svg";
-import { useAuth } from "../context/AuthContext";
+import { useAuth, UserInfo } from "../context/AuthContext";
 import { api } from "../utils/api";
 
 const profilePlaceholder = require("../assets/profile-placeholder.png");
 
-type UserInfo = {
-  id: number;
-  email: string;
-  name: string;
-  profileImageUrl: string | null;
-  provider: "KAKAO" | "NAVER" | "GOOGLE";
-};
-
 export default function MyInfoScreen() {
   const router = useRouter();
-  const { token } = useAuth();
+  const { token, userInfo, updateUserInfo } = useAuth();
 
-  const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading] = useState(false);
   const [editingNickname, setEditingNickname] = useState(false);
-  const [draftNickname, setDraftNickname] = useState("");
+  const [draftNickname, setDraftNickname] = useState(userInfo?.name ?? "");
   const [saving, setSaving] = useState(false);
   const inputRef = useRef<TextInput>(null);
-
-  useEffect(() => {
-    if (!token) return;
-    api.get<UserInfo>("/api/users/me", token)
-      .then((data) => {
-        setUserInfo(data);
-        setDraftNickname(data.name);
-      })
-      .finally(() => setLoading(false));
-  }, [token]);
 
   const handleSave = async () => {
     if (!token || !userInfo) return;
@@ -56,8 +37,7 @@ export default function MyInfoScreen() {
     setSaving(true);
     try {
       const updated = await api.patch<UserInfo>("/api/users/me", token, { name });
-      setUserInfo(updated);
-      setDraftNickname(updated.name);
+      updateUserInfo(updated);
     } finally {
       setSaving(false);
       setEditingNickname(false);
