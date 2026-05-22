@@ -1,6 +1,9 @@
+import { useState, useCallback } from "react";
+import { useFocusEffect } from "expo-router";
 import { View, Text, ScrollView, TouchableOpacity, Image } from "react-native";
 import { useRouter } from "expo-router";
 import { useAuth } from "../../context/AuthContext";
+import { api } from "../../utils/api";
 import Svg, { Circle, Path } from "react-native-svg";
 import BellIcon from "../../assets/bell-icon.svg";
 import ArrowRight from "../../assets/detail-arrow-right.svg";
@@ -43,7 +46,19 @@ function MenuItem({ label, onPress }: { label: string; onPress?: () => void }) {
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { isLoggedIn, logout, userInfo } = useAuth();
+  const { isLoggedIn, logout, userInfo, token } = useAuth();
+  const [foundCount, setFoundCount] = useState(0);
+  const [lostCount, setLostCount] = useState(0);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!token) return;
+      api.get<{ id: number }[]>("/api/registration/me?itemType=FOUND", token)
+        .then((data) => setFoundCount(data.length)).catch(() => {});
+      api.get<{ id: number }[]>("/api/registration/me?itemType=LOST", token)
+        .then((data) => setLostCount(data.length)).catch(() => {});
+    }, [token])
+  );
   return (
     <View style={{ flex: 1, backgroundColor: "#F5F7FA" }}>
       {/* 헤더: "마이페이지" centered, 벨 아이콘 right */}
@@ -171,7 +186,7 @@ export default function ProfileScreen() {
               }}
             >
               <Text style={{ fontSize: 14, fontWeight: "600", color: "#1E3A5F" }}>
-                0
+                {foundCount}
               </Text>
               <Text style={{ fontSize: 12, color: "#1E3A5F" }}>등록한 습득물</Text>
             </TouchableOpacity>
@@ -190,7 +205,7 @@ export default function ProfileScreen() {
               }}
             >
               <Text style={{ fontSize: 14, fontWeight: "600", color: "#FF7A00" }}>
-                0
+                {lostCount}
               </Text>
               <Text style={{ fontSize: 12, color: "#FF7A00" }}>등록한 분실물</Text>
             </TouchableOpacity>

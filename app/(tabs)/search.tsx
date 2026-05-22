@@ -12,6 +12,7 @@ const CATEGORIES: Category[] = ["전체", "의류", "전자기기", "지갑/가�
 
 type RegistrationItem = {
   id: number;
+
   itemType: "LOST" | "FOUND";
   title: string;
   category: string;
@@ -42,20 +43,34 @@ function ItemCard({ item, onPress }: { item: RegistrationItem; onPress?: () => v
     <TouchableOpacity
       activeOpacity={0.9}
       onPress={onPress}
-      style={{ backgroundColor: "#fff", borderRadius: 20, flexDirection: "row", alignItems: "center", paddingHorizontal: 12, paddingVertical: 12, shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 6, elevation: 2 }}
+      style={{
+        backgroundColor: "#fff",
+        borderRadius: 20,
+        flexDirection: "row",
+        alignItems: "center",
+        paddingHorizontal: 12,
+        paddingVertical: 12,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.06,
+        shadowRadius: 6,
+        elevation: 2,
+      }}
     >
-      <Image
-        source={item.imageUrl ? { uri: item.imageUrl } : require("../../assets/cap.jpg")}
-        style={{ width: 100, height: 100, borderRadius: 14, flexShrink: 0 }}
-        resizeMode="cover"
-      />
+      <Image source={item.imageUrl ? { uri: item.imageUrl } : require("../../assets/cap.jpg")} style={{ width: 100, height: 100, borderRadius: 14, flexShrink: 0 }} resizeMode="cover" />
       <View style={{ flex: 1, paddingLeft: 12, gap: 3 }}>
         <View style={{ alignSelf: "flex-start", backgroundColor: typeColor + "1A", borderRadius: 6, paddingHorizontal: 7, paddingVertical: 2 }}>
           <Text style={{ fontSize: 10, fontWeight: "700", color: typeColor }}>{typeLabel}</Text>
         </View>
-        <Text style={{ fontSize: 15, fontWeight: "700", color: "#000", letterSpacing: -0.32 }} numberOfLines={1}>{item.title}</Text>
-        <Text style={{ fontSize: 12, color: "#434343", lineHeight: 17, letterSpacing: -0.2 }} numberOfLines={2}>{item.description}</Text>
-        <Text style={{ fontSize: 11, color: "#919191", letterSpacing: -0.2 }} numberOfLines={1}>{item.location} · {date}</Text>
+        <Text style={{ fontSize: 15, fontWeight: "700", color: "#000", letterSpacing: -0.32 }} numberOfLines={1}>
+          {item.title}
+        </Text>
+        <Text style={{ fontSize: 12, color: "#434343", lineHeight: 17, letterSpacing: -0.2 }} numberOfLines={2}>
+          {item.description}
+        </Text>
+        <Text style={{ fontSize: 11, color: "#919191", letterSpacing: -0.2 }} numberOfLines={1}>
+          {item.location} · {date}
+        </Text>
       </View>
     </TouchableOpacity>
   );
@@ -77,18 +92,21 @@ export default function SearchScreen() {
   const isLostMode = typeFilter === "분실물";
   const activeColor = isLostMode ? "#FF7A00" : "#1E3A5F";
 
-  const fetchResults = useCallback(async (keyword: string) => {
-    if (!token || !keyword.trim()) return;
-    setLoading(true);
-    try {
-      const data = await api.get<RegistrationItem[]>(`/api/registration/search?keyword=${encodeURIComponent(keyword)}`, token);
-      setResults(data);
-    } catch {
-      setResults([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [token]);
+  const fetchResults = useCallback(
+    async (keyword: string) => {
+      if (!token || !keyword.trim()) return;
+      setLoading(true);
+      try {
+        const data = await api.get<RegistrationItem[]>(`/api/registration/search?keyword=${encodeURIComponent(keyword)}`, token);
+        setResults(data);
+      } catch {
+        setResults([]);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [token],
+  );
 
   const handleSubmit = () => {
     const trimmed = query.trim();
@@ -120,7 +138,22 @@ export default function SearchScreen() {
     <View style={{ flex: 1, backgroundColor: "#F5F7FA" }}>
       {/* 검색 바 */}
       <View style={{ paddingTop: 64, paddingHorizontal: 20, paddingBottom: 12, backgroundColor: "#F5F7FA" }}>
-        <View style={{ flexDirection: "row", alignItems: "center", backgroundColor: "#fff", borderRadius: 14, paddingHorizontal: 14, height: 46, gap: 8, shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.07, shadowRadius: 6, elevation: 2 }}>
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            backgroundColor: "#fff",
+            borderRadius: 14,
+            paddingHorizontal: 14,
+            height: 46,
+            gap: 8,
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.07,
+            shadowRadius: 6,
+            elevation: 2,
+          }}
+        >
           <SearchIcon />
           <TextInput
             value={query}
@@ -179,7 +212,14 @@ export default function SearchScreen() {
                 <TouchableOpacity
                   key={t}
                   onPress={() => setTypeFilter(t)}
-                  style={{ flex: 1, height: 32, borderRadius: 8, alignItems: "center", justifyContent: "center", backgroundColor: typeFilter === t ? (t === "습득물" ? "#5F92D5" : "#FFB26B") : "transparent" }}
+                  style={{
+                    flex: 1,
+                    height: 32,
+                    borderRadius: 8,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    backgroundColor: typeFilter === t ? (t === "습득물" ? "#5F92D5" : "#FFB26B") : "transparent",
+                  }}
                 >
                   <Text style={{ fontSize: 13, fontWeight: "600", color: typeFilter === t ? "#fff" : "#757575" }}>{t}</Text>
                 </TouchableOpacity>
@@ -192,7 +232,20 @@ export default function SearchScreen() {
             {CATEGORIES.map((cat) => {
               const isActive = category === cat;
               return (
-                <TouchableOpacity key={cat} onPress={() => setCategory(cat)} style={{ height: 32, paddingHorizontal: 14, borderRadius: 16, alignItems: "center", justifyContent: "center", backgroundColor: isActive ? activeColor : "#fff", borderWidth: 1, borderColor: isActive ? activeColor : "#E5E7EB" }}>
+                <TouchableOpacity
+                  key={cat}
+                  onPress={() => setCategory(cat)}
+                  style={{
+                    height: 32,
+                    paddingHorizontal: 14,
+                    borderRadius: 16,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    backgroundColor: isActive ? activeColor : "#fff",
+                    borderWidth: 1,
+                    borderColor: isActive ? activeColor : "#E5E7EB",
+                  }}
+                >
                   <Text style={{ fontSize: 13, fontWeight: "600", color: isActive ? "#fff" : "#757575", letterSpacing: -0.2 }}>{cat}</Text>
                 </TouchableOpacity>
               );
@@ -221,12 +274,7 @@ export default function SearchScreen() {
               keyExtractor={(item) => item.id.toString()}
               showsVerticalScrollIndicator={false}
               contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 100, gap: 10 }}
-              renderItem={({ item }) => (
-                <ItemCard
-                  item={item}
-                  onPress={() => router.push(`/detail?id=${item.id}&type=${item.itemType.toLowerCase()}`)}
-                />
-              )}
+              renderItem={({ item }) => <ItemCard item={item} onPress={() => router.push(`/detail?id=${item.id}&type=${item.itemType.toLowerCase()}`)} />}
             />
           )}
         </>
