@@ -1,92 +1,69 @@
-import { useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity, Image } from "react-native";
+import { useState, useEffect, useCallback } from "react";
+import { View, Text, ScrollView, TouchableOpacity, Image, ActivityIndicator, RefreshControl } from "react-native";
 import { useRouter } from "expo-router";
 import { useAuth } from "../../context/AuthContext";
-
-const capImage = require("../../assets/cap.jpg");
+import { api } from "../../utils/api";
 import LogoCircle from "../../assets/logo-text.svg";
 import LogoWordmark from "../../assets/logo-icon.svg";
 import BellIcon from "../../assets/bell-icon.svg";
 
 type FilterType = "습득물" | "분실물";
 
-const MOCK_ITEMS = [
-  {
-    id: 1,
-    type: "found" as const,
-    category: "의류 > 모자",
-    title: "Kodak 검은색 모자",
-    desc: "지하철역 근처에서 검은색 Kodak 모자를 주웠습니다. 모자 앞면에 노란색 로고가 있는 것이 특징입니다",
-    location: "강남역 4번출구",
-    date: "2026.04.22",
-  },
-  {
-    id: 2,
-    type: "lost" as const,
-    category: "의류 > 모자",
-    title: "검은색 코닥 모자",
-    desc: "지하철역 근처에서 검은색 Kodak 모자를 분실했습니다. 모자 앞면에 노란색 로고가 있는 것이 특징입니다",
-    location: "강남역 4번출구",
-    date: "2026.04.22",
-  },
-  {
-    id: 3,
-    type: "found" as const,
-    category: "의류 > 모자",
-    title: "검은색 코닥 모자",
-    desc: "지하철역 근처에서 검은색 Kodak 모자를 주웠습니다. 모자 앞면에 노란색 로고가 있는 것이 특징입니다",
-    location: "강남역 4번출구",
-    date: "2026.04.22",
-  },
-  {
-    id: 4,
-    type: "lost" as const,
-    category: "의류 > 모자",
-    title: "검은색 코닥 모자",
-    desc: "지하철역 근처에서 검은색 Kodak 모자를 분실했습니다. 모자 앞면에 노란색 로고가 있는 것이 특징입니다",
-    location: "강남역 4번출구",
-    date: "2026.04.22",
-  },
-];
-
-type Item = (typeof MOCK_ITEMS)[0];
+type RegistrationItem = {
+  id: number;
+  itemType: "LOST" | "FOUND";
+  title: string;
+  category: string;
+  location: string;
+  occurredDate: string;
+  description: string;
+  imageUrl: string | null;
+  matched: boolean;
+  createdDate: string;
+};
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, token } = useAuth();
   const [filter, setFilter] = useState<FilterType>("습득물");
+  const [items, setItems] = useState<RegistrationItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const fetchItems = useCallback(async () => {
+    if (!token) { setItems([]); return; }
+    const path = filter === "습득물" ? "/api/registration/found" : "/api/registration/lost";
+    try {
+      const data = await api.get<RegistrationItem[]>(path, token);
+      setItems(data);
+    } catch {
+      setItems([]);
+    }
+  }, [filter, token]);
+
+  useEffect(() => {
+    setLoading(true);
+    fetchItems().finally(() => setLoading(false));
+  }, [fetchItems]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchItems();
+    setRefreshing(false);
+  }, [fetchItems]);
 
   return (
     <View style={{ flex: 1, backgroundColor: "#F5F7FA" }}>
-      {/* 헤더: paddingHorizontal 24, logo at left:24, toggle at left:215, bell at ~left:355 */}
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          paddingHorizontal: 24,
-          paddingTop: 76,
-          paddingBottom: 16,
-        }}
-      >
-        {/* 로고: 원형 아이콘 (31×30) + 4px gap + GET IT 텍스트 (93×16) = 128px */}
+      {/* 헤더 */}
+      <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 24, paddingTop: 76, paddingBottom: 16 }}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
           <LogoCircle width={31} height={30} />
           <LogoWordmark width={93} height={16} />
         </View>
 
-        {/* 중간 여백 (flex:1 → 63px) */}
         <View style={{ flex: 1 }} />
 
-        {/* 토글: 128×32, 내부 패딩 2, 각 버튼 61×28 */}
-        <View
-          style={{
-            flexDirection: "row",
-            backgroundColor: "#E5E7EB",
-            borderRadius: 8,
-            padding: 2,
-            gap: 2,
-          }}
-        >
+        <View style={{ flexDirection: "row", backgroundColor: "#E5E7EB", borderRadius: 8, padding: 2, gap: 2 }}>
           {(["습득물", "분실물"] as FilterType[]).map((type) => (
             <TouchableOpacity
               key={type}
@@ -102,20 +79,13 @@ export default function HomeScreen() {
                 justifyContent: "center",
               }}
             >
-              <Text
-                style={{
-                  color: filter === type ? "#fff" : "#000",
-                  fontSize: 12,
-                  fontWeight: "600",
-                }}
-              >
+              <Text style={{ color: filter === type ? "#fff" : "#000", fontSize: 12, fontWeight: "600" }}>
                 {type}
               </Text>
             </TouchableOpacity>
           ))}
         </View>
 
-        {/* 알림 벨: marginLeft 12 */}
         <TouchableOpacity
           style={{ marginLeft: 12 }}
           onPress={() => isLoggedIn ? router.push("/notification") : router.push("/login")}
@@ -124,38 +94,43 @@ export default function HomeScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* 카드 리스트: paddingTop 32 → 첫 카드 y=140px */}
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{
-          paddingHorizontal: 12,
-          paddingTop: 20,
-          paddingBottom: 16,
-          gap: 12,
-        }}
-      >
-        {MOCK_ITEMS.filter((item) =>
-          filter === "습득물" ? item.type === "found" : item.type === "lost"
-        ).map((item, idx) => (
-          <ItemCard
-            key={item.id}
-            item={item}
-            onPress={() =>
-              router.push(
-                `/detail?type=${item.type}${idx <= 1 ? "&matchStatus=complete" : ""}`
-              )
-            }
-          />
-        ))}
-      </ScrollView>
+      {loading ? (
+        <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+          <ActivityIndicator size="large" color="#1E3A5F" />
+        </View>
+      ) : (
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingHorizontal: 12, paddingTop: 20, paddingBottom: 16, gap: 12 }}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        >
+          {items.length === 0 ? (
+            <View style={{ alignItems: "center", marginTop: 60 }}>
+              <Text style={{ fontSize: 14, color: "#919191" }}>등록된 게시물이 없습니다.</Text>
+            </View>
+          ) : (
+            items.map((item) => (
+              <ItemCard
+                key={item.id}
+                item={item}
+                onPress={() => router.push(`/detail?id=${item.id}&type=${item.itemType.toLowerCase()}${item.matched ? "&matchStatus=complete" : ""}`)}
+              />
+            ))
+          )}
+        </ScrollView>
+      )}
     </View>
   );
 }
 
-function ItemCard({ item, onPress }: { item: Item; onPress?: () => void }) {
-  const isLost = item.type === "lost";
+function ItemCard({ item, onPress }: { item: RegistrationItem; onPress?: () => void }) {
+  const isLost = item.itemType === "LOST";
   const typeColor = isLost ? "#FF7A00" : "#5F92D5";
   const typeLabel = isLost ? "분실물" : "습득물";
+
+  const formattedDate = item.occurredDate
+    ? item.occurredDate.replace(/-/g, ".")
+    : item.createdDate?.slice(0, 10).replace(/-/g, ".");
 
   return (
     <TouchableOpacity
@@ -171,37 +146,22 @@ function ItemCard({ item, onPress }: { item: Item; onPress?: () => void }) {
         paddingVertical: 12,
       }}
     >
-      {/* 이미지: 131×131, borderRadius 30 */}
-      <Image source={capImage} style={{ width: 131, height: 131, borderRadius: 30, flexShrink: 0 }} resizeMode="cover" />
-
-      {/* 텍스트 영역: 이미지 우측 12px gap */}
+      <Image
+        source={item.imageUrl ? { uri: item.imageUrl } : require("../../assets/cap.jpg")}
+        style={{ width: 131, height: 131, borderRadius: 30, flexShrink: 0 }}
+        resizeMode="cover"
+      />
       <View style={{ flex: 1, paddingLeft: 12, alignSelf: "stretch", justifyContent: "center", gap: 3 }}>
-        {/* 타입 태그 + 카테고리 */}
         <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-          <View
-            style={{
-              backgroundColor: typeColor + "1A",
-              borderRadius: 6,
-              paddingHorizontal: 7,
-              paddingVertical: 2,
-            }}
-          >
+          <View style={{ backgroundColor: typeColor + "1A", borderRadius: 6, paddingHorizontal: 7, paddingVertical: 2 }}>
             <Text style={{ fontSize: 10, fontWeight: "700", color: typeColor }}>{typeLabel}</Text>
           </View>
           <Text style={{ fontSize: 11, color: "#919191" }} numberOfLines={1}>{item.category}</Text>
         </View>
-        <Text style={{ fontSize: 16, fontWeight: "600", color: "#000" }} numberOfLines={1}>
-          {item.title}
-        </Text>
-        <Text style={{ fontSize: 12, color: "#000", lineHeight: 18 }} numberOfLines={2}>
-          {item.desc}
-        </Text>
-        <Text style={{ fontSize: 12, color: "#919191" }} numberOfLines={1}>
-          {item.location}
-        </Text>
-        <Text style={{ fontSize: 12, color: "#919191" }} numberOfLines={1}>
-          {item.date}
-        </Text>
+        <Text style={{ fontSize: 16, fontWeight: "600", color: "#000" }} numberOfLines={1}>{item.title}</Text>
+        <Text style={{ fontSize: 12, color: "#000", lineHeight: 18 }} numberOfLines={2}>{item.description}</Text>
+        <Text style={{ fontSize: 12, color: "#919191" }} numberOfLines={1}>{item.location}</Text>
+        <Text style={{ fontSize: 12, color: "#919191" }} numberOfLines={1}>{formattedDate}</Text>
       </View>
     </TouchableOpacity>
   );
