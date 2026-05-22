@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Image,
   TextInput,
+  ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
 import MyInfoBackIcon from "../assets/myinfo-back.svg";
@@ -15,82 +16,111 @@ import MyInfoKakaoIcon from "../assets/myinfo-kakao.svg";
 import MyInfoGoogleIcon from "../assets/myinfo-google.svg";
 import MyInfoCheckIcon from "../assets/myinfo-check.svg";
 import MyInfoArrowIcon from "../assets/myinfo-arrow.svg";
+import { useAuth } from "../context/AuthContext";
+import { api } from "../utils/api";
 
-const profileImage = require("../assets/profile-placeholder.png");
+const profilePlaceholder = require("../assets/profile-placeholder.png");
+
+type UserInfo = {
+  id: number;
+  email: string;
+  name: string;
+  profileImageUrl: string | null;
+  provider: "KAKAO" | "NAVER" | "GOOGLE";
+};
 
 export default function MyInfoScreen() {
   const router = useRouter();
-  const [nickname, setNickname] = useState("홍길동");
+  const { token } = useAuth();
+
+  const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
+  const [loading, setLoading] = useState(true);
   const [editingNickname, setEditingNickname] = useState(false);
-  const [draftNickname, setDraftNickname] = useState(nickname);
+  const [draftNickname, setDraftNickname] = useState("");
+  const [saving, setSaving] = useState(false);
   const inputRef = useRef<TextInput>(null);
 
-  const handleSave = () => {
-    setNickname(draftNickname.trim() || nickname);
-    setEditingNickname(false);
-    router.back();
+  useEffect(() => {
+    if (!token) return;
+    api.get<UserInfo>("/api/users/me", token)
+      .then((data) => {
+        setUserInfo(data);
+        setDraftNickname(data.name);
+      })
+      .finally(() => setLoading(false));
+  }, [token]);
+
+  const handleSave = async () => {
+    if (!token || !userInfo) return;
+    const name = draftNickname.trim() || userInfo.name;
+    setSaving(true);
+    try {
+      const updated = await api.patch<UserInfo>("/api/users/me", token, { name });
+      setUserInfo(updated);
+      setDraftNickname(updated.name);
+    } finally {
+      setSaving(false);
+      setEditingNickname(false);
+      router.back();
+    }
   };
+
+  const name = userInfo?.name ?? "";
+  const email = userInfo?.email ?? "";
+  const provider = userInfo?.provider ?? null;
+
+  const accounts = [
+    { key: "KAKAO" as const, label: "카카오", icon: <MyInfoKakaoIcon width={25} height={25} /> },
+    { key: "NAVER" as const, label: "네이버", icon: <MyInfoNaverIcon width={25} height={25} /> },
+    {
+      key: "GOOGLE" as const,
+      label: "Google",
+      icon: (
+        <View style={{ width: 25, height: 25, borderWidth: 1, borderColor: "#D9D9D9", borderRadius: 3, alignItems: "center", justifyContent: "center" }}>
+          <MyInfoGoogleIcon width={15} height={15} />
+        </View>
+      ),
+    },
+  ];
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: "#F5F7FA" }}>
+        <ActivityIndicator size="large" color="#1E3A5F" />
+      </View>
+    );
+  }
 
   return (
     <View style={{ flex: 1, backgroundColor: "#F5F7FA" }}>
-      {/* 헤더: 뒤로가기 | 내 정보 관리 | 저장 */}
-      {/* Figma: 모든 요소 center y=84, 저장버튼 y=71 h=26 */}
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          paddingHorizontal: 24,
-          paddingTop: 60,
-          paddingBottom: 16,
-        }}
-      >
+      {/* 헤더 */}
+      <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 24, paddingTop: 60, paddingBottom: 16 }}>
         <TouchableOpacity onPress={() => router.back()}>
           <MyInfoBackIcon width={11} height={19} />
         </TouchableOpacity>
 
         <View style={{ flex: 1, alignItems: "center" }}>
-          <Text
-            style={{
-              fontSize: 20,
-              fontWeight: "500",
-              color: "#000",
-              letterSpacing: -0.32,
-            }}
-          >
+          <Text style={{ fontSize: 20, fontWeight: "500", color: "#000", letterSpacing: -0.32 }}>
             내 정보 관리
           </Text>
         </View>
 
-        {/* 저장 버튼: w=46, h=26, bg=#1E3A5F, borderRadius=13 */}
         <TouchableOpacity
           activeOpacity={0.85}
           onPress={handleSave}
-          style={{
-            backgroundColor: "#1E3A5F",
-            width: 46,
-            height: 26,
-            borderRadius: 13,
-            alignItems: "center",
-            justifyContent: "center",
-          }}
+          disabled={saving}
+          style={{ backgroundColor: "#1E3A5F", width: 46, height: 26, borderRadius: 13, alignItems: "center", justifyContent: "center" }}
         >
-          <Text style={{ color: "#fff", fontSize: 12, fontWeight: "600" }}>
-            저장
-          </Text>
+          <Text style={{ color: "#fff", fontSize: 12, fontWeight: "600" }}>저장</Text>
         </TouchableOpacity>
       </View>
 
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 40 }}
-      >
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
         {/* 프로필 사진 + 이름 + 이메일 */}
-        {/* Figma: avatar top=120 (header ~96 + gap 24), 120×120 centered */}
         <View style={{ alignItems: "center", marginTop: 16, marginBottom: 24 }}>
-          {/* 아바타 + 카메라 뱃지 (right:0, bottom:0) */}
           <View style={{ marginBottom: 14 }}>
             <Image
-              source={profileImage}
+              source={userInfo?.profileImageUrl ? { uri: userInfo.profileImageUrl } : profilePlaceholder}
               style={{ width: 120, height: 120, borderRadius: 60 }}
             />
             <View style={{ position: "absolute", right: 0, bottom: 0 }}>
@@ -98,42 +128,22 @@ export default function MyInfoScreen() {
             </View>
           </View>
 
-          <Text
-            style={{
-              fontSize: 20,
-              fontWeight: "600",
-              color: "#000",
-              marginBottom: 8,
-            }}
-          >
-            {nickname}
+          <Text style={{ fontSize: 20, fontWeight: "600", color: "#000", marginBottom: 8 }}>
+            {name}
           </Text>
-
-          {/* 이메일: 14px Regular, #757575 */}
-          <Text style={{ fontSize: 14, color: "#757575" }}>
-            baroyeogi@email.com
-          </Text>
+          <Text style={{ fontSize: 14, color: "#757575" }}>{email}</Text>
         </View>
 
         {/* 프로필 섹션 */}
-        {/* Figma: label y=326, row y=341 h=46 w=345 left=24 */}
         <View style={{ paddingHorizontal: 24, marginBottom: 24 }}>
-          <Text
-            style={{
-              fontSize: 14,
-              fontWeight: "600",
-              color: "#757575",
-              letterSpacing: -0.32,
-              marginBottom: 8,
-            }}
-          >
+          <Text style={{ fontSize: 14, fontWeight: "600", color: "#757575", letterSpacing: -0.32, marginBottom: 8 }}>
             프로필
           </Text>
 
           <TouchableOpacity
             activeOpacity={0.8}
             onPress={() => {
-              setDraftNickname(nickname);
+              setDraftNickname(name);
               setEditingNickname(true);
               setTimeout(() => inputRef.current?.focus(), 50);
             }}
@@ -148,15 +158,7 @@ export default function MyInfoScreen() {
               paddingHorizontal: 16,
             }}
           >
-            <Text
-              style={{
-                flex: 1,
-                fontSize: 16,
-                fontWeight: "600",
-                color: "#434343",
-                letterSpacing: -0.32,
-              }}
-            >
+            <Text style={{ flex: 1, fontSize: 16, fontWeight: "600", color: "#434343", letterSpacing: -0.32 }}>
               닉네임
             </Text>
             {editingNickname ? (
@@ -165,28 +167,11 @@ export default function MyInfoScreen() {
                 value={draftNickname}
                 onChangeText={(v) => setDraftNickname(v.slice(0, 6))}
                 maxLength={6}
-                style={{
-                  fontSize: 14,
-                  fontWeight: "600",
-                  color: "#000",
-                  letterSpacing: -0.32,
-                  marginRight: 8,
-                  width: 84,
-                  textAlign: "right",
-                  padding: 0,
-                }}
+                style={{ fontSize: 14, fontWeight: "600", color: "#000", letterSpacing: -0.32, marginRight: 8, width: 84, textAlign: "right", padding: 0 }}
               />
             ) : (
-              <Text
-                style={{
-                  fontSize: 14,
-                  fontWeight: "600",
-                  color: "#757575",
-                  letterSpacing: -0.32,
-                  marginRight: 8,
-                }}
-              >
-                {nickname}
+              <Text style={{ fontSize: 14, fontWeight: "600", color: "#757575", letterSpacing: -0.32, marginRight: 8 }}>
+                {name}
               </Text>
             )}
             <MyInfoArrowIcon width={6} height={10} />
@@ -194,158 +179,56 @@ export default function MyInfoScreen() {
         </View>
 
         {/* 연결된 계정 섹션 */}
-        {/* Figma: label y=418, rows y=434/490/546, each h=57 w=345 */}
         <View style={{ paddingHorizontal: 24 }}>
-          <Text
-            style={{
-              fontSize: 14,
-              fontWeight: "600",
-              color: "#757575",
-              letterSpacing: -0.32,
-              marginBottom: 8,
-            }}
-          >
+          <Text style={{ fontSize: 14, fontWeight: "600", color: "#757575", letterSpacing: -0.32, marginBottom: 8 }}>
             연결된 계정
           </Text>
 
-          {/* 카카오: 첫 행 rounded top 15, 주 계정 + 체크 */}
-          <View
-            style={{
-              backgroundColor: "#fff",
-              borderWidth: 1,
-              borderColor: "#D9D9D9",
-              borderTopLeftRadius: 15,
-              borderTopRightRadius: 15,
-              height: 57,
-              flexDirection: "row",
-              alignItems: "center",
-              paddingHorizontal: 16,
-            }}
-          >
-            <MyInfoKakaoIcon width={25} height={25} />
-            <Text
-              style={{
-                fontSize: 16,
-                fontWeight: "600",
-                color: "#434343",
-                marginLeft: 12,
-                letterSpacing: -0.32,
-              }}
-            >
-              카카오
-            </Text>
-            {/* 주 계정 뱃지: bg=#F4F7FF, text #1E3A5F 10px, w=38 h=16 */}
-            <View
-              style={{
-                marginLeft: 8,
-                backgroundColor: "#F4F7FF",
-                borderRadius: 8,
-                width: 38,
-                height: 16,
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Text
-                style={{ fontSize: 10, fontWeight: "600", color: "#1E3A5F" }}
-              >
-                주 계정
-              </Text>
-            </View>
-            <View style={{ flex: 1 }} />
-            <MyInfoCheckIcon width={15} height={11} />
-          </View>
-
-          {/* 네이버: 중간 행, top border 없음 */}
-          <View
-            style={{
-              backgroundColor: "#fff",
-              borderWidth: 1,
-              borderColor: "#D9D9D9",
-              borderTopWidth: 0,
-              height: 57,
-              flexDirection: "row",
-              alignItems: "center",
-              paddingHorizontal: 16,
-            }}
-          >
-            <MyInfoNaverIcon width={25} height={25} />
-            <View style={{ marginLeft: 12 }}>
-              <Text
+          {accounts.map((account, idx) => {
+            const isMain = account.key === provider;
+            const isFirst = idx === 0;
+            const isLast = idx === accounts.length - 1;
+            return (
+              <View
+                key={account.key}
                 style={{
-                  fontSize: 16,
-                  fontWeight: "600",
-                  color: "#434343",
-                  letterSpacing: -0.32,
+                  backgroundColor: "#fff",
+                  borderWidth: 1,
+                  borderColor: "#D9D9D9",
+                  borderTopWidth: isFirst ? 1 : 0,
+                  borderTopLeftRadius: isFirst ? 15 : 0,
+                  borderTopRightRadius: isFirst ? 15 : 0,
+                  borderBottomLeftRadius: isLast ? 15 : 0,
+                  borderBottomRightRadius: isLast ? 15 : 0,
+                  height: 57,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  paddingHorizontal: 16,
                 }}
               >
-                네이버
-              </Text>
-              <Text style={{ fontSize: 10, color: "#757575" }}>
-                연결되지 않음
-              </Text>
-            </View>
-          </View>
-
-          {/* Google: 마지막 행, rounded bottom 15, top border 없음 */}
-          <View
-            style={{
-              backgroundColor: "#fff",
-              borderWidth: 1,
-              borderColor: "#D9D9D9",
-              borderTopWidth: 0,
-              borderBottomLeftRadius: 15,
-              borderBottomRightRadius: 15,
-              height: 57,
-              flexDirection: "row",
-              alignItems: "center",
-              paddingHorizontal: 16,
-            }}
-          >
-            {/* Google 아이콘: 흰색 보더 박스(25×25, borderRadius 3) 안에 G icon */}
-            <View
-              style={{
-                width: 25,
-                height: 25,
-                borderWidth: 1,
-                borderColor: "#D9D9D9",
-                borderRadius: 3,
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <MyInfoGoogleIcon width={15} height={15} />
-            </View>
-            <View style={{ marginLeft: 12 }}>
-              <Text
-                style={{
-                  fontSize: 16,
-                  fontWeight: "600",
-                  color: "#434343",
-                  letterSpacing: -0.32,
-                }}
-              >
-                Google
-              </Text>
-              <Text style={{ fontSize: 10, color: "#757575" }}>
-                연결되지 않음
-              </Text>
-            </View>
-          </View>
+                {account.icon}
+                <Text style={{ fontSize: 16, fontWeight: "600", color: "#434343", marginLeft: 12, letterSpacing: -0.32 }}>
+                  {account.label}
+                </Text>
+                {isMain && (
+                  <View style={{ marginLeft: 8, backgroundColor: "#F4F7FF", borderRadius: 8, width: 38, height: 16, alignItems: "center", justifyContent: "center" }}>
+                    <Text style={{ fontSize: 10, fontWeight: "600", color: "#1E3A5F" }}>주 계정</Text>
+                  </View>
+                )}
+                <View style={{ flex: 1 }} />
+                {isMain
+                  ? <MyInfoCheckIcon width={15} height={11} />
+                  : <Text style={{ fontSize: 10, color: "#757575" }}>연결되지 않음</Text>
+                }
+              </View>
+            );
+          })}
         </View>
 
-        {/* 회원탈퇴: 우측 정렬, Figma: right:24, y=622 */}
-        <View
-          style={{
-            alignItems: "flex-end",
-            paddingHorizontal: 24,
-            marginTop: 20,
-          }}
-        >
+        {/* 회원탈퇴 */}
+        <View style={{ alignItems: "flex-end", paddingHorizontal: 24, marginTop: 20 }}>
           <TouchableOpacity>
-            <Text style={{ fontSize: 12, fontWeight: "600", color: "#EF4444" }}>
-              회원탈퇴
-            </Text>
+            <Text style={{ fontSize: 12, fontWeight: "600", color: "#EF4444" }}>회원탈퇴</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
