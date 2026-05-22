@@ -200,11 +200,10 @@ export default function DetailScreen() {
               </View>
 
               <TouchableOpacity
-                activeOpacity={isLost ? 0.8 : 1}
-                disabled={!isLost}
-                onPress={() => isLost && router.push(`/top5?id=${item.id}`)}
+                activeOpacity={0.8}
+                onPress={() => router.push(`/top5?id=${item.id}`)}
                 style={{
-                  backgroundColor: isLost ? "#FF7A00" : "#D9D9D9",
+                  backgroundColor: isLost ? "#FF7A00" : "#1E3A5F",
                   borderRadius: 8,
                   paddingHorizontal: 12,
                   paddingVertical: 8,
