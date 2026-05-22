@@ -172,7 +172,7 @@ export default function DetailScreen() {
               <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
                 <View style={{ width: 7, height: 7, borderRadius: 3.5, backgroundColor: isLost ? "#FF7A00" : "#1E3A5F" }} />
                 <Text style={{ fontSize: 11, fontWeight: "600", color: isLost ? "#FF7A00" : "#1E3A5F", letterSpacing: -0.32 }}>
-                  {item.matched ? "매칭 완료" : "분석 중"}
+                  {item.matched ? "매칭 완료" : isLost ? "결과 확인 가능" : "분석 중"}
                 </Text>
               </View>
             </View>
@@ -200,11 +200,11 @@ export default function DetailScreen() {
               </View>
 
               <TouchableOpacity
-                activeOpacity={item.matched ? 0.8 : 1}
-                disabled={!item.matched}
-                onPress={() => item.matched && router.push(`/top5?id=${item.id}&type=lost`)}
+                activeOpacity={isLost ? 0.8 : 1}
+                disabled={!isLost}
+                onPress={() => isLost && router.push(`/top5?id=${item.id}`)}
                 style={{
-                  backgroundColor: item.matched ? (isLost ? "#FF7A00" : "#1E3A5F") : "#D9D9D9",
+                  backgroundColor: isLost ? "#FF7A00" : "#D9D9D9",
                   borderRadius: 8,
                   paddingHorizontal: 12,
                   paddingVertical: 8,
