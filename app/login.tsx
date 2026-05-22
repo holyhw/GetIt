@@ -9,21 +9,20 @@ import BackArrow from "../assets/back-arrow.svg";
 import { useAuth } from "../context/AuthContext";
 
 const GOOGLE_OAUTH_URL = "https://api.getitsju.com/api/auth/oauth2/google";
+const KAKAO_OAUTH_URL = "https://api.getitsju.com/api/auth/oauth2/kakao";
+const NAVER_OAUTH_URL = "https://api.getitsju.com/api/auth/oauth2/naver";
 
 export default function Login() {
   const router = useRouter();
   const { login } = useAuth();
 
-  const handleGoogleLogin = async () => {
+  const handleOAuthLogin = async (url: string) => {
     if (Platform.OS === "web") {
-      window.location.href = GOOGLE_OAUTH_URL;
+      window.location.href = url;
       return;
     }
 
-    const result = await WebBrowser.openAuthSessionAsync(
-      GOOGLE_OAUTH_URL,
-      "getit://oauth/redirect"
-    );
+    const result = await WebBrowser.openAuthSessionAsync(url, "getit://oauth/redirect");
 
     if (result.type === "success" && result.url) {
       const query = result.url.split("?")[1] ?? "";
@@ -35,6 +34,8 @@ export default function Login() {
       }
     }
   };
+
+  const handleGoogleLogin = () => handleOAuthLogin(GOOGLE_OAUTH_URL);
 
   return (
     <View style={{ flex: 1, backgroundColor: "#F5F7FA" }}>
@@ -64,6 +65,7 @@ export default function Login() {
 
         {/* 카카오 */}
         <TouchableOpacity
+          onPress={() => handleOAuthLogin(KAKAO_OAUTH_URL)}
           activeOpacity={0.85}
           style={{
             backgroundColor: "#FEE500",
@@ -81,6 +83,7 @@ export default function Login() {
 
         {/* 네이버 */}
         <TouchableOpacity
+          onPress={() => handleOAuthLogin(NAVER_OAUTH_URL)}
           activeOpacity={0.85}
           style={{
             backgroundColor: "#03C75A",
