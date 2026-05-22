@@ -31,10 +31,9 @@ export default function HomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchItems = useCallback(async () => {
-    if (!token) { setItems([]); return; }
     const path = filter === "습득물" ? "/api/registration/found" : "/api/registration/lost";
     try {
-      const data = await api.get<RegistrationItem[]>(path, token);
+      const data = await api.get<RegistrationItem[]>(path, token ?? "");
       setItems(data);
     } catch {
       setItems([]);
