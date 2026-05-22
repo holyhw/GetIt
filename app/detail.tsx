@@ -56,8 +56,8 @@ export default function DetailScreen() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!id || !token) return;
-    api.get<RegistrationDetail>(`/api/registration/${id}`, token)
+    if (!id) return;
+    api.get<RegistrationDetail>(`/api/registration/${id}`, token ?? "")
       .then(setItem)
       .finally(() => setLoading(false));
   }, [id, token]);
@@ -202,7 +202,7 @@ export default function DetailScreen() {
               <TouchableOpacity
                 activeOpacity={item.matched ? 0.8 : 1}
                 disabled={!item.matched}
-                onPress={() => item.matched && router.push(`/top5?id=${item.id}`)}
+                onPress={() => item.matched && router.push(`/top5?id=${item.id}&type=lost`)}
                 style={{
                   backgroundColor: item.matched ? (isLost ? "#FF7A00" : "#1E3A5F") : "#D9D9D9",
                   borderRadius: 8,
