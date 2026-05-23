@@ -234,12 +234,14 @@ export default function DetailScreen() {
           <View style={{ marginTop: 16 }}>
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
               <Text style={{ fontSize: 12, fontWeight: "700", color: "#000" }}>AI 매칭</Text>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
-                <View style={{ width: 7, height: 7, borderRadius: 3.5, backgroundColor: isLost ? "#FF7A00" : "#1E3A5F" }} />
-                <Text style={{ fontSize: 11, fontWeight: "600", color: isLost ? "#FF7A00" : "#1E3A5F", letterSpacing: -0.32 }}>
-                  {item.matched ? "매칭 완료" : isLost ? "결과 확인 가능" : "분석 중"}
-                </Text>
-              </View>
+              {item.matched && (
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+                  <View style={{ width: 7, height: 7, borderRadius: 3.5, backgroundColor: isLost ? "#FF7A00" : "#1E3A5F" }} />
+                  <Text style={{ fontSize: 11, fontWeight: "600", color: isLost ? "#FF7A00" : "#1E3A5F", letterSpacing: -0.32 }}>
+                    매칭 완료
+                  </Text>
+                </View>
+              )}
             </View>
 
             <View style={{
@@ -257,10 +259,10 @@ export default function DetailScreen() {
             }}>
               <View style={{ flex: 1, marginRight: 12 }}>
                 <Text style={{ fontSize: 13, fontWeight: "700", color: "#000", marginBottom: 4, letterSpacing: -0.32 }}>
-                  {item.matched ? "유사도 Top5 결과가 준비됐어요!" : isLost ? "등록된 습득물과 유사도 분석 중..." : "등록된 분실물과 유사도 분석 중..."}
+                  {item.matched ? "유사도 Top5 결과가 준비됐어요!" : "유사도 Top5를 확인해보세요!"}
                 </Text>
                 <Text style={{ fontSize: 11, color: "#757575", lineHeight: 15, letterSpacing: -0.32 }}>
-                  {item.matched ? "AI가 선정한 가장 유사한 5개 습득물을\n확인해 보세요." : "잠시 후 AI 매칭 결과를 확인할 수\n있어요."}
+                  {"AI가 분석한 가장 유사한 5개 결과를\n확인해보세요."}
                 </Text>
               </View>
 
@@ -277,7 +279,7 @@ export default function DetailScreen() {
                   gap: 5,
                 }}
               >
-                <Top5DetailIcon width={11} height={13} style={{ opacity: item.matched ? 1 : 0.5 }} />
+                <Top5DetailIcon width={11} height={13} />
                 <Text style={{ fontSize: 12, fontWeight: "600", color: "#fff", letterSpacing: -0.32 }}>결과 보기</Text>
               </TouchableOpacity>
             </View>
