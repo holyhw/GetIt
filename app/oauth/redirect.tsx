@@ -15,14 +15,7 @@ export default function OAuthRedirect() {
 
     if (!token) return;
 
-    if (Platform.OS === "web") {
-      // 네이티브 openAuthSessionAsync 인터셉트용 딥링크
-      window.location.href = `getit://oauth/redirect?accessToken=${token}`;
-      // 웹 브라우저 fallback
-      login(token).then(() => router.replace("/(tabs)"));
-    } else {
-      login(token).then(() => router.replace("/(tabs)"));
-    }
+    login(token).then(() => router.replace("/(tabs)"));
   }, [params.accessToken]);
 
   return (
