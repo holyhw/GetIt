@@ -1,6 +1,7 @@
 import { Text, TouchableOpacity, View, Platform } from "react-native";
 import { useRouter } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
+import { Linking } from "react-native";
 import GetItLogo from "../assets/getit-logo.svg";
 import KakaoIcon from "../assets/kakao-icon.svg";
 import NaverIcon from "../assets/naver-icon.svg";
@@ -22,6 +23,12 @@ export default function Login() {
       return;
     }
 
+    if (Platform.OS === "android") {
+      Linking.openURL(url + "?redirect=app");
+      return;
+    }
+
+    // iOS
     const result = await WebBrowser.openAuthSessionAsync(url + "?redirect=app", "getit://oauth/redirect");
 
     if (result.type === "success" && result.url) {

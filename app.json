@@ -24,7 +24,14 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "package": "com.getitsju.app",
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "data": [{ "scheme": "getit" }],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png",

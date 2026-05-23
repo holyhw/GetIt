@@ -288,26 +288,20 @@ export default function RegisterScreen() {
                     <ArrowRight width={5} height={9} />
                   </TouchableOpacity>
 
-                  <Modal transparent visible={showPicker} animationType="slide">
-                    <TouchableOpacity style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.3)" }} onPress={() => setShowPicker(false)} />
-                    <View style={{ backgroundColor: "#fff", paddingBottom: 20 }}>
-                      <View style={{ flexDirection: "row", justifyContent: "flex-end", paddingHorizontal: 16, paddingTop: 12 }}>
-                        <TouchableOpacity onPress={() => setShowPicker(false)}>
-                          <Text style={{ fontSize: 16, color: themeColor, fontWeight: "600" }}>완료</Text>
-                        </TouchableOpacity>
-                      </View>
-                      {DateTimePicker && (
-                        <DateTimePicker
-                          value={date ?? new Date()}
-                          mode="date"
-                          display="spinner"
-                          maximumDate={new Date()}
-                          onChange={(_: any, selected?: Date) => { if (selected) setDate(selected); }}
-                          locale="ko-KR"
-                        />
-                      )}
-                    </View>
-                  </Modal>
+                  {Platform.OS === "android" && (
+                    DateTimePicker && showPicker && (
+                      <DateTimePicker
+                        value={date ?? new Date()}
+                        mode="date"
+                        display="default"
+                        maximumDate={new Date()}
+                        onChange={(_: any, selected?: Date) => {
+                          setShowPicker(false);
+                          if (selected) setDate(selected);
+                        }}
+                      />
+                    )
+                  )}
                 </>
               )}
             </View>
@@ -339,6 +333,35 @@ export default function RegisterScreen() {
             }
           </TouchableOpacity>
         </View>
+
+        {/* iOS 날짜 피커 바텀시트 */}
+        {Platform.OS === "ios" && showPicker && DateTimePicker && (
+          <>
+            <TouchableOpacity
+              style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.3)" }}
+              onPress={() => setShowPicker(false)}
+            />
+            <View style={{ position: "absolute", bottom: 0, left: 0, right: 0, backgroundColor: "#fff", borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingBottom: 34 }}>
+              <View style={{ width: 40, height: 4, backgroundColor: "#D9D9D9", borderRadius: 2, alignSelf: "center", marginTop: 12 }} />
+              <View style={{ flexDirection: "row", justifyContent: "flex-end", paddingHorizontal: 20, paddingTop: 8, paddingBottom: 4 }}>
+                <TouchableOpacity onPress={() => setShowPicker(false)}>
+                  <Text style={{ fontSize: 16, color: themeColor, fontWeight: "600" }}>완료</Text>
+                </TouchableOpacity>
+              </View>
+              <View style={{ alignItems: "center", width: "100%" }}>
+                <DateTimePicker
+                  value={date ?? new Date()}
+                  mode="date"
+                  display="spinner"
+                  maximumDate={new Date()}
+                  style={{ height: 216 }}
+                  locale="ko"
+                  onChange={(_: any, selected?: Date) => { if (selected) setDate(selected); }}
+                />
+              </View>
+            </View>
+          </>
+        )}
       </View>
     </KeyboardAvoidingView>
   );
