@@ -1,4 +1,4 @@
-import { Text, TouchableOpacity, View, Platform, Alert } from "react-native";
+import { Text, TouchableOpacity, View, Platform } from "react-native";
 import { useRouter } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import GetItLogo from "../assets/getit-logo.svg";
@@ -22,7 +22,7 @@ export default function Login() {
       return;
     }
 
-    const result = await WebBrowser.openAuthSessionAsync(url, "getit://oauth/redirect");
+    const result = await WebBrowser.openAuthSessionAsync(url + "?redirect=app", "getit://oauth/redirect");
 
     if (result.type === "success" && result.url) {
       const query = result.url.split("?")[1] ?? "";
