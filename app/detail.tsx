@@ -16,6 +16,7 @@ const mapImage = require("../assets/map-placeholder.jpg");
 
 type RegistrationDetail = {
   id: number;
+  userId: number;
   itemType: "LOST" | "FOUND";
   title: string;
   category: string;
@@ -50,7 +51,7 @@ function DarkBtn({ children }: { children: React.ReactNode }) {
 export default function DetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { token } = useAuth();
+  const { token, userInfo } = useAuth();
 
   const [item, setItem] = useState<RegistrationDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -81,6 +82,7 @@ export default function DetailScreen() {
   }
 
   const isLost = item.itemType === "LOST";
+  const isOwner = userInfo?.id === item.userId;
 
   const handleMatchComplete = async () => {
     if (!token) return;
@@ -94,6 +96,25 @@ export default function DetailScreen() {
     } finally {
       setActionLoading(false);
     }
+  };
+
+  const handleReport = () => {
+    setShowMore(false);
+    Alert.alert("신고하기", "이 게시물을 신고하시겠습니까?", [
+      { text: "취소", style: "cancel" },
+      {
+        text: "신고", style: "destructive",
+        onPress: async () => {
+          if (!token) return;
+          try {
+            await api.post(`/api/registration/${item.id}/report`, token, {});
+            Alert.alert("신고 완료", "신고가 접수되었습니다.");
+          } catch {
+            Alert.alert("오류", "신고 처리 중 문제가 발생했습니다.");
+          }
+        },
+      },
+    ]);
   };
 
   const handleDelete = () => {
@@ -139,19 +160,35 @@ export default function DetailScreen() {
         <TouchableOpacity style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.4)" }} onPress={() => setShowMore(false)} />
         <View style={{ backgroundColor: "#fff", borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingBottom: 32 }}>
           <View style={{ width: 40, height: 4, backgroundColor: "#D9D9D9", borderRadius: 2, alignSelf: "center", marginTop: 12, marginBottom: 8 }} />
-          {!item.matched && (
-            <TouchableOpacity
-              onPress={handleMatchComplete}
-              style={{ paddingVertical: 18, paddingHorizontal: 24, borderBottomWidth: 1, borderBottomColor: "#F0F0F0" }}
-            >
-              <Text style={{ fontSize: 16, color: "#1E3A5F", fontWeight: "600" }}>매칭 완료</Text>
-              <Text style={{ fontSize: 12, color: "#919191", marginTop: 2 }}>물건을 찾았어요</Text>
+          {isOwner ? (
+            <>
+              {!item.matched && (
+                <TouchableOpacity
+                  onPress={handleMatchComplete}
+                  style={{ paddingVertical: 18, paddingHorizontal: 24, borderBottomWidth: 1, borderBottomColor: "#F0F0F0" }}
+                >
+                  <Text style={{ fontSize: 16, color: "#1E3A5F", fontWeight: "600" }}>매칭 완료</Text>
+                  <Text style={{ fontSize: 12, color: "#919191", marginTop: 2 }}>물건을 찾았어요</Text>
+                </TouchableOpacity>
+              )}
+              <TouchableOpacity
+                onPress={() => { setShowMore(false); router.push(`/edit?id=${item.id}`); }}
+                style={{ paddingVertical: 18, paddingHorizontal: 24, borderBottomWidth: 1, borderBottomColor: "#F0F0F0" }}
+              >
+                <Text style={{ fontSize: 16, color: "#434343", fontWeight: "600" }}>수정하기</Text>
+                <Text style={{ fontSize: 12, color: "#919191", marginTop: 2 }}>게시물 내용을 수정합니다</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={handleDelete} style={{ paddingVertical: 18, paddingHorizontal: 24 }}>
+                <Text style={{ fontSize: 16, color: "#EF4444", fontWeight: "600" }}>게시물 삭제</Text>
+                <Text style={{ fontSize: 12, color: "#919191", marginTop: 2 }}>이 게시물을 삭제합니다</Text>
+              </TouchableOpacity>
+            </>
+          ) : (
+            <TouchableOpacity onPress={handleReport} style={{ paddingVertical: 18, paddingHorizontal: 24 }}>
+              <Text style={{ fontSize: 16, color: "#EF4444", fontWeight: "600" }}>신고하기</Text>
+              <Text style={{ fontSize: 12, color: "#919191", marginTop: 2 }}>부적절한 게시물을 신고합니다</Text>
             </TouchableOpacity>
           )}
-          <TouchableOpacity onPress={handleDelete} style={{ paddingVertical: 18, paddingHorizontal: 24 }}>
-            <Text style={{ fontSize: 16, color: "#EF4444", fontWeight: "600" }}>게시물 삭제</Text>
-            <Text style={{ fontSize: 12, color: "#919191", marginTop: 2 }}>이 게시물을 삭제합니다</Text>
-          </TouchableOpacity>
         </View>
       </Modal>
 

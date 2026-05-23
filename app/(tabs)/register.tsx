@@ -1,17 +1,5 @@
 import { useState } from "react";
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  TextInput,
-  Image,
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  ActivityIndicator,
-  Modal,
-} from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, TextInput, Image, Alert, KeyboardAvoidingView, Platform, ActivityIndicator, Modal } from "react-native";
 import { useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import BackIcon from "../../assets/myinfo-back.svg";
@@ -29,10 +17,7 @@ const API_BASE_URL = "https://api.getitsju.com";
 const CATEGORIES = ["지갑", "의류", "가방", "전자기기", "기타"];
 
 // 네이티브 전용 DateTimePicker
-const DateTimePicker =
-  Platform.OS !== "web"
-    ? require("@react-native-community/datetimepicker").default
-    : null;
+const DateTimePicker = Platform.OS !== "web" ? require("@react-native-community/datetimepicker").default : null;
 
 type InputRowProps = {
   label: string;
@@ -54,11 +39,19 @@ function InputRow({ label, required, optional, value, onChangeText, placeholder,
         {required && <RequiredDot width={5} height={5} style={{ marginLeft: 2 }} />}
         {optional && <Text style={{ fontSize: 10, fontWeight: "700", color: "#919191", marginLeft: 4 }}>{" (선택)"}</Text>}
       </View>
-      <View style={{
-        flex: 1, height, backgroundColor: "#E5E7EB", borderWidth: 1,
-        borderColor: "#D9D9D9", borderRadius: 10, flexDirection: "row",
-        alignItems: "center", paddingHorizontal: 12,
-      }}>
+      <View
+        style={{
+          flex: 1,
+          height,
+          backgroundColor: "#E5E7EB",
+          borderWidth: 1,
+          borderColor: "#D9D9D9",
+          borderRadius: 10,
+          flexDirection: "row",
+          alignItems: "center",
+          paddingHorizontal: 12,
+        }}
+      >
         {leftIcon && <View style={{ marginRight: 6 }}>{leftIcon}</View>}
         <TextInput
           value={value}
@@ -67,7 +60,10 @@ function InputRow({ label, required, optional, value, onChangeText, placeholder,
           placeholderTextColor="#919191"
           multiline={multiline}
           style={{
-            flex: 1, fontSize: 12, color: "#000", padding: 0,
+            flex: 1,
+            fontSize: 12,
+            color: "#000",
+            padding: 0,
             textAlignVertical: multiline ? "top" : "center",
             height: multiline ? height - 16 : undefined,
           }}
@@ -98,23 +94,49 @@ export default function RegisterScreen() {
 
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== "granted") { Alert.alert("권한 필요", "사진 접근 권한이 필요합니다."); return; }
+    if (status !== "granted") {
+      Alert.alert("권한 필요", "사진 접근 권한이 필요합니다.");
+      return;
+    }
     const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, quality: 0.8 });
     if (!result.canceled && result.assets[0]) setPhoto(result.assets[0].uri);
   };
 
   const handleSubmit = async () => {
-    if (!token) { Alert.alert("로그인이 필요합니다."); return; }
-    if (!title.trim()) { Alert.alert("제목을 입력해주세요."); return; }
-    if (!category) { Alert.alert("카테고리를 선택해주세요."); return; }
-    if (!location.trim()) { Alert.alert("위치를 입력해주세요."); return; }
-    if (isFound && !photo) { Alert.alert("사진을 등록해주세요."); return; }
-    if (!isFound && !description.trim()) { Alert.alert("상세 설명을 입력해주세요."); return; }
+    if (!token) {
+      Alert.alert("로그인이 필요합니다.");
+      return;
+    }
+    if (!title.trim()) {
+      Alert.alert("제목을 입력해주세요.");
+      return;
+    }
+    if (!category) {
+      Alert.alert("카테고리를 선택해주세요.");
+      return;
+    }
+    if (!location.trim()) {
+      Alert.alert("위치를 입력해주세요.");
+      return;
+    }
+    if (isFound && !photo) {
+      Alert.alert("사진을 등록해주세요.");
+      return;
+    }
+    if (!isFound && !description.trim()) {
+      Alert.alert("상세 설명을 입력해주세요.");
+      return;
+    }
 
     const params = new URLSearchParams({ title: title.trim() });
     if (category) params.append("category", category);
     if (location.trim()) params.append("location", location.trim());
-    if (date) params.append("occurredDate", date.toISOString().split("T")[0]);
+    if (date) {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, "0");
+      const d = String(date.getDate()).padStart(2, "0");
+      params.append("occurredDate", `${y}-${m}-${d}`);
+    }
     if (isFound && description.trim()) params.append("description", description.trim());
     if (!isFound && description.trim()) params.append("text", description.trim());
 
@@ -157,7 +179,6 @@ export default function RegisterScreen() {
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "height"}>
       <View style={{ flex: 1, backgroundColor: "#F5F7FA" }}>
-
         {/* 헤더 */}
         <View style={{ backgroundColor: "#F5F7FA" }}>
           <View style={{ height: 60 }} />
@@ -172,23 +193,37 @@ export default function RegisterScreen() {
           </View>
         </View>
 
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 8, paddingBottom: 100 }}
-          keyboardShouldPersistTaps="handled"
-        >
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 8, paddingBottom: 100 }} keyboardShouldPersistTaps="handled">
           {/* 토글 */}
           <View style={{ height: 34, flexDirection: "row", backgroundColor: "#F7F7F7", borderWidth: 1, borderColor: "#D9D9D9", borderRadius: 10, padding: 2, marginBottom: 16 }}>
-            <TouchableOpacity onPress={() => setType("found")} style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: isFound ? "#1E3A5F" : "transparent", borderRadius: 8 }}>
+            <TouchableOpacity
+              onPress={() => setType("found")}
+              style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: isFound ? "#1E3A5F" : "transparent", borderRadius: 8 }}
+            >
               <Text style={{ fontSize: 12, fontWeight: "700", color: isFound ? "#fff" : "#919191" }}>습득물 등록</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => setType("lost")} style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: !isFound ? "#FF7A00" : "transparent", borderRadius: 8 }}>
+            <TouchableOpacity
+              onPress={() => setType("lost")}
+              style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: !isFound ? "#FF7A00" : "transparent", borderRadius: 8 }}
+            >
               <Text style={{ fontSize: 12, fontWeight: "700", color: !isFound ? "#fff" : "#919191" }}>분실물 등록</Text>
             </TouchableOpacity>
           </View>
 
           {/* 사진 등록 */}
-          <View style={{ backgroundColor: "#fff", borderRadius: 10, padding: 12, marginBottom: 10, shadowColor: "#000", shadowOffset: { width: -2, height: 2 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2 }}>
+          <View
+            style={{
+              backgroundColor: "#fff",
+              borderRadius: 10,
+              padding: 12,
+              marginBottom: 10,
+              shadowColor: "#000",
+              shadowOffset: { width: -2, height: 2 },
+              shadowOpacity: 0.05,
+              shadowRadius: 4,
+              elevation: 2,
+            }}
+          >
             <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}>
               <View style={{ flexDirection: "row", alignItems: "center" }}>
                 <Text style={{ fontSize: 12, fontWeight: "700", color: "#000" }}>사진 등록</Text>
@@ -197,17 +232,35 @@ export default function RegisterScreen() {
               </View>
               <View style={{ flex: 1 }} />
               <InfoIcon width={11} height={11} />
-              <Text style={{ fontSize: 10, color: "#919191", marginLeft: 4, flexShrink: 1 }} numberOfLines={1}>물건의 특징이 잘 보이도록 사진을 등록해주세요.</Text>
+              <Text style={{ fontSize: 10, color: "#919191", marginLeft: 4, flexShrink: 1 }} numberOfLines={1}>
+                물건의 특징이 잘 보이도록 사진을 등록해주세요.
+              </Text>
             </View>
 
             {!photo ? (
-              <TouchableOpacity onPress={pickImage} style={{ height: 130, borderWidth: 1, borderStyle: "dashed", borderColor: "#D9D9D9", borderRadius: 10, alignItems: "center", justifyContent: "center", backgroundColor: "#fff" }}>
+              <TouchableOpacity
+                onPress={pickImage}
+                style={{ height: 130, borderWidth: 1, borderStyle: "dashed", borderColor: "#D9D9D9", borderRadius: 10, alignItems: "center", justifyContent: "center", backgroundColor: "#fff" }}
+              >
                 <CameraIcon width={41} height={35} />
                 <Text style={{ fontSize: 12, fontWeight: "800", color: "#919191", marginTop: 8 }}>사진 추가</Text>
               </TouchableOpacity>
             ) : (
               <View style={{ flexDirection: "row", gap: 12 }}>
-                <TouchableOpacity onPress={pickImage} style={{ width: 178, height: 130, borderWidth: 1, borderStyle: "dashed", borderColor: "#D9D9D9", borderRadius: 10, alignItems: "center", justifyContent: "center", backgroundColor: "#fff" }}>
+                <TouchableOpacity
+                  onPress={pickImage}
+                  style={{
+                    width: 178,
+                    height: 130,
+                    borderWidth: 1,
+                    borderStyle: "dashed",
+                    borderColor: "#D9D9D9",
+                    borderRadius: 10,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    backgroundColor: "#fff",
+                  }}
+                >
                   <CameraIcon width={41} height={35} />
                   <Text style={{ fontSize: 12, fontWeight: "800", color: "#919191", marginTop: 8 }}>사진 변경</Text>
                 </TouchableOpacity>
@@ -235,7 +288,20 @@ export default function RegisterScreen() {
                 {CATEGORIES.map((cat) => {
                   const selected = category === cat;
                   return (
-                    <TouchableOpacity key={cat} onPress={() => setCategory(selected ? null : cat)} style={{ height: 30, paddingHorizontal: 14, borderRadius: 15, alignItems: "center", justifyContent: "center", backgroundColor: selected ? "#fff" : "#E5E7EB", borderWidth: selected ? 1.5 : 1, borderColor: selected ? themeColor : "#D9D9D9" }}>
+                    <TouchableOpacity
+                      key={cat}
+                      onPress={() => setCategory(selected ? null : cat)}
+                      style={{
+                        height: 30,
+                        paddingHorizontal: 14,
+                        borderRadius: 15,
+                        alignItems: "center",
+                        justifyContent: "center",
+                        backgroundColor: selected ? "#fff" : "#E5E7EB",
+                        borderWidth: selected ? 1.5 : 1,
+                        borderColor: selected ? themeColor : "#D9D9D9",
+                      }}
+                    >
                       <Text style={{ fontSize: 10, color: selected ? themeColor : "#000", fontWeight: selected ? "600" : "400" }}>{cat}</Text>
                     </TouchableOpacity>
                   );
@@ -250,11 +316,31 @@ export default function RegisterScreen() {
                 <RequiredDot width={5} height={5} style={{ marginLeft: 2 }} />
               </View>
               <View style={{ flexDirection: "row", gap: 8 }}>
-                <View style={{ flex: 1, height: 34, backgroundColor: "#E5E7EB", borderWidth: 1, borderColor: "#D9D9D9", borderRadius: 10, flexDirection: "row", alignItems: "center", paddingHorizontal: 10 }}>
+                <View
+                  style={{
+                    flex: 1,
+                    height: 34,
+                    backgroundColor: "#E5E7EB",
+                    borderWidth: 1,
+                    borderColor: "#D9D9D9",
+                    borderRadius: 10,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    paddingHorizontal: 10,
+                  }}
+                >
                   <PinIcon width={9} height={11} style={{ marginRight: 6 }} />
-                  <TextInput value={location} onChangeText={setLocation} placeholder="위치를 선택해주세요" placeholderTextColor="#919191" style={{ flex: 1, fontSize: 12, color: "#000", padding: 0 }} />
+                  <TextInput
+                    value={location}
+                    onChangeText={setLocation}
+                    placeholder="위치를 선택해주세요"
+                    placeholderTextColor="#919191"
+                    style={{ flex: 1, fontSize: 12, color: "#000", padding: 0 }}
+                  />
                 </View>
-                <TouchableOpacity style={{ width: 68, height: 34, backgroundColor: "#E5E7EB", borderWidth: 1, borderColor: "#D9D9D9", borderRadius: 10, alignItems: "center", justifyContent: "center" }}>
+                <TouchableOpacity
+                  style={{ width: 68, height: 34, backgroundColor: "#E5E7EB", borderWidth: 1, borderColor: "#D9D9D9", borderRadius: 10, alignItems: "center", justifyContent: "center" }}
+                >
                   <Text style={{ fontSize: 10, fontWeight: "700", color: "#464646" }}>지도에서 선택</Text>
                 </TouchableOpacity>
               </View>
@@ -268,12 +354,24 @@ export default function RegisterScreen() {
               </View>
 
               {Platform.OS === "web" ? (
-                <View style={{ height: 34, backgroundColor: "#E5E7EB", borderWidth: 1, borderColor: "#D9D9D9", borderRadius: 10, flexDirection: "row", alignItems: "center", paddingHorizontal: 10, overflow: "hidden" }}>
+                <View
+                  style={{
+                    height: 34,
+                    backgroundColor: "#E5E7EB",
+                    borderWidth: 1,
+                    borderColor: "#D9D9D9",
+                    borderRadius: 10,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    paddingHorizontal: 10,
+                    overflow: "hidden",
+                  }}
+                >
                   <CalendarIcon width={10} height={11} style={{ marginRight: 8 }} />
                   <input
                     type="date"
                     value={date ? date.toISOString().split("T")[0] : ""}
-                    onChange={(e: any) => e.target.value ? setDate(new Date(e.target.value)) : setDate(null)}
+                    onChange={(e: any) => (e.target.value ? setDate(new Date(e.target.value)) : setDate(null))}
                     style={{ flex: 1, fontSize: 12, border: "none", background: "transparent", outline: "none", color: date ? "#000" : "#919191", fontFamily: "inherit" } as any}
                   />
                 </View>
@@ -288,19 +386,17 @@ export default function RegisterScreen() {
                     <ArrowRight width={5} height={9} />
                   </TouchableOpacity>
 
-                  {Platform.OS === "android" && (
-                    DateTimePicker && showPicker && (
-                      <DateTimePicker
-                        value={date ?? new Date()}
-                        mode="date"
-                        display="default"
-                        maximumDate={new Date()}
-                        onChange={(_: any, selected?: Date) => {
-                          setShowPicker(false);
-                          if (selected) setDate(selected);
-                        }}
-                      />
-                    )
+                  {Platform.OS === "android" && DateTimePicker && showPicker && (
+                    <DateTimePicker
+                      value={date ?? new Date()}
+                      mode="date"
+                      display="default"
+                      maximumDate={new Date()}
+                      onChange={(_: any, selected?: Date) => {
+                        setShowPicker(false);
+                        if (selected) setDate(selected);
+                      }}
+                    />
                   )}
                 </>
               )}
@@ -327,20 +423,14 @@ export default function RegisterScreen() {
             disabled={loading}
             style={{ backgroundColor: themeColor, height: 46, borderRadius: 10, alignItems: "center", justifyContent: "center" }}
           >
-            {loading
-              ? <ActivityIndicator color="#fff" />
-              : <Text style={{ color: "#fff", fontSize: 14, fontWeight: "600", letterSpacing: -0.32 }}>{ctaText}</Text>
-            }
+            {loading ? <ActivityIndicator color="#fff" /> : <Text style={{ color: "#fff", fontSize: 14, fontWeight: "600", letterSpacing: -0.32 }}>{ctaText}</Text>}
           </TouchableOpacity>
         </View>
 
         {/* iOS 날짜 피커 바텀시트 */}
         {Platform.OS === "ios" && showPicker && DateTimePicker && (
           <>
-            <TouchableOpacity
-              style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.3)" }}
-              onPress={() => setShowPicker(false)}
-            />
+            <TouchableOpacity style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.3)" }} onPress={() => setShowPicker(false)} />
             <View style={{ position: "absolute", bottom: 0, left: 0, right: 0, backgroundColor: "#fff", borderTopLeftRadius: 20, borderTopRightRadius: 20, paddingBottom: 34 }}>
               <View style={{ width: 40, height: 4, backgroundColor: "#D9D9D9", borderRadius: 2, alignSelf: "center", marginTop: 12 }} />
               <View style={{ flexDirection: "row", justifyContent: "flex-end", paddingHorizontal: 20, paddingTop: 8, paddingBottom: 4 }}>
@@ -356,7 +446,9 @@ export default function RegisterScreen() {
                   maximumDate={new Date()}
                   style={{ height: 216 }}
                   locale="ko"
-                  onChange={(_: any, selected?: Date) => { if (selected) setDate(selected); }}
+                  onChange={(_: any, selected?: Date) => {
+                    if (selected) setDate(selected);
+                  }}
                 />
               </View>
             </View>
