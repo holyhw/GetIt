@@ -26,6 +26,8 @@ type RegistrationDetail = {
   imageUrl: string | null;
   matched: boolean;
   createdDate: string;
+  userName: string;
+  userProfileImageUrl: string | null;
 };
 
 function Divider() {
@@ -235,9 +237,12 @@ export default function DetailScreen() {
 
           {/* 프로필 */}
           <View style={{ flexDirection: "row", alignItems: "center", paddingVertical: 12 }}>
-            <Image source={profilePlaceholder} style={{ width: 45, height: 45, borderRadius: 22.5 }} />
+            <Image
+              source={item.userProfileImageUrl ? { uri: item.userProfileImageUrl } : profilePlaceholder}
+              style={{ width: 45, height: 45, borderRadius: 22.5 }}
+            />
             <View style={{ marginLeft: 12 }}>
-              <Text style={{ fontSize: 12, fontWeight: "700", color: "#000" }}>알 수 없음</Text>
+              <Text style={{ fontSize: 12, fontWeight: "700", color: "#000" }}>{item.userName}</Text>
               <Text style={{ fontSize: 10, color: "#464646", marginTop: 4 }}>{dateLabel}</Text>
             </View>
           </View>
