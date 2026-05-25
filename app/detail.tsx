@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
-import { View, Text, ScrollView, TouchableOpacity, Image, ActivityIndicator, Modal, Alert } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, Image, ActivityIndicator, Modal, Alert, Share } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
+import Head from "expo-router/head";
 import DetailBackIcon from "../assets/detail-back.svg";
 import DetailShareIcon from "../assets/detail-share.svg";
 import DetailMoreIcon from "../assets/detail-more.svg";
@@ -86,6 +87,16 @@ export default function DetailScreen() {
   const isLost = item.itemType === "LOST";
   const isOwner = userInfo?.id === item.userId;
 
+  const handleShare = async () => {
+    const type = isLost ? "lost" : "found";
+    const typeLabel = isLost ? "분실물" : "습득물";
+    const url = `https://www.getitsju.com/detail?id=${item.id}&type=${type}`;
+    const category = item.category?.split(">").pop()?.trim() ?? item.category;
+    await Share.share({
+      message: `[GET IT - ${typeLabel}] ${item.title}\n카테고리: ${category} · 📍 ${item.location}\n\n👉 ${url}`,
+    });
+  };
+
   const handleMatchComplete = async () => {
     if (!token) return;
     setShowMore(false);
@@ -143,14 +154,27 @@ export default function DetailScreen() {
   const ctaColor = isLost ? "#FF7A00" : "#1E3A5F";
   const ctaText = isLost ? "이 물건을 주운 것 같아요" : "이 물건 제 것 같아요";
   const dateLabel = `${item.occurredDate?.replace(/-/g, ".") ?? ""} ${isLost ? "분실" : "습득"}`;
+  const ogUrl = `https://www.getitsju.com/detail?id=${item.id}&type=${isLost ? "lost" : "found"}`;
   const category = item.category?.split(">").pop()?.trim() ?? item.category;
 
   return (
     <View style={{ flex: 1, backgroundColor: "#fff" }}>
+      <Head>
+        <title>{item.title}</title>
+        <meta property="og:title" content={item.title} />
+        <meta property="og:description" content={item.description ?? ""} />
+        <meta property="og:image" content={item.imageUrl ?? ""} />
+        <meta property="og:url" content={ogUrl} />
+        <meta property="og:type" content="website" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={item.title} />
+        <meta name="twitter:description" content={item.description ?? ""} />
+        <meta name="twitter:image" content={item.imageUrl ?? ""} />
+      </Head>
       <OverlayButton left={24} onPress={() => router.back()}>
         <DetailBackIcon width={30} height={30} />
       </OverlayButton>
-      <OverlayButton left={293}>
+      <OverlayButton left={293} onPress={handleShare}>
         <DarkBtn><DetailShareIcon width={13} height={15} /></DarkBtn>
       </OverlayButton>
       <OverlayButton left={339} onPress={() => setShowMore(true)}>
