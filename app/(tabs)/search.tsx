@@ -204,7 +204,7 @@ export default function SearchScreen() {
           )}
         </View>
       ) : (
-        <>
+        <View style={{ flex: 1 }}>
           {/* 타입 토글 */}
           <View style={{ paddingHorizontal: 20, marginBottom: 10 }}>
             <View style={{ flexDirection: "row", backgroundColor: "#E5E7EB", borderRadius: 10, padding: 2 }}>
@@ -273,11 +273,12 @@ export default function SearchScreen() {
               data={filtered}
               keyExtractor={(item) => item.id.toString()}
               showsVerticalScrollIndicator={false}
+              style={{ flex: 1 }}
               contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 100, gap: 10 }}
               renderItem={({ item }) => <ItemCard item={item} onPress={() => router.push(`/detail?id=${item.id}&type=${item.itemType.toLowerCase()}`)} />}
             />
           )}
-        </>
+        </View>
       )}
     </View>
   );
