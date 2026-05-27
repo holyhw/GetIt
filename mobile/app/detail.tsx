@@ -45,6 +45,7 @@ export default function DetailScreen() {
   const [item, setItem] = useState<RegistrationDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [showMore, setShowMore] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
 
   useEffect(() => {
@@ -116,26 +117,19 @@ export default function DetailScreen() {
     ]);
   };
 
-  const handleDelete = () => {
+  const handleDeleteConfirm = async () => {
+    setShowDeleteConfirm(false);
     setShowMore(false);
-    Alert.alert("게시물 삭제", "정말 삭제하시겠습니까?", [
-      { text: "취소", style: "cancel" },
-      {
-        text: "삭제", style: "destructive",
-        onPress: async () => {
-          if (!token) return;
-          setActionLoading(true);
-          try {
-            await api.delete(`/api/registration/${item.id}`, token);
-            router.back();
-          } catch {
-            Alert.alert("오류", "삭제 중 문제가 발생했습니다.");
-          } finally {
-            setActionLoading(false);
-          }
-        },
-      },
-    ]);
+    if (!token) return;
+    setActionLoading(true);
+    try {
+      await api.delete(`/api/registration/${item!.id}`, token);
+      router.canGoBack() ? router.back() : router.replace("/(tabs)");
+    } catch (e: any) {
+      Alert.alert("오류", e?.message ?? "삭제 중 문제가 발생했습니다.");
+    } finally {
+      setActionLoading(false);
+    }
   };
   const ctaColor = isLost ? "#FF7A00" : "#1E3A5F";
   const ctaText = isLost ? "이 물건을 주운 것 같아요" : "이 물건 제 것 같아요";
@@ -157,7 +151,7 @@ export default function DetailScreen() {
         <meta name="twitter:description" content={item.description ?? ""} />
         <meta name="twitter:image" content={item.imageUrl ?? ""} />
       </Head>
-      <OverlayButton left={24} onPress={() => router.back()}>
+      <OverlayButton left={24} onPress={() => router.canGoBack() ? router.back() : router.replace("/(tabs)")}>
         <DetailBackIcon width={30} height={30} />
       </OverlayButton>
       <OverlayButton left={293} onPress={handleShare}>
@@ -190,7 +184,7 @@ export default function DetailScreen() {
                 <Text style={{ fontSize: 16, color: "#434343", fontWeight: "600" }}>수정하기</Text>
                 <Text style={{ fontSize: 12, color: "#919191", marginTop: 2 }}>게시물 내용을 수정합니다</Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={handleDelete} style={{ paddingVertical: 18, paddingHorizontal: 24 }}>
+              <TouchableOpacity onPress={() => setShowDeleteConfirm(true)} style={{ paddingVertical: 18, paddingHorizontal: 24 }}>
                 <Text style={{ fontSize: 16, color: "#EF4444", fontWeight: "600" }}>게시물 삭제</Text>
                 <Text style={{ fontSize: 12, color: "#919191", marginTop: 2 }}>이 게시물을 삭제합니다</Text>
               </TouchableOpacity>
@@ -201,6 +195,30 @@ export default function DetailScreen() {
               <Text style={{ fontSize: 12, color: "#919191", marginTop: 2 }}>부적절한 게시물을 신고합니다</Text>
             </TouchableOpacity>
           )}
+        </View>
+      </Modal>
+
+      {/* 삭제 확인 Modal */}
+      <Modal visible={showDeleteConfirm} transparent animationType="fade" onRequestClose={() => setShowDeleteConfirm(false)}>
+        <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)", alignItems: "center", justifyContent: "center" }}>
+          <View style={{ backgroundColor: "#fff", borderRadius: 16, padding: 24, width: 280 }}>
+            <Text style={{ fontSize: 16, fontWeight: "700", color: "#000", marginBottom: 8, textAlign: "center" }}>게시물 삭제</Text>
+            <Text style={{ fontSize: 14, color: "#434343", marginBottom: 24, textAlign: "center" }}>정말 삭제하시겠습니까?</Text>
+            <View style={{ flexDirection: "row", gap: 10 }}>
+              <TouchableOpacity
+                onPress={() => setShowDeleteConfirm(false)}
+                style={{ flex: 1, height: 42, borderRadius: 8, borderWidth: 1, borderColor: "#D9D9D9", alignItems: "center", justifyContent: "center" }}
+              >
+                <Text style={{ fontSize: 14, color: "#434343", fontWeight: "600" }}>취소</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={handleDeleteConfirm}
+                style={{ flex: 1, height: 42, borderRadius: 8, backgroundColor: "#EF4444", alignItems: "center", justifyContent: "center" }}
+              >
+                <Text style={{ fontSize: 14, color: "#fff", fontWeight: "600" }}>삭제</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
         </View>
       </Modal>
 
@@ -320,7 +338,7 @@ export default function DetailScreen() {
 
               <TouchableOpacity
                 activeOpacity={0.8}
-                onPress={() => router.push(`/top5?id=${item.id}`)}
+                onPress={() => router.push(`/top5?id=${item.id}&type=${isLost ? "lost" : "found"}`)}
                 style={{
                   backgroundColor: isLost ? "#FF7A00" : "#1E3A5F",
                   borderRadius: 8,

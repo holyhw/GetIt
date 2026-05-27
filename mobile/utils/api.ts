@@ -20,7 +20,12 @@ async function request<T>(
     },
   });
   if (!res.ok) throw new Error(`API error: ${res.status}`);
-  const data: ApiResponse<T> = await res.json();
+  if (res.status === 204 || res.headers.get("content-length") === "0") {
+    return undefined as T;
+  }
+  const text = await res.text();
+  if (!text) return undefined as T;
+  const data: ApiResponse<T> = JSON.parse(text);
   return data.result;
 }
 

@@ -73,6 +73,7 @@ export default function RootLayout() {
         <Stack.Screen name="top5" options={{ headerShown: false }} />
         <Stack.Screen name="notification" options={{ headerShown: false }} />
         <Stack.Screen name="edit" options={{ headerShown: false }} />
+        <Stack.Screen name="register-photo" options={{ headerShown: false }} />
         <Stack.Screen name="register-detail" options={{ headerShown: false }} />
         <Stack.Screen name="oauth/redirect" options={{ headerShown: false }} />
       </Stack>

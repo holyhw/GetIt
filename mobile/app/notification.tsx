@@ -165,7 +165,7 @@ export default function NotificationScreen() {
     <View style={{ flex: 1, backgroundColor: "#F5F7FA" }}>
       {/* 헤더 */}
       <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 24, paddingTop: 60, paddingBottom: 12 }}>
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity onPress={() => router.canGoBack() ? router.back() : router.replace("/(tabs)")}>
           <MyInfoBackIcon width={11} height={19} />
         </TouchableOpacity>
         <View style={{ flex: 1, alignItems: "center" }}>

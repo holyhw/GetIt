@@ -1,15 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  TextInput,
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  ActivityIndicator,
-} from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, TextInput, Alert, KeyboardAvoidingView, Platform, ActivityIndicator } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import BackIcon from "../assets/myinfo-back.svg";
 import RequiredDot from "../assets/reg-required.svg";
@@ -22,7 +12,6 @@ import { registerStore } from "../utils/registerStore";
 import type { PreAnalysisStatus } from "../types/preAnalysis";
 
 const API_BASE_URL = "https://api.getitsju.com";
-const CATEGORIES = ["지갑", "의류", "가방", "전자기기", "기타"];
 const DateTimePicker = Platform.OS !== "web" ? require("@react-native-community/datetimepicker").default : null;
 
 type InputRowProps = {
@@ -106,14 +95,18 @@ function AnalysisStatusBadge({ status }: { status: PreAnalysisStatus }) {
 
 export default function RegisterDetailScreen() {
   const router = useRouter();
-  const { type, text: initialText } = useLocalSearchParams<{
+  const {
+    type,
+    category,
+    text: initialText,
+  } = useLocalSearchParams<{
     type: "found" | "lost";
+    category: string;
     text: string;
   }>();
   const { token } = useAuth();
 
   const [title, setTitle] = useState("");
-  const [category, setCategory] = useState<string | null>(null);
   const [location, setLocation] = useState("");
   const [date, setDate] = useState<Date | null>(null);
   const [showPicker, setShowPicker] = useState(false);
@@ -126,9 +119,7 @@ export default function RegisterDetailScreen() {
 
   const isFound = type === "found";
   const themeColor = isFound ? "#1E3A5F" : "#FF7A00";
-  const dateLabel = date
-    ? date.toLocaleDateString("ko-KR", { year: "numeric", month: "2-digit", day: "2-digit" }).replace(/\. /g, ".").replace(/\.$/, "")
-    : "날짜를 선택해주세요";
+  const dateLabel = date ? date.toLocaleDateString("ko-KR", { year: "numeric", month: "2-digit", day: "2-digit" }).replace(/\. /g, ".").replace(/\.$/, "") : "날짜를 선택해주세요";
 
   // 마운트 시 pre-analysis 시작
   useEffect(() => {
@@ -140,6 +131,7 @@ export default function RegisterDetailScreen() {
       try {
         const formData = new FormData();
         formData.append("itemType", type === "found" ? "FOUND" : "LOST");
+        if (category?.trim()) formData.append("category", category.trim());
         if (initialText?.trim()) formData.append("text", initialText.trim());
         if (photo) {
           if (Platform.OS === "web") {
@@ -227,9 +219,14 @@ export default function RegisterDetailScreen() {
 
   const handleSubmit = async () => {
     if (!token) return;
-    if (!title.trim()) { Alert.alert("제목을 입력해주세요."); return; }
-    if (!category) { Alert.alert("카테고리를 선택해주세요."); return; }
-    if (!location.trim()) { Alert.alert("위치를 입력해주세요."); return; }
+    if (!title.trim()) {
+      Alert.alert("제목을 입력해주세요.");
+      return;
+    }
+    if (!location.trim()) {
+      Alert.alert("위치를 입력해주세요.");
+      return;
+    }
 
     setLoading(true);
     try {
@@ -253,7 +250,7 @@ export default function RegisterDetailScreen() {
 
       const body: Record<string, string> = {
         title: title.trim(),
-        category: category!,
+        category: category ?? "",
         location: location.trim(),
       };
       if (date) {
@@ -264,9 +261,7 @@ export default function RegisterDetailScreen() {
       }
       if (initialText?.trim()) body.description = initialText.trim();
 
-      const path = isFound
-        ? `/api/ai/pre-analysis/${pId}/registration/found`
-        : `/api/ai/pre-analysis/${pId}/registration/lost`;
+      const path = isFound ? `/api/ai/pre-analysis/${pId}/registration/found` : `/api/ai/pre-analysis/${pId}/registration/lost`;
 
       const res = await fetch(`${API_BASE_URL}${path}`, {
         method: "POST",
@@ -311,11 +306,7 @@ export default function RegisterDetailScreen() {
           </View>
         </View>
 
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 8, paddingBottom: 100 }}
-          keyboardShouldPersistTaps="handled"
-        >
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 8, paddingBottom: 100 }} keyboardShouldPersistTaps="handled">
           {/* 등록 유형 표시 */}
           <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 16 }}>
             <View
@@ -326,9 +317,7 @@ export default function RegisterDetailScreen() {
                 backgroundColor: themeColor,
               }}
             >
-              <Text style={{ fontSize: 11, fontWeight: "700", color: "#fff" }}>
-                {isFound ? "습득물 등록" : "분실물 등록"}
-              </Text>
+              <Text style={{ fontSize: 11, fontWeight: "700", color: "#fff" }}>{isFound ? "습득물 등록" : "분실물 등록"}</Text>
             </View>
           </View>
 
@@ -346,37 +335,6 @@ export default function RegisterDetailScreen() {
             }}
           >
             <InputRow label="제목" required value={title} onChangeText={setTitle} placeholder="예: 검은색 Kodak 모자" />
-
-            {/* 카테고리 */}
-            <View style={{ marginBottom: 14 }}>
-              <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}>
-                <Text style={{ fontSize: 12, fontWeight: "700", color: "#000" }}>카테고리</Text>
-                <RequiredDot width={5} height={5} style={{ marginLeft: 2 }} />
-              </View>
-              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
-                {CATEGORIES.map((cat) => {
-                  const selected = category === cat;
-                  return (
-                    <TouchableOpacity
-                      key={cat}
-                      onPress={() => setCategory(selected ? null : cat)}
-                      style={{
-                        height: 30,
-                        paddingHorizontal: 14,
-                        borderRadius: 15,
-                        alignItems: "center",
-                        justifyContent: "center",
-                        backgroundColor: selected ? "#fff" : "#E5E7EB",
-                        borderWidth: selected ? 1.5 : 1,
-                        borderColor: selected ? themeColor : "#D9D9D9",
-                      }}
-                    >
-                      <Text style={{ fontSize: 10, color: selected ? themeColor : "#000", fontWeight: selected ? "600" : "400" }}>{cat}</Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-            </View>
 
             {/* 위치 */}
             <View style={{ marginBottom: 14 }}>
@@ -488,7 +446,6 @@ export default function RegisterDetailScreen() {
                 </>
               )}
             </View>
-
           </View>
         </ScrollView>
 
@@ -509,9 +466,7 @@ export default function RegisterDetailScreen() {
             {loading ? (
               <ActivityIndicator color="#fff" />
             ) : (
-              <Text style={{ color: "#fff", fontSize: 14, fontWeight: "600", letterSpacing: -0.32 }}>
-                {isFound ? "습득물 등록하기" : "분실물 등록하기"}
-              </Text>
+              <Text style={{ color: "#fff", fontSize: 14, fontWeight: "600", letterSpacing: -0.32 }}>{isFound ? "습득물 등록하기" : "분실물 등록하기"}</Text>
             )}
           </TouchableOpacity>
         </View>
@@ -519,10 +474,7 @@ export default function RegisterDetailScreen() {
         {/* iOS 날짜 피커 바텀시트 */}
         {Platform.OS === "ios" && showPicker && DateTimePicker && (
           <>
-            <TouchableOpacity
-              style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.3)" }}
-              onPress={() => setShowPicker(false)}
-            />
+            <TouchableOpacity style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.3)" }} onPress={() => setShowPicker(false)} />
             <View
               style={{
                 position: "absolute",

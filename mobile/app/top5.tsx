@@ -110,7 +110,7 @@ function CardItem({ item, index, scrollX }: CardProps) {
 
 export default function Top5Screen() {
   const router = useRouter();
-  const { id } = useLocalSearchParams<{ id?: string }>();
+  const { id, type } = useLocalSearchParams<{ id?: string; type?: "found" | "lost" }>();
   const { token } = useAuth();
 
   const scrollX = useRef(new Animated.Value(0)).current;
@@ -133,7 +133,10 @@ export default function Top5Screen() {
   useEffect(() => {
     if (!id || !token) return;
     setLoading(true);
-    api.get<{ matchResults: MatchResultResponse[] }>(`/api/registration/${id}/matches`, token)
+    const endpoint = type === "found"
+      ? `/api/registration/${id}/matched-lost`
+      : `/api/registration/${id}/matches`;
+    api.get<{ matchResults: MatchResultResponse[] }>(endpoint, token)
       .then((res) => setData(res.matchResults ?? []))
       .catch(() => setData([]))
       .finally(() => setLoading(false));
@@ -169,7 +172,7 @@ export default function Top5Screen() {
     return (
       <View style={{ flex: 1, backgroundColor: "#F5F7FA", alignItems: "center", justifyContent: "center" }}>
         <Text style={{ fontSize: 14, color: "#919191" }}>매칭 결과가 없습니다.</Text>
-        <TouchableOpacity onPress={() => router.back()} style={{ marginTop: 16 }}>
+        <TouchableOpacity onPress={() => router.canGoBack() ? router.back() : router.replace("/(tabs)")} style={{ marginTop: 16 }}>
           <Text style={{ fontSize: 14, color: "#1E3A5F", fontWeight: "600" }}>돌아가기</Text>
         </TouchableOpacity>
       </View>
