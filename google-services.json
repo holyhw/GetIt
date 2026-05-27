@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "977638973945",
+    "project_id": "get-it-e2e49",
+    "storage_bucket": "get-it-e2e49.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:977638973945:android:052b34a70b19e3f9469d28",
+        "android_client_info": {
+          "package_name": "com.getitsju.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDTXVhw9Urysz52n1earKIQMEhtHWu8T3c"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

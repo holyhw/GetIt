@@ -1,7 +1,36 @@
 import "../global.css";
-import { Stack } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 import { Platform, View } from "react-native";
+import { useEffect, useRef } from "react";
+import * as Notifications from "expo-notifications";
 import { AuthProvider } from "../context/AuthContext";
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
+
+function NotificationNavigator() {
+  const router = useRouter();
+  const responseListener = useRef<Notifications.EventSubscription>();
+
+  useEffect(() => {
+    responseListener.current = Notifications.addNotificationResponseReceivedListener((response) => {
+      const data = response.notification.request.content.data as Record<string, string>;
+      if (data?.targetType === "REGISTRATION" && data?.targetId) {
+        router.push(`/detail?id=${data.targetId}`);
+      } else {
+        router.push("/notification");
+      }
+    });
+    return () => responseListener.current?.remove();
+  }, [router]);
+
+  return null;
+}
 
 function PhoneFrame({ children }: { children: React.ReactNode }) {
   if (Platform.OS !== "web") return <>{children}</>;
@@ -29,6 +58,7 @@ function PhoneFrame({ children }: { children: React.ReactNode }) {
 export default function RootLayout() {
   return (
     <AuthProvider>
+    <NotificationNavigator />
     <PhoneFrame>
       <Stack>
         <Stack.Screen name="index" options={{ headerShown: false }} />

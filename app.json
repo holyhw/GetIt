@@ -24,6 +24,7 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "package": "com.getitsju.app",
+      "googleServicesFile": "./google-services.json",
       "predictiveBackGestureEnabled": false,
       "intentFilters": [
         {
@@ -38,6 +39,16 @@
       "bundler": "metro",
       "output": "static"
     },
-    "plugins": ["expo-router"]
+    "plugins": [
+      "expo-router",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#1E3A5F",
+          "sounds": []
+        }
+      ]
+    ]
   }
 }

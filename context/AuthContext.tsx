@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import { Platform } from "react-native";
 import * as SecureStore from "expo-secure-store";
+import * as Notifications from "expo-notifications";
 import { api } from "../utils/api";
 
 const TOKEN_KEY = "accessToken";
@@ -54,6 +55,18 @@ async function deleteToken() {
   }
 }
 
+async function registerFcmToken(authToken: string) {
+  if (Platform.OS !== "android") return;
+  try {
+    const { status } = await Notifications.requestPermissionsAsync();
+    if (status !== "granted") return;
+    const { data: fcmToken } = await Notifications.getDevicePushTokenAsync();
+    if (!fcmToken) return;
+    await api.post("/api/device-tokens", authToken, { token: fcmToken, platform: "ANDROID" });
+  } catch {}
+}
+
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -65,6 +78,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setToken(t);
         setIsLoggedIn(true);
         api.get<UserInfo>("/api/users/me", t).then(setUserInfo).catch(() => {});
+        registerFcmToken(t);
       }
     });
   }, []);
@@ -74,6 +88,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setToken(newToken);
     setIsLoggedIn(true);
     api.get<UserInfo>("/api/users/me", newToken).then(setUserInfo).catch(() => {});
+    registerFcmToken(newToken);
   };
 
   const logout = async () => {

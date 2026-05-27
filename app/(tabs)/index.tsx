@@ -29,6 +29,7 @@ export default function HomeScreen() {
   const [items, setItems] = useState<RegistrationItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   const fetchItems = useCallback(async () => {
     const path = filter === "습득물" ? "/api/registration/found" : "/api/registration/lost";
@@ -50,6 +51,13 @@ export default function HomeScreen() {
     await fetchItems();
     setRefreshing(false);
   }, [fetchItems]);
+
+  useEffect(() => {
+    if (!token) return;
+    api.get<{ count: number }>("/api/notifications/unread-count", token)
+      .then((res) => setUnreadCount(res.count ?? 0))
+      .catch(() => {});
+  }, [token]);
 
   return (
     <View style={{ flex: 1, backgroundColor: "#F5F7FA" }}>
@@ -89,7 +97,14 @@ export default function HomeScreen() {
           style={{ marginLeft: 12 }}
           onPress={() => isLoggedIn ? router.push("/notification") : router.push("/login")}
         >
-          <BellIcon width={16} height={18} />
+          <View>
+            <BellIcon width={16} height={18} />
+            {isLoggedIn && unreadCount > 0 && (
+              <View style={{ position: "absolute", top: -4, right: -4, backgroundColor: "#F4551E", borderRadius: 6, minWidth: 12, height: 12, paddingHorizontal: 2, alignItems: "center", justifyContent: "center" }}>
+                <Text style={{ fontSize: 8, fontWeight: "700", color: "#fff" }}>{unreadCount > 99 ? "99+" : unreadCount}</Text>
+              </View>
+            )}
+          </View>
         </TouchableOpacity>
       </View>
 
