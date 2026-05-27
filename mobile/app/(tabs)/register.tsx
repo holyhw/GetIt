@@ -1,7 +1,6 @@
 import { useState, useCallback } from "react";
 import { View, Text, ScrollView, TouchableOpacity, TextInput, Image, Alert, KeyboardAvoidingView, Platform, ActivityIndicator } from "react-native";
-import { useRouter } from "expo-router";
-import { useFocusEffect } from "@react-navigation/native";
+import { useRouter, useFocusEffect } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import BackIcon from "../../assets/myinfo-back.svg";
 import CameraIcon from "../../assets/reg-camera.svg";
