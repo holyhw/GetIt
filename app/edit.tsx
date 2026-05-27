@@ -136,7 +136,7 @@ export default function EditScreen() {
       Alert.alert("권한 필요", "사진 접근 권한이 필요합니다.");
       return;
     }
-    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, quality: 0.8 });
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaType.Images, quality: 0.8 });
     if (!result.canceled && result.assets[0]) setPhoto(result.assets[0].uri);
   };
 
@@ -401,10 +401,11 @@ export default function EditScreen() {
                       mode="date"
                       display="default"
                       maximumDate={new Date()}
-                      onChange={(_: any, selected?: Date) => {
+                      onValueChange={(selected: Date) => {
                         setShowPicker(false);
-                        if (selected) setDate(selected);
+                        setDate(selected);
                       }}
+                      onDismiss={() => setShowPicker(false)}
                     />
                   )}
                 </>
@@ -454,8 +455,8 @@ export default function EditScreen() {
                   maximumDate={new Date()}
                   style={{ height: 216 }}
                   locale="ko"
-                  onChange={(_: any, selected?: Date) => {
-                    if (selected) setDate(selected);
+                  onValueChange={(selected: Date) => {
+                    setDate(selected);
                   }}
                 />
               </View>
