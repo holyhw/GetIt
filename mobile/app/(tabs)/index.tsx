@@ -3,24 +3,11 @@ import { View, Text, ScrollView, TouchableOpacity, Image, ActivityIndicator, Ref
 import { useRouter } from "expo-router";
 import { useAuth } from "../../context/AuthContext";
 import { api } from "../../utils/api";
+import type { FilterType, RegistrationItem } from "../../types/registration";
 import LogoCircle from "../../assets/logo-text.svg";
 import LogoWordmark from "../../assets/logo-icon.svg";
 import BellIcon from "../../assets/bell-icon.svg";
 
-type FilterType = "습득물" | "분실물";
-
-type RegistrationItem = {
-  id: number;
-  itemType: "LOST" | "FOUND";
-  title: string;
-  category: string;
-  location: string;
-  occurredDate: string;
-  description: string;
-  imageUrl: string | null;
-  matched: boolean;
-  createdDate: string;
-};
 
 export default function HomeScreen() {
   const router = useRouter();

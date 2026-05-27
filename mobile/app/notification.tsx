@@ -5,18 +5,8 @@ import Svg, { Circle, Path } from "react-native-svg";
 import MyInfoBackIcon from "../assets/myinfo-back.svg";
 import { useAuth } from "../context/AuthContext";
 import { api } from "../utils/api";
+import type { ApiNotification } from "../types/notification";
 
-type ApiNotification = {
-  id: number;
-  type: string;
-  title: string;
-  message: string;
-  targetType: string | null;
-  targetId: number | null;
-  relatedId: number | null;
-  read: boolean;
-  createdDate: string;
-};
 
 function formatRelativeTime(isoString: string): string {
   const date = new Date(isoString);

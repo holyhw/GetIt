@@ -11,25 +11,11 @@ import DetailArrowIcon from "../assets/detail-arrow-right.svg";
 import Top5DetailIcon from "../assets/top5-detail.svg";
 import { useAuth } from "../context/AuthContext";
 import { api } from "../utils/api";
+import type { RegistrationDetail } from "../types/registration";
 
 const profilePlaceholder = require("../assets/profile-placeholder.png");
 const mapImage = require("../assets/map-placeholder.jpg");
 
-type RegistrationDetail = {
-  id: number;
-  userId: number;
-  itemType: "LOST" | "FOUND";
-  title: string;
-  category: string;
-  location: string;
-  occurredDate: string;
-  description: string;
-  imageUrl: string | null;
-  matched: boolean;
-  createdDate: string;
-  userName: string;
-  userProfileImageUrl: string | null;
-};
 
 function Divider() {
   return <View style={{ height: 1, backgroundColor: "#E5E5E5" }} />;

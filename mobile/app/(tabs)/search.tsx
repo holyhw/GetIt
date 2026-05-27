@@ -3,26 +3,10 @@ import { View, Text, TextInput, ScrollView, TouchableOpacity, Image, FlatList, A
 import { useRouter } from "expo-router";
 import Svg, { Circle, Line } from "react-native-svg";
 import { useAuth } from "../../context/AuthContext";
+import type { FilterType, Category, RegistrationItem } from "../../types/registration";
 import { api } from "../../utils/api";
 
-type FilterType = "습득물" | "분실물";
-type Category = "전체" | "의류" | "전자기기" | "지갑/가방" | "귀중품" | "기타";
-
 const CATEGORIES: Category[] = ["전체", "의류", "전자기기", "지갑/가방", "귀중품", "기타"];
-
-type RegistrationItem = {
-  id: number;
-
-  itemType: "LOST" | "FOUND";
-  title: string;
-  category: string;
-  location: string;
-  occurredDate: string;
-  description: string;
-  imageUrl: string | null;
-  matched: boolean;
-  createdDate: string;
-};
 
 function SearchIcon({ color = "#919191" }: { color?: string }) {
   return (

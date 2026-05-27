@@ -8,7 +8,8 @@ import Top5DetailIcon from "../assets/top5-detail.svg";
 import RankBg from "../assets/top5-rank.svg";
 import PinIcon from "../assets/reg-pin.svg";
 import CalendarIcon from "../assets/reg-calendar.svg";
-import { matchStore, MatchResultResponse } from "../utils/matchStore";
+import { matchStore } from "../utils/matchStore";
+import type { MatchResultResponse } from "../types/match";
 import { useAuth } from "../context/AuthContext";
 import { api } from "../utils/api";
 

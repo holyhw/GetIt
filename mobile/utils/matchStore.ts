@@ -1,19 +1,6 @@
-type MatchResultResponse = {
-  registrationId: number;
-  title: string;
-  category: string;
-  location: string;
-  occurredDate: string;
-  description: string;
-  imageUrl: string | null;
-  similarity: number;
-  explanation: string;
-  rank: number;
-};
+import type { MatchResultResponse, PendingMatch } from "../types/match";
 
-type PendingMatch = {
-  matchResults: MatchResultResponse[];
-};
+export type { MatchResultResponse, PendingMatch };
 
 let pending: PendingMatch | null = null;
 
@@ -22,5 +9,3 @@ export const matchStore = {
   get: () => pending,
   clear: () => { pending = null; },
 };
-
-export type { MatchResultResponse, PendingMatch };

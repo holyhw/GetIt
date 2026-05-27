@@ -12,24 +12,13 @@ import CloseIcon from "../assets/reg-close.svg";
 import ArrowRight from "../assets/detail-arrow-right.svg";
 import { useAuth } from "../context/AuthContext";
 import { api } from "../utils/api";
+import type { RegistrationDetail } from "../types/registration";
 
 const API_BASE_URL = "https://api.getitsju.com";
 const CATEGORIES = ["지갑", "의류", "가방", "전자기기", "기타"];
 
 const DateTimePicker = Platform.OS !== "web" ? require("@react-native-community/datetimepicker").default : null;
 
-type RegistrationDetail = {
-  id: number;
-  itemType: "LOST" | "FOUND";
-  title: string;
-  category: string;
-  location: string;
-  occurredDate: string;
-  description: string;
-  imageUrl: string | null;
-  matched: boolean;
-  createdDate: string;
-};
 
 type InputRowProps = {
   label: string;
@@ -136,7 +125,7 @@ export default function EditScreen() {
       Alert.alert("권한 필요", "사진 접근 권한이 필요합니다.");
       return;
     }
-    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaType.Images, quality: 0.8 });
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: "images", quality: 0.8 });
     if (!result.canceled && result.assets[0]) setPhoto(result.assets[0].uri);
   };
 

@@ -5,6 +5,7 @@ import MyInfoBackIcon from "../assets/myinfo-back.svg";
 import RegisterIcon from "../assets/myitems-register.svg";
 import { useAuth } from "../context/AuthContext";
 import { api } from "../utils/api";
+import type { RegistrationItem } from "../types/registration";
 
 const itemPlaceholder = require("../assets/cap.jpg");
 
@@ -17,18 +18,6 @@ const STATUS_CONFIG: Record<Status, { dot: string; text: string }> = {
   종료:     { dot: "#757575", text: "#757575" },
 };
 
-type RegistrationItem = {
-  id: number;
-  itemType: "LOST" | "FOUND";
-  title: string;
-  category: string;
-  location: string;
-  occurredDate: string;
-  description: string;
-  imageUrl: string | null;
-  matched: boolean;
-  createdDate: string;
-};
 
 function toStatus(item: RegistrationItem): Status {
   if (item.matched) return "매칭완료";

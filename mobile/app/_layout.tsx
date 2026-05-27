@@ -16,7 +16,7 @@ Notifications.setNotificationHandler({
 
 function NotificationNavigator() {
   const router = useRouter();
-  const responseListener = useRef<Notifications.EventSubscription>();
+  const responseListener = useRef<Notifications.EventSubscription | undefined>(undefined);
 
   useEffect(() => {
     responseListener.current = Notifications.addNotificationResponseReceivedListener((response) => {

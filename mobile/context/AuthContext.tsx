@@ -3,16 +3,10 @@ import { Platform } from "react-native";
 import * as SecureStore from "expo-secure-store";
 import * as Notifications from "expo-notifications";
 import { api } from "../utils/api";
+import type { UserInfo } from "../types/user";
 
 const TOKEN_KEY = "accessToken";
 
-export type UserInfo = {
-  id: number;
-  email: string;
-  name: string;
-  profileImageUrl: string | null;
-  provider: "KAKAO" | "NAVER" | "GOOGLE";
-};
 
 type AuthContextType = {
   isLoggedIn: boolean;

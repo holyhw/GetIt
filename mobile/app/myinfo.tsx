@@ -19,7 +19,8 @@ import MyInfoKakaoIcon from "../assets/myinfo-kakao.svg";
 import MyInfoGoogleIcon from "../assets/myinfo-google.svg";
 import MyInfoCheckIcon from "../assets/myinfo-check.svg";
 import MyInfoArrowIcon from "../assets/myinfo-arrow.svg";
-import { useAuth, UserInfo } from "../context/AuthContext";
+import { useAuth } from "../context/AuthContext";
+import type { UserInfo } from "../types/user";
 
 const API_BASE_URL = "https://api.getitsju.com";
 const profilePlaceholder = require("../assets/profile-placeholder.png");
@@ -41,7 +42,7 @@ export default function MyInfoScreen() {
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaType.Images,
+      mediaTypes: "images",
       quality: 0.8,
       allowsEditing: true,
       aspect: [1, 1],

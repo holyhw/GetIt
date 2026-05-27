@@ -2,9 +2,8 @@ import { useState } from "react";
 import { View, Text, ScrollView, TouchableOpacity } from "react-native";
 import { useRouter } from "expo-router";
 import OnlineDot from "../../assets/chat-online.svg";
+import type { ChatType, ChatFilterKey } from "../../types/chat";
 
-type ChatType = "분실" | "습득";
-type FilterKey = "전체" | "분실" | "습득";
 
 const CHATS: {
   id: number;
@@ -90,7 +89,7 @@ const TYPE_COLOR: Record<ChatType, string> = {
   습득: "#1E3A5F",
 };
 
-const FILTERS: { key: FilterKey; count: number }[] = [
+const FILTERS: { key: ChatFilterKey; count: number }[] = [
   { key: "전체", count: 6 },
   { key: "분실", count: 3 },
   { key: "습득", count: 3 },
@@ -204,7 +203,7 @@ function ChatRow({ item, onPress }: { item: (typeof CHATS)[0]; onPress?: () => v
 
 export default function ChatScreen() {
   const router = useRouter();
-  const [activeFilter, setActiveFilter] = useState<FilterKey>("전체");
+  const [activeFilter, setActiveFilter] = useState<ChatFilterKey>("전체");
 
   const filtered = activeFilter === "전체" ? CHATS : CHATS.filter((c) => c.type === activeFilter);
 
