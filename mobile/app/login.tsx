@@ -48,7 +48,7 @@ export default function Login() {
     <View style={{ flex: 1, backgroundColor: "#F5F7FA" }}>
       {/* 뒤로가기 */}
       <TouchableOpacity
-        onPress={() => router.canGoBack() ? router.back() : null}
+        onPress={() => router.canGoBack() ? router.back() : router.replace("/(tabs)")}
         style={{ position: "absolute", top: 60, left: 24, zIndex: 10, padding: 4 }}
       >
         <BackArrow width={10} height={18} />

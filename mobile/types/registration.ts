@@ -9,6 +9,8 @@ export type RegistrationItem = {
   majorCategory: string | null;
   minorCategory: string | null;
   location: string;
+  latitude?: number | null;
+  longitude?: number | null;
   occurredDate: string;
   description: string;
   imageUrl: string | null;

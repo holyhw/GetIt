@@ -14,6 +14,7 @@ import { useAuth } from "../context/AuthContext";
 import { api } from "../utils/api";
 import type { RegistrationDetail } from "../types/registration";
 import { CategoryFilterModal, type CategoryFilterValue } from "../components/CategoryFilterModal";
+import { LocationSearchModal, type SelectedPlace } from "../components/LocationSearchModal";
 
 const API_BASE_URL = "https://api.getitsju.com";
 
@@ -87,6 +88,8 @@ export default function EditScreen() {
   const [category, setCategory] = useState<CategoryFilterValue>(null);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [location, setLocation] = useState("");
+  const [selectedPlace, setSelectedPlace] = useState<SelectedPlace | null>(null);
+  const [showLocationModal, setShowLocationModal] = useState(false);
   const [date, setDate] = useState<Date | null>(null);
   const [tempDate, setTempDate] = useState<Date>(new Date());
   const [showPicker, setShowPicker] = useState(false);
@@ -147,6 +150,10 @@ export default function EditScreen() {
       params.append("minorCategory", category.minor);
     }
     if (location.trim()) params.append("location", location.trim());
+    if (selectedPlace) {
+      params.append("latitude", String(selectedPlace.lat));
+      params.append("longitude", String(selectedPlace.lng));
+    }
     if (date) {
       const y = date.getFullYear();
       const m = String(date.getMonth() + 1).padStart(2, "0");
@@ -313,35 +320,24 @@ export default function EditScreen() {
                 <Text style={{ fontSize: 12, fontWeight: "700", color: "#000" }}>{isFound ? "습득 위치" : "분실 위치"}</Text>
                 <RequiredDot width={5} height={5} style={{ marginLeft: 2 }} />
               </View>
-              <View style={{ flexDirection: "row", gap: 8 }}>
-                <View
-                  style={{
-                    flex: 1,
-                    height: 34,
-                    backgroundColor: "#E5E7EB",
-                    borderWidth: 1,
-                    borderColor: "#D9D9D9",
-                    borderRadius: 10,
-                    flexDirection: "row",
-                    alignItems: "center",
-                    paddingHorizontal: 10,
-                  }}
-                >
-                  <PinIcon width={9} height={11} style={{ marginRight: 6 }} />
-                  <TextInput
-                    value={location}
-                    onChangeText={setLocation}
-                    placeholder="위치를 선택해주세요"
-                    placeholderTextColor="#919191"
-                    style={{ flex: 1, fontSize: 12, color: "#000", padding: 0 }}
-                  />
-                </View>
-                <TouchableOpacity
-                  style={{ width: 68, height: 34, backgroundColor: "#E5E7EB", borderWidth: 1, borderColor: "#D9D9D9", borderRadius: 10, alignItems: "center", justifyContent: "center" }}
-                >
-                  <Text style={{ fontSize: 10, fontWeight: "700", color: "#464646" }}>지도에서 선택</Text>
-                </TouchableOpacity>
-              </View>
+              <TouchableOpacity
+                onPress={() => setShowLocationModal(true)}
+                style={{
+                  height: 34,
+                  backgroundColor: "#E5E7EB",
+                  borderWidth: 1,
+                  borderColor: "#D9D9D9",
+                  borderRadius: 10,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  paddingHorizontal: 10,
+                }}
+              >
+                <PinIcon width={9} height={11} style={{ marginRight: 6 }} />
+                <Text style={{ flex: 1, fontSize: 12, color: location ? "#000" : "#919191" }}>
+                  {location || "위치를 검색해주세요"}
+                </Text>
+              </TouchableOpacity>
             </View>
 
             {/* 날짜 */}
@@ -458,6 +454,14 @@ export default function EditScreen() {
         activeColor={themeColor}
         onSelect={setCategory}
         onClose={() => setShowCategoryModal(false)}
+      />
+      <LocationSearchModal
+        visible={showLocationModal}
+        onSelect={(place) => {
+          setSelectedPlace(place);
+          setLocation(place.name);
+        }}
+        onClose={() => setShowLocationModal(false)}
       />
     </KeyboardAvoidingView>
   );

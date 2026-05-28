@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { View, Text, ScrollView, TouchableOpacity, Image, ActivityIndicator, Modal, Alert, Share } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, Image, ActivityIndicator, Modal, Alert, Share, SafeAreaView, Platform } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import Head from "expo-router/head";
 import DetailBackIcon from "../assets/detail-back.svg";
@@ -12,9 +12,11 @@ import Top5DetailIcon from "../assets/top5-detail.svg";
 import { useAuth } from "../context/AuthContext";
 import { api } from "../utils/api";
 import type { RegistrationDetail } from "../types/registration";
+import { NaverMapView } from "../components/NaverMapView";
+import { loadNaverSDK } from "../utils/naverSDK";
+import { NAVER_SEARCH_CLIENT_ID, NAVER_SEARCH_CLIENT_SECRET } from "../utils/mapKeys";
 
 const profilePlaceholder = require("../assets/profile-placeholder.png");
-const mapImage = require("../assets/map-placeholder.jpg");
 
 
 function Divider() {
@@ -49,13 +51,53 @@ export default function DetailScreen() {
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [showDeleteError, setShowDeleteError] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
+  const [mapCoords, setMapCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [showFullMap, setShowFullMap] = useState(false);
 
   useEffect(() => {
     if (!id) return;
     api.get<RegistrationDetail>(`/api/registration/${id}`, token ?? "")
-      .then(setItem)
+      .then((data) => {
+        setItem(data);
+        if (data.latitude && data.longitude) {
+          setMapCoords({ lat: data.latitude, lng: data.longitude });
+        }
+      })
       .finally(() => setLoading(false));
   }, [id, token]);
+
+  useEffect(() => {
+    if (!item || mapCoords) return;
+    if (!item.location) return;
+
+    if (Platform.OS === "web") {
+      loadNaverSDK(() => {
+        const naver = (window as any).naver;
+        if (!naver?.maps?.Service) return;
+        naver.maps.Service.geocode({ query: item.location }, (status: any, res: any) => {
+          if (status === naver.maps.Service.Status.ERROR) return;
+          const addr = res.v2?.addresses?.[0];
+          if (addr) setMapCoords({ lat: parseFloat(addr.y), lng: parseFloat(addr.x) });
+        });
+      });
+    } else {
+      fetch(
+        `https://openapi.naver.com/v1/search/local.json?query=${encodeURIComponent(item.location)}&display=1`,
+        {
+          headers: {
+            "X-Naver-Client-Id": NAVER_SEARCH_CLIENT_ID,
+            "X-Naver-Client-Secret": NAVER_SEARCH_CLIENT_SECRET,
+          },
+        }
+      )
+        .then((r) => r.json())
+        .then((data) => {
+          const doc = data.items?.[0];
+          if (doc) setMapCoords({ lat: parseInt(doc.mapy) / 1e7, lng: parseInt(doc.mapx) / 1e7 });
+        })
+        .catch(() => {});
+    }
+  }, [item, mapCoords]);
 
   if (loading) {
     return (
@@ -246,6 +288,24 @@ export default function DetailScreen() {
         </View>
       </Modal>
 
+      {/* 풀스크린 지도 모달 */}
+      <Modal visible={showFullMap} animationType="slide" onRequestClose={() => setShowFullMap(false)}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: "#000" }}>
+          <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 20, paddingVertical: 14, backgroundColor: "#fff", borderBottomWidth: 1, borderBottomColor: "#E5E7EB" }}>
+            <TouchableOpacity onPress={() => setShowFullMap(false)} style={{ padding: 4 }}>
+              <Text style={{ fontSize: 18, color: "#434343" }}>✕</Text>
+            </TouchableOpacity>
+            <View style={{ flex: 1, alignItems: "center" }}>
+              <Text style={{ fontSize: 14, fontWeight: "700", color: "#000" }}>{item.location}</Text>
+            </View>
+            <View style={{ width: 26 }} />
+          </View>
+          {mapCoords && (
+            <NaverMapView lat={mapCoords.lat} lng={mapCoords.lng} fill interactive borderRadius={0} />
+          )}
+        </SafeAreaView>
+      </Modal>
+
       {actionLoading && (
         <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(0,0,0,0.2)", zIndex: 100 }}>
           <ActivityIndicator size="large" color="#1E3A5F" />
@@ -303,7 +363,9 @@ export default function DetailScreen() {
 
           {/* 상세 설명 */}
           <Text style={{ fontSize: 12, fontWeight: "700", color: "#000", marginTop: 16, marginBottom: 8 }}>상세 설명</Text>
-          <Text style={{ fontSize: 12, color: "#434343", lineHeight: 16, marginBottom: 16 }}>{item.description}</Text>
+          <Text style={{ fontSize: 12, color: item.description ? "#434343" : "#ABABAB", lineHeight: 16, marginBottom: 16 }}>
+            {item.description || "상세 설명이 없습니다."}
+          </Text>
 
           <Divider />
 
@@ -312,14 +374,23 @@ export default function DetailScreen() {
             {isLost ? "분실 위치" : "습득 위치"}
           </Text>
           <View style={{ shadowColor: "#000", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 3 }}>
-            <View style={{ borderTopLeftRadius: 8, borderTopRightRadius: 8, overflow: "hidden", height: 74 }}>
-              <Image source={mapImage} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
+            <View style={{ borderTopLeftRadius: 8, borderTopRightRadius: 8, overflow: "hidden", height: 120 }}>
+              {mapCoords ? (
+                <NaverMapView lat={mapCoords.lat} lng={mapCoords.lng} height={120} interactive={false} borderRadius={0} />
+              ) : (
+                <View style={{ flex: 1, backgroundColor: "#E5E7EB", alignItems: "center", justifyContent: "center" }}>
+                  <ActivityIndicator size="small" color="#919191" />
+                </View>
+              )}
             </View>
-            <View style={{ backgroundColor: "#F5F7FA", height: 33, borderBottomLeftRadius: 8, borderBottomRightRadius: 8, flexDirection: "row", alignItems: "center", paddingHorizontal: 16 }}>
+            <TouchableOpacity
+              onPress={() => mapCoords && setShowFullMap(true)}
+              style={{ backgroundColor: "#F5F7FA", height: 33, borderBottomLeftRadius: 8, borderBottomRightRadius: 8, flexDirection: "row", alignItems: "center", paddingHorizontal: 16 }}
+            >
               <DetailPinIcon width={9} height={11} />
               <Text style={{ flex: 1, marginLeft: 7, fontSize: 10, color: "#000" }}>{item.location}</Text>
-              {!isLost && <DetailArrowIcon width={5} height={9} />}
-            </View>
+              {mapCoords && <DetailArrowIcon width={5} height={9} />}
+            </TouchableOpacity>
           </View>
 
           <Divider />
