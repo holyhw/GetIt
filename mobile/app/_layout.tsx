@@ -3,7 +3,8 @@ import { Stack, useRouter } from "expo-router";
 import { Platform, View } from "react-native";
 import { useEffect, useRef } from "react";
 import * as Notifications from "expo-notifications";
-import { AuthProvider } from "../context/AuthContext";
+import { AuthProvider, useAuth } from "../context/AuthContext";
+import { setUnauthorizedHandler } from "../utils/api";
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -13,6 +14,20 @@ Notifications.setNotificationHandler({
     shouldSetBadge: false,
   }),
 });
+
+function AuthHandler() {
+  const router = useRouter();
+  const { logout } = useAuth();
+
+  useEffect(() => {
+    setUnauthorizedHandler(() => {
+      logout();
+      router.replace("/login");
+    });
+  }, [logout, router]);
+
+  return null;
+}
 
 function NotificationNavigator() {
   const router = useRouter();
@@ -59,6 +74,7 @@ function PhoneFrame({ children }: { children: React.ReactNode }) {
 export default function RootLayout() {
   return (
     <AuthProvider>
+    <AuthHandler />
     <NotificationNavigator />
     <PhoneFrame>
       <Stack>

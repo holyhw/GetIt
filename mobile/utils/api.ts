@@ -1,5 +1,11 @@
 const API_BASE_URL = "https://api.getitsju.com";
 
+let onUnauthorized: (() => void) | null = null;
+
+export function setUnauthorizedHandler(handler: () => void) {
+  onUnauthorized = handler;
+}
+
 type ApiResponse<T> = {
   code: string;
   message: string;
@@ -20,6 +26,9 @@ async function request<T>(
     },
   });
   if (!res.ok) {
+    if (res.status === 401 && token) {
+      onUnauthorized?.();
+    }
     const errText = await res.text().catch(() => "");
     let errMessage = `API error: ${res.status}`;
     if (errText) {
