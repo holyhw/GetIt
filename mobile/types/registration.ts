@@ -22,3 +22,13 @@ export type RegistrationDetail = RegistrationItem & {
   userName: string;
   userProfileImageUrl: string | null;
 };
+
+export type PagedResponse<T> = {
+  content: T[];
+  totalPages: number;
+  totalElements: number;
+  hasNext: boolean;
+  hasPrevious: boolean;
+  page: number;
+  size: number;
+};

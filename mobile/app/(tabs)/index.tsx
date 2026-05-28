@@ -1,13 +1,14 @@
 import { useState, useEffect, useCallback } from "react";
-import { View, Text, ScrollView, TouchableOpacity, Image, ActivityIndicator, RefreshControl } from "react-native";
+import { View, Text, FlatList, TouchableOpacity, Image, ActivityIndicator, RefreshControl } from "react-native";
 import { useRouter } from "expo-router";
 import { useAuth } from "../../context/AuthContext";
 import { api } from "../../utils/api";
-import type { FilterType, RegistrationItem } from "../../types/registration";
+import type { FilterType, RegistrationItem, PagedResponse } from "../../types/registration";
 import LogoCircle from "../../assets/logo-text.svg";
 import LogoWordmark from "../../assets/logo-icon.svg";
 import BellIcon from "../../assets/bell-icon.svg";
 
+const PAGE_SIZE = 15;
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -15,29 +16,45 @@ export default function HomeScreen() {
   const [filter, setFilter] = useState<FilterType>("습득물");
   const [items, setItems] = useState<RegistrationItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [page, setPage] = useState(0);
+  const [hasNext, setHasNext] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
-  const fetchItems = useCallback(async () => {
-    const path = filter === "습득물" ? "/api/registration/found" : "/api/registration/lost";
+  const fetchItems = useCallback(async (pageNum: number, append: boolean) => {
+    const path = filter === "습득물"
+      ? `/api/registration/found/page?page=${pageNum}&size=${PAGE_SIZE}`
+      : `/api/registration/lost/page?page=${pageNum}&size=${PAGE_SIZE}`;
     try {
-      const data = await api.get<RegistrationItem[]>(path, token ?? "");
-      setItems(data);
+      const data = await api.get<PagedResponse<RegistrationItem>>(path, token ?? "");
+      setItems(prev => append ? [...prev, ...data.content] : data.content);
+      setHasNext(data.hasNext);
+      setPage(data.page);
     } catch {
-      setItems([]);
+      if (!append) setItems([]);
     }
   }, [filter, token]);
 
   useEffect(() => {
     setLoading(true);
-    fetchItems().finally(() => setLoading(false));
+    setItems([]);
+    setPage(0);
+    setHasNext(false);
+    fetchItems(0, false).finally(() => setLoading(false));
   }, [fetchItems]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await fetchItems();
+    await fetchItems(0, false);
     setRefreshing(false);
   }, [fetchItems]);
+
+  const onEndReached = useCallback(() => {
+    if (!hasNext || loadingMore || loading) return;
+    setLoadingMore(true);
+    fetchItems(page + 1, true).finally(() => setLoadingMore(false));
+  }, [hasNext, loadingMore, loading, fetchItems, page]);
 
   useEffect(() => {
     if (!token) return;
@@ -100,25 +117,33 @@ export default function HomeScreen() {
           <ActivityIndicator size="large" color="#1E3A5F" />
         </View>
       ) : (
-        <ScrollView
+        <FlatList
+          data={items}
+          keyExtractor={(item) => item.id.toString()}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingHorizontal: 12, paddingTop: 20, paddingBottom: 16, gap: 12 }}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-        >
-          {items.length === 0 ? (
+          onEndReached={onEndReached}
+          onEndReachedThreshold={0.3}
+          ListEmptyComponent={
             <View style={{ alignItems: "center", marginTop: 60 }}>
               <Text style={{ fontSize: 14, color: "#919191" }}>등록된 게시물이 없습니다.</Text>
             </View>
-          ) : (
-            items.map((item) => (
-              <ItemCard
-                key={item.id}
-                item={item}
-                onPress={() => router.push(`/detail?id=${item.id}&type=${item.itemType.toLowerCase()}${item.matched ? "&matchStatus=complete" : ""}`)}
-              />
-            ))
+          }
+          ListFooterComponent={
+            loadingMore ? (
+              <View style={{ paddingVertical: 16, alignItems: "center" }}>
+                <ActivityIndicator size="small" color="#1E3A5F" />
+              </View>
+            ) : null
+          }
+          renderItem={({ item }) => (
+            <ItemCard
+              item={item}
+              onPress={() => router.push(`/detail?id=${item.id}&type=${item.itemType.toLowerCase()}${item.matched ? "&matchStatus=complete" : ""}`)}
+            />
           )}
-        </ScrollView>
+        />
       )}
     </View>
   );

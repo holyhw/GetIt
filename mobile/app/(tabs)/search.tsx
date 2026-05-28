@@ -3,7 +3,7 @@ import { View, Text, TextInput, ScrollView, TouchableOpacity, Image, FlatList, A
 import { useRouter } from "expo-router";
 import Svg, { Circle, Line } from "react-native-svg";
 import { useAuth } from "../../context/AuthContext";
-import type { FilterType, Category, RegistrationItem } from "../../types/registration";
+import type { FilterType, Category, RegistrationItem, PagedResponse } from "../../types/registration";
 import { api } from "../../utils/api";
 
 const CATEGORIES: Category[] = ["전체", "의류", "전자기기", "지갑/가방", "귀중품", "기타"];
@@ -71,22 +71,27 @@ export default function SearchScreen() {
   const [category, setCategory] = useState<Category>("전체");
   const [results, setResults] = useState<RegistrationItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [searchPage, setSearchPage] = useState(0);
+  const [searchHasNext, setSearchHasNext] = useState(false);
 
   const isSearched = submittedQuery.trim() !== "";
   const isLostMode = typeFilter === "분실물";
   const activeColor = isLostMode ? "#FF7A00" : "#1E3A5F";
 
   const fetchResults = useCallback(
-    async (keyword: string) => {
+    async (keyword: string, pageNum: number, append: boolean) => {
       if (!keyword.trim()) return;
-      setLoading(true);
       try {
-        const data = await api.get<RegistrationItem[]>(`/api/registration/search?keyword=${encodeURIComponent(keyword)}`, token ?? "");
-        setResults(data);
+        const data = await api.get<PagedResponse<RegistrationItem>>(
+          `/api/registration/search/page?keyword=${encodeURIComponent(keyword)}&page=${pageNum}&size=15`,
+          token ?? ""
+        );
+        setResults(prev => append ? [...prev, ...data.content] : data.content);
+        setSearchHasNext(data.hasNext);
+        setSearchPage(data.page);
       } catch {
-        setResults([]);
-      } finally {
-        setLoading(false);
+        if (!append) setResults([]);
       }
     },
     [token],
@@ -97,20 +102,36 @@ export default function SearchScreen() {
     if (!trimmed) return;
     setSubmittedQuery(trimmed);
     setRecentSearches((prev) => [trimmed, ...prev.filter((s) => s !== trimmed)].slice(0, 8));
-    fetchResults(trimmed);
+    setResults([]);
+    setSearchPage(0);
+    setSearchHasNext(false);
+    setLoading(true);
+    fetchResults(trimmed, 0, false).finally(() => setLoading(false));
   };
 
   const handleRecentTap = (term: string) => {
     setQuery(term);
     setSubmittedQuery(term);
-    fetchResults(term);
+    setResults([]);
+    setSearchPage(0);
+    setSearchHasNext(false);
+    setLoading(true);
+    fetchResults(term, 0, false).finally(() => setLoading(false));
   };
 
   const handleClear = () => {
     setQuery("");
     setSubmittedQuery("");
     setResults([]);
+    setSearchPage(0);
+    setSearchHasNext(false);
   };
+
+  const onEndReached = useCallback(() => {
+    if (!searchHasNext || loadingMore || loading) return;
+    setLoadingMore(true);
+    fetchResults(submittedQuery, searchPage + 1, true).finally(() => setLoadingMore(false));
+  }, [searchHasNext, loadingMore, loading, fetchResults, submittedQuery, searchPage]);
 
   const filtered = results.filter((item) => {
     const matchType = isLostMode ? item.itemType === "LOST" : item.itemType === "FOUND";
@@ -259,6 +280,15 @@ export default function SearchScreen() {
               showsVerticalScrollIndicator={false}
               style={{ flex: 1 }}
               contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 100, gap: 10 }}
+              onEndReached={onEndReached}
+              onEndReachedThreshold={0.3}
+              ListFooterComponent={
+                loadingMore ? (
+                  <View style={{ paddingVertical: 16, alignItems: "center" }}>
+                    <ActivityIndicator size="small" color="#1E3A5F" />
+                  </View>
+                ) : null
+              }
               renderItem={({ item }) => <ItemCard item={item} onPress={() => router.push(`/detail?id=${item.id}&type=${item.itemType.toLowerCase()}`)} />}
             />
           )}
