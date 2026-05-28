@@ -46,6 +46,8 @@ export default function DetailScreen() {
   const [loading, setLoading] = useState(true);
   const [showMore, setShowMore] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [showDeleteError, setShowDeleteError] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
 
   useEffect(() => {
@@ -118,15 +120,17 @@ export default function DetailScreen() {
   };
 
   const handleDeleteConfirm = async () => {
-    setShowDeleteConfirm(false);
-    setShowMore(false);
     if (!token) return;
+    setDeleteError(null);
     setActionLoading(true);
     try {
       await api.delete(`/api/registration/${item!.id}`, token);
+      setShowDeleteConfirm(false);
       router.canGoBack() ? router.back() : router.replace("/(tabs)");
     } catch (e: any) {
-      Alert.alert("오류", e?.message ?? "삭제 중 문제가 발생했습니다.");
+      setDeleteError("매칭 결과가 있어 삭제할 수 없습니다.");
+      setShowDeleteConfirm(false);
+      setShowDeleteError(true);
     } finally {
       setActionLoading(false);
     }
@@ -184,7 +188,7 @@ export default function DetailScreen() {
                 <Text style={{ fontSize: 16, color: "#434343", fontWeight: "600" }}>수정하기</Text>
                 <Text style={{ fontSize: 12, color: "#919191", marginTop: 2 }}>게시물 내용을 수정합니다</Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={() => setShowDeleteConfirm(true)} style={{ paddingVertical: 18, paddingHorizontal: 24 }}>
+              <TouchableOpacity onPress={() => { setShowMore(false); setDeleteError(null); setShowDeleteConfirm(true); }} style={{ paddingVertical: 18, paddingHorizontal: 24 }}>
                 <Text style={{ fontSize: 16, color: "#EF4444", fontWeight: "600" }}>게시물 삭제</Text>
                 <Text style={{ fontSize: 12, color: "#919191", marginTop: 2 }}>이 게시물을 삭제합니다</Text>
               </TouchableOpacity>
@@ -213,11 +217,31 @@ export default function DetailScreen() {
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={handleDeleteConfirm}
+                disabled={actionLoading}
                 style={{ flex: 1, height: 42, borderRadius: 8, backgroundColor: "#EF4444", alignItems: "center", justifyContent: "center" }}
               >
-                <Text style={{ fontSize: 14, color: "#fff", fontWeight: "600" }}>삭제</Text>
+                {actionLoading
+                  ? <ActivityIndicator size="small" color="#fff" />
+                  : <Text style={{ fontSize: 14, color: "#fff", fontWeight: "600" }}>삭제</Text>
+                }
               </TouchableOpacity>
             </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* 삭제 실패 Modal */}
+      <Modal visible={showDeleteError} transparent animationType="fade" onRequestClose={() => {}}>
+        <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)", alignItems: "center", justifyContent: "center" }}>
+          <View style={{ backgroundColor: "#fff", borderRadius: 16, padding: 24, width: 280 }}>
+            <Text style={{ fontSize: 16, fontWeight: "700", color: "#000", marginBottom: 8, textAlign: "center" }}>삭제 실패</Text>
+            <Text style={{ fontSize: 14, color: "#434343", marginBottom: 24, textAlign: "center" }}>{deleteError}</Text>
+            <TouchableOpacity
+              onPress={() => setShowDeleteError(false)}
+              style={{ height: 42, borderRadius: 8, backgroundColor: "#EF4444", alignItems: "center", justifyContent: "center" }}
+            >
+              <Text style={{ fontSize: 14, color: "#fff", fontWeight: "600" }}>확인</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>

@@ -14,12 +14,19 @@ async function request<T>(
   const res = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
     headers: {
-      Authorization: `Bearer ${token}`,
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       "Content-Type": "application/json",
       ...options.headers,
     },
   });
-  if (!res.ok) throw new Error(`API error: ${res.status}`);
+  if (!res.ok) {
+    const errText = await res.text().catch(() => "");
+    let errMessage = `API error: ${res.status}`;
+    if (errText) {
+      try { errMessage = JSON.parse(errText).message ?? errMessage; } catch {}
+    }
+    throw new Error(errMessage);
+  }
   if (res.status === 204 || res.headers.get("content-length") === "0") {
     return undefined as T;
   }

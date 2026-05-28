@@ -78,10 +78,10 @@ export default function SearchScreen() {
 
   const fetchResults = useCallback(
     async (keyword: string) => {
-      if (!token || !keyword.trim()) return;
+      if (!keyword.trim()) return;
       setLoading(true);
       try {
-        const data = await api.get<RegistrationItem[]>(`/api/registration/search?keyword=${encodeURIComponent(keyword)}`, token);
+        const data = await api.get<RegistrationItem[]>(`/api/registration/search?keyword=${encodeURIComponent(keyword)}`, token ?? "");
         setResults(data);
       } catch {
         setResults([]);
