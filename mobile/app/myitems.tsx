@@ -9,13 +9,12 @@ import type { RegistrationItem } from "../types/registration";
 
 const itemPlaceholder = require("../assets/cap.jpg");
 
-type Status = "매칭완료" | "매칭중" | "종료";
-type FilterKey = "전체" | "매칭중" | "매칭완료" | "종료";
+type Status = "매칭완료" | "매칭중";
+type FilterKey = "전체" | "매칭중" | "매칭완료";
 
 const STATUS_CONFIG: Record<Status, { dot: string; text: string }> = {
   매칭완료: { dot: "#1E3A5F", text: "#1E3A5F" },
   매칭중:   { dot: "#FF7A00", text: "#FF7A00" },
-  종료:     { dot: "#757575", text: "#757575" },
 };
 
 
@@ -106,10 +105,9 @@ export default function MyItemsScreen() {
     전체:   items.length,
     매칭중: items.filter((i) => toStatus(i) === "매칭중").length,
     매칭완료: items.filter((i) => toStatus(i) === "매칭완료").length,
-    종료:   0,
   };
 
-  const FILTERS: FilterKey[] = ["전체", "매칭중", "매칭완료", "종료"];
+  const FILTERS: FilterKey[] = ["전체", "매칭중", "매칭완료"];
 
   return (
     <View style={{ flex: 1, backgroundColor: "#F5F7FA" }}>
