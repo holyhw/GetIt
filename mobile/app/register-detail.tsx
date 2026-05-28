@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { View, Text, ScrollView, TouchableOpacity, TextInput, Alert, KeyboardAvoidingView, Platform, ActivityIndicator } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, TextInput, Alert, KeyboardAvoidingView, Platform, ActivityIndicator, Animated, Easing } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import BackIcon from "../assets/myinfo-back.svg";
 import RequiredDot from "../assets/reg-required.svg";
@@ -13,6 +13,80 @@ import type { PreAnalysisStatus } from "../types/preAnalysis";
 
 const API_BASE_URL = "https://api.getitsju.com";
 const DateTimePicker = Platform.OS !== "web" ? require("@react-native-community/datetimepicker").default : null;
+
+const MATCHING_MESSAGES = [
+  "분실물 정보 분석 중...",
+  "유사한 습득물 검색 중...",
+  "매칭 결과 생성 중...",
+];
+
+function MatchingLoadingOverlay() {
+  const ring1 = useRef(new Animated.Value(0)).current;
+  const ring2 = useRef(new Animated.Value(0)).current;
+  const ring3 = useRef(new Animated.Value(0)).current;
+  const textOpacity = useRef(new Animated.Value(1)).current;
+  const [msgIndex, setMsgIndex] = useState(0);
+
+  useEffect(() => {
+    const radarAnim = Animated.loop(
+      Animated.stagger(700, [ring1, ring2, ring3].map((ring) =>
+        Animated.sequence([
+          Animated.timing(ring, { toValue: 1, duration: 2100, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+          Animated.timing(ring, { toValue: 0, duration: 0, useNativeDriver: true }),
+        ])
+      ))
+    );
+    radarAnim.start();
+
+    let idx = 0;
+    const cycleText = () => {
+      Animated.timing(textOpacity, { toValue: 0, duration: 280, useNativeDriver: true }).start(() => {
+        idx = (idx + 1) % MATCHING_MESSAGES.length;
+        setMsgIndex(idx);
+        Animated.timing(textOpacity, { toValue: 1, duration: 280, useNativeDriver: true }).start();
+      });
+    };
+    const interval = setInterval(cycleText, 2100);
+
+    return () => {
+      radarAnim.stop();
+      clearInterval(interval);
+    };
+  }, []);
+
+  return (
+    <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(10,18,42,0.97)", alignItems: "center", justifyContent: "center", zIndex: 9999 }}>
+      {/* Radar rings */}
+      <View style={{ width: 220, height: 220, alignItems: "center", justifyContent: "center" }}>
+        {[ring1, ring2, ring3].map((ring, i) => (
+          <Animated.View
+            key={i}
+            style={{
+              position: "absolute",
+              width: 220,
+              height: 220,
+              borderRadius: 110,
+              borderWidth: 1.5,
+              borderColor: "#FF7A00",
+              opacity: ring.interpolate({ inputRange: [0, 0.08, 0.65, 1], outputRange: [0, 0.75, 0.25, 0] }),
+              transform: [{ scale: ring.interpolate({ inputRange: [0, 1], outputRange: [0.12, 1] }) }],
+            }}
+          />
+        ))}
+        {/* Center badge */}
+        <View style={{ width: 82, height: 82, borderRadius: 41, backgroundColor: "#FF7A00", alignItems: "center", justifyContent: "center", shadowColor: "#FF7A00", shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.7, shadowRadius: 28, elevation: 14 }}>
+          <Text style={{ fontSize: 36 }}>🔍</Text>
+        </View>
+      </View>
+
+      <Text style={{ fontSize: 22, fontWeight: "700", color: "#ffffff", marginTop: 36, letterSpacing: -0.5 }}>분실물 매칭 중</Text>
+      <Animated.Text style={{ fontSize: 14, color: "#FF7A00", marginTop: 10, letterSpacing: -0.3, opacity: textOpacity }}>
+        {MATCHING_MESSAGES[msgIndex]}
+      </Animated.Text>
+      <Text style={{ fontSize: 11, color: "rgba(255,255,255,0.28)", marginTop: 8 }}>잠시만 기다려주세요</Text>
+    </View>
+  );
+}
 
 type InputRowProps = {
   label: string;
@@ -475,6 +549,9 @@ export default function RegisterDetailScreen() {
             )}
           </TouchableOpacity>
         </View>
+
+        {/* 분실물 매칭 로딩 오버레이 */}
+        {loading && !isFound && <MatchingLoadingOverlay />}
 
         {/* iOS 날짜 피커 바텀시트 */}
         {Platform.OS === "ios" && showPicker && DateTimePicker && (
