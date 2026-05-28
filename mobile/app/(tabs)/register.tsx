@@ -2,23 +2,36 @@ import { useState, useCallback } from "react";
 import { View, Text, ScrollView, TouchableOpacity, Alert } from "react-native";
 import { useRouter, useFocusEffect } from "expo-router";
 import BackIcon from "../../assets/myinfo-back.svg";
-import RequiredDot from "../../assets/reg-required.svg";
-
+import SmartphoneIcon from "../../assets/smartphone.svg";
+import BackpackIcon from "../../assets/backpack.svg";
+import WalletIcon from "../../assets/wallet.svg";
+import ShirtIcon from "../../assets/shirt.svg";
+import GemIcon from "../../assets/gem.svg";
+import BookIcon from "../../assets/book.svg";
+import KeyIcon from "../../assets/key-round.svg";
 import { useAuth } from "../../context/AuthContext";
 
-const CATEGORIES = ["지갑", "의류", "가방", "전자기기", "기타"];
+const CATEGORIES = [
+  { label: "전자기기", Icon: SmartphoneIcon, subcategories: ["스마트폰", "이어폰", "헤드셋", "키보드", "태블릿", "노트북", "보조배터리", "기타"] },
+  { label: "가방", Icon: BackpackIcon, subcategories: ["백팩", "토트백", "에코백", "크로스백", "파우치", "기타"] },
+  { label: "지갑", Icon: WalletIcon, subcategories: ["반지갑", "장지갑", "카드지갑", "기타"] },
+  { label: "패션잡화", Icon: ShirtIcon, subcategories: ["신발", "의류", "안경", "선글라스", "모자", "기타"] },
+  { label: "액세서리", Icon: GemIcon, subcategories: ["반지", "목걸이", "귀걸이", "팔찌", "시계", "기타"] },
+  { label: "도서/문구", Icon: BookIcon, subcategories: ["책", "기타"] },
+  { label: "소지품", Icon: KeyIcon, subcategories: ["열쇠", "텀블러", "우산", "기타"] },
+];
 
 export default function RegisterScreen() {
   const router = useRouter();
   const { token } = useAuth();
 
   const [type, setType] = useState<"found" | "lost">("found");
-  const [category, setCategory] = useState<string | null>(null);
+  const [selected, setSelected] = useState<{ main: string; sub: string } | null>(null);
 
   useFocusEffect(
     useCallback(() => {
       setType("found");
-      setCategory(null);
+      setSelected(null);
     }, [])
   );
 
@@ -30,10 +43,11 @@ export default function RegisterScreen() {
       Alert.alert("로그인이 필요합니다.");
       return;
     }
-    if (!category) {
+    if (!selected) {
       Alert.alert("카테고리를 선택해주세요.");
       return;
     }
+    const category = `${selected.main} > ${selected.sub}`;
     router.push(`/register-photo?type=${type}&category=${encodeURIComponent(category)}`);
   };
 
@@ -67,7 +81,7 @@ export default function RegisterScreen() {
             borderColor: "#D9D9D9",
             borderRadius: 10,
             padding: 2,
-            marginBottom: 24,
+            marginBottom: 20,
           }}
         >
           <TouchableOpacity
@@ -84,46 +98,60 @@ export default function RegisterScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* 카테고리 */}
-        <View
-          style={{
-            backgroundColor: "#fff",
-            borderRadius: 10,
-            padding: 16,
-            shadowColor: "#000",
-            shadowOffset: { width: -2, height: 2 },
-            shadowOpacity: 0.05,
-            shadowRadius: 4,
-            elevation: 2,
-          }}
-        >
-          <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 14 }}>
-            <Text style={{ fontSize: 14, fontWeight: "700", color: "#000" }}>카테고리</Text>
-            <RequiredDot width={5} height={5} style={{ marginLeft: 2 }} />
-          </View>
-          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
-            {CATEGORIES.map((cat) => {
-              const selected = category === cat;
-              return (
-                <TouchableOpacity
-                  key={cat}
-                  onPress={() => setCategory(selected ? null : cat)}
-                  style={{
-                    height: 36,
-                    paddingHorizontal: 18,
-                    borderRadius: 18,
-                    alignItems: "center",
-                    justifyContent: "center",
-                    backgroundColor: selected ? "#fff" : "#E5E7EB",
-                    borderWidth: selected ? 1.5 : 1,
-                    borderColor: selected ? themeColor : "#D9D9D9",
-                  }}
-                >
-                  <Text style={{ fontSize: 12, color: selected ? themeColor : "#000", fontWeight: selected ? "600" : "400" }}>{cat}</Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
+        {/* 카테고리 목록 */}
+        <View style={{ gap: 12 }}>
+          {CATEGORIES.map((cat) => {
+            const { Icon } = cat;
+            return (
+              <View key={cat.label} style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+                {/* 대분류 — 흰 박스 밖 */}
+                <View style={{ width: 52, alignItems: "center", gap: 4 }}>
+                  <Icon width={24} height={24} />
+                  <Text style={{ fontSize: 11, fontWeight: "600", color: "#434343", textAlign: "center" }}>{cat.label}</Text>
+                </View>
+
+                {/* 소분류 — 흰 박스 */}
+                <View style={{
+                  flex: 1,
+                  backgroundColor: "#fff",
+                  borderRadius: 12,
+                  padding: 12,
+                  shadowColor: "#000",
+                  shadowOffset: { width: -2, height: 2 },
+                  shadowOpacity: 0.05,
+                  shadowRadius: 4,
+                  elevation: 2,
+                  flexDirection: "row",
+                  flexWrap: "wrap",
+                  gap: 8,
+                }}>
+                  {cat.subcategories.map((sub) => {
+                    const isSelected = selected?.main === cat.label && selected?.sub === sub;
+                    return (
+                      <TouchableOpacity
+                        key={sub}
+                        onPress={() => setSelected(isSelected ? null : { main: cat.label, sub })}
+                        style={{
+                          width: "47%",
+                          paddingVertical: 10,
+                          borderRadius: 8,
+                          alignItems: "center",
+                          justifyContent: "center",
+                          backgroundColor: isSelected ? themeColor + "15" : "#F5F7FA",
+                          borderWidth: 1,
+                          borderColor: isSelected ? themeColor : "#E5E7EB",
+                        }}
+                      >
+                        <Text style={{ fontSize: 12, color: isSelected ? themeColor : "#434343", fontWeight: isSelected ? "600" : "400" }}>
+                          {sub}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+            );
+          })}
         </View>
       </ScrollView>
 
@@ -133,7 +161,7 @@ export default function RegisterScreen() {
           activeOpacity={0.85}
           onPress={handleNext}
           style={{
-            backgroundColor: category ? themeColor : "#D9D9D9",
+            backgroundColor: selected ? themeColor : "#D9D9D9",
             height: 46,
             borderRadius: 10,
             alignItems: "center",
