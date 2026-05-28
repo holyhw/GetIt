@@ -111,6 +111,7 @@ export default function RegisterDetailScreen() {
   const [title, setTitle] = useState("");
   const [location, setLocation] = useState("");
   const [date, setDate] = useState<Date | null>(null);
+  const [tempDate, setTempDate] = useState<Date>(new Date());
   const [showPicker, setShowPicker] = useState(false);
   const [loading, setLoading] = useState(false);
   const [preAnalysisId, setPreAnalysisId] = useState<number | null>(null);
@@ -418,7 +419,7 @@ export default function RegisterDetailScreen() {
               ) : (
                 <>
                   <TouchableOpacity
-                    onPress={() => setShowPicker(true)}
+                    onPress={() => { setTempDate(date ?? new Date()); setShowPicker(true); }}
                     style={{
                       height: 34,
                       backgroundColor: "#E5E7EB",
@@ -493,20 +494,20 @@ export default function RegisterDetailScreen() {
             >
               <View style={{ width: 40, height: 4, backgroundColor: "#D9D9D9", borderRadius: 2, alignSelf: "center", marginTop: 12 }} />
               <View style={{ flexDirection: "row", justifyContent: "flex-end", paddingHorizontal: 20, paddingTop: 8, paddingBottom: 4 }}>
-                <TouchableOpacity onPress={() => setShowPicker(false)}>
+                <TouchableOpacity onPress={() => { setDate(tempDate); setShowPicker(false); }}>
                   <Text style={{ fontSize: 16, color: themeColor, fontWeight: "600" }}>완료</Text>
                 </TouchableOpacity>
               </View>
               <View style={{ alignItems: "center", width: "100%" }}>
                 <DateTimePicker
-                  value={date ?? new Date()}
+                  value={tempDate}
                   mode="date"
                   display="spinner"
                   maximumDate={new Date()}
                   style={{ height: 216 }}
                   locale="ko"
                   onChange={(event: any, selected?: Date) => {
-                    if (selected) setDate(new Date(selected));
+                    if (selected) setTempDate(new Date(selected));
                   }}
                 />
               </View>
