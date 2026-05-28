@@ -7,6 +7,10 @@ import type { FilterType, RegistrationItem, PagedResponse } from "../../types/re
 import LogoCircle from "../../assets/logo-text.svg";
 import LogoWordmark from "../../assets/logo-icon.svg";
 import BellIcon from "../../assets/bell-icon.svg";
+import { CategoryFilterModal, type CategoryFilterValue } from "../../components/CategoryFilterModal";
+import { DateFilterModal } from "../../components/DateFilterModal";
+import type { DateFilter } from "../../utils/filters";
+import { getDateFilterLabel } from "../../utils/filters";
 
 const PAGE_SIZE = 15;
 
@@ -21,11 +25,21 @@ export default function HomeScreen() {
   const [page, setPage] = useState(0);
   const [hasNext, setHasNext] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [categoryFilter, setCategoryFilter] = useState<CategoryFilterValue>(null);
+  const [dateFilter, setDateFilter] = useState<DateFilter>({});
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [showDateModal, setShowDateModal] = useState(false);
 
   const fetchItems = useCallback(async (pageNum: number, append: boolean) => {
-    const path = filter === "습득물"
-      ? `/api/registration/found/page?page=${pageNum}&size=${PAGE_SIZE}`
-      : `/api/registration/lost/page?page=${pageNum}&size=${PAGE_SIZE}`;
+    const params = new URLSearchParams({ page: String(pageNum), size: String(PAGE_SIZE) });
+    if (categoryFilter) {
+      params.set("majorCategory", categoryFilter.major);
+      params.set("minorCategory", categoryFilter.minor);
+    }
+    if (dateFilter.start) params.set("startDate", dateFilter.start);
+    if (dateFilter.end) params.set("endDate", dateFilter.end);
+    const endpoint = filter === "습득물" ? "found" : "lost";
+    const path = `/api/registration/${endpoint}/page?${params.toString()}`;
     try {
       const data = await api.get<PagedResponse<RegistrationItem>>(path, token ?? "");
       setItems(prev => append ? [...prev, ...data.content] : data.content);
@@ -34,7 +48,7 @@ export default function HomeScreen() {
     } catch {
       if (!append) setItems([]);
     }
-  }, [filter, token]);
+  }, [filter, token, categoryFilter, dateFilter]);
 
   useEffect(() => {
     setLoading(true);
@@ -62,6 +76,11 @@ export default function HomeScreen() {
       .then((res) => setUnreadCount(res.count ?? 0))
       .catch(() => {});
   }, [token]);
+
+  const activeColor = filter === "분실물" ? "#FF7A00" : "#1E3A5F";
+  const categoryLabel = categoryFilter ? `${categoryFilter.major} > ${categoryFilter.minor}` : "카테고리";
+  const isCategoryActive = categoryFilter !== null;
+  const isDateActive = !!(dateFilter.start || dateFilter.end);
 
   return (
     <View style={{ flex: 1, backgroundColor: "#F5F7FA" }}>
@@ -112,6 +131,40 @@ export default function HomeScreen() {
         </TouchableOpacity>
       </View>
 
+      {/* 필터 버튼 */}
+      <View style={{ flexDirection: "row", paddingHorizontal: 16, gap: 8, marginBottom: 4 }}>
+        <TouchableOpacity
+          onPress={() => setShowCategoryModal(true)}
+          style={{
+            flexDirection: "row", alignItems: "center", gap: 4,
+            paddingHorizontal: 12, paddingVertical: 7,
+            borderRadius: 20, borderWidth: 1,
+            borderColor: isCategoryActive ? activeColor : "#D9D9D9",
+            backgroundColor: isCategoryActive ? activeColor + "15" : "#fff",
+          }}
+        >
+          <Text style={{ fontSize: 13, fontWeight: "600", color: isCategoryActive ? activeColor : "#434343" }}>
+            {categoryLabel}
+          </Text>
+          <Text style={{ fontSize: 9, color: isCategoryActive ? activeColor : "#919191" }}>▼</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => setShowDateModal(true)}
+          style={{
+            flexDirection: "row", alignItems: "center", gap: 4,
+            paddingHorizontal: 12, paddingVertical: 7,
+            borderRadius: 20, borderWidth: 1,
+            borderColor: isDateActive ? activeColor : "#D9D9D9",
+            backgroundColor: isDateActive ? activeColor + "15" : "#fff",
+          }}
+        >
+          <Text style={{ fontSize: 13, fontWeight: "600", color: isDateActive ? activeColor : "#434343" }}>
+            {getDateFilterLabel(dateFilter)}
+          </Text>
+          <Text style={{ fontSize: 9, color: isDateActive ? activeColor : "#919191" }}>▼</Text>
+        </TouchableOpacity>
+      </View>
+
       {loading ? (
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
           <ActivityIndicator size="large" color="#1E3A5F" />
@@ -145,6 +198,21 @@ export default function HomeScreen() {
           )}
         />
       )}
+      <CategoryFilterModal
+        visible={showCategoryModal}
+        value={categoryFilter}
+        activeColor={activeColor}
+        onSelect={setCategoryFilter}
+        onClose={() => setShowCategoryModal(false)}
+      />
+
+      <DateFilterModal
+        visible={showDateModal}
+        value={dateFilter}
+        activeColor={activeColor}
+        onSelect={setDateFilter}
+        onClose={() => setShowDateModal(false)}
+      />
     </View>
   );
 }
@@ -182,7 +250,7 @@ function ItemCard({ item, onPress }: { item: RegistrationItem; onPress?: () => v
           <View style={{ backgroundColor: typeColor + "1A", borderRadius: 6, paddingHorizontal: 7, paddingVertical: 2 }}>
             <Text style={{ fontSize: 10, fontWeight: "700", color: typeColor }}>{typeLabel}</Text>
           </View>
-          <Text style={{ fontSize: 11, color: "#919191" }} numberOfLines={1}>{item.category}</Text>
+          <Text style={{ fontSize: 11, color: "#919191" }} numberOfLines={1}>{`${item.majorCategory ?? "null"} > ${item.minorCategory ?? "null"}`}</Text>
         </View>
         <Text style={{ fontSize: 16, fontWeight: "600", color: "#000" }} numberOfLines={1}>{item.title}</Text>
         <Text style={{ fontSize: 12, color: "#000", lineHeight: 18 }} numberOfLines={2}>{item.description}</Text>

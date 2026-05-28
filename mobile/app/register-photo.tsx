@@ -23,7 +23,8 @@ import { registerStore } from "../utils/registerStore";
 export default function RegisterPhotoScreen() {
   const router = useRouter();
   const { token } = useAuth();
-  const { type, category } = useLocalSearchParams<{ type: "found" | "lost"; category: string }>();
+  const { type, majorCategory, minorCategory } = useLocalSearchParams<{ type: "found" | "lost"; majorCategory: string; minorCategory: string }>();
+  const categoryDisplay = majorCategory && minorCategory ? `${majorCategory} > ${minorCategory}` : "";
 
   const [photo, setPhoto] = useState<string | null>(null);
   const [text, setText] = useState("");
@@ -56,7 +57,7 @@ export default function RegisterPhotoScreen() {
     }
 
     registerStore.setPhoto(photo);
-    router.replace(`/register-detail?type=${type}&category=${encodeURIComponent(category ?? "")}&text=${encodeURIComponent(text.trim())}`);
+    router.replace(`/register-detail?type=${type}&majorCategory=${encodeURIComponent(majorCategory ?? "")}&minorCategory=${encodeURIComponent(minorCategory ?? "")}&text=${encodeURIComponent(text.trim())}`);
   };
 
   return (
@@ -86,9 +87,9 @@ export default function RegisterPhotoScreen() {
             <View style={{ paddingHorizontal: 12, paddingVertical: 4, borderRadius: 8, backgroundColor: themeColor }}>
               <Text style={{ fontSize: 11, fontWeight: "700", color: "#fff" }}>{isFound ? "습득물" : "분실물"}</Text>
             </View>
-            {category ? (
+            {categoryDisplay ? (
               <View style={{ paddingHorizontal: 12, paddingVertical: 4, borderRadius: 8, backgroundColor: "#E5E7EB" }}>
-                <Text style={{ fontSize: 11, fontWeight: "600", color: "#434343" }}>{category}</Text>
+                <Text style={{ fontSize: 11, fontWeight: "600", color: "#434343" }}>{categoryDisplay}</Text>
               </View>
             ) : null}
           </View>

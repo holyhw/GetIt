@@ -80,7 +80,7 @@ export default function DetailScreen() {
     const type = isLost ? "lost" : "found";
     const typeLabel = isLost ? "분실물" : "습득물";
     const url = `https://www.getitsju.com/detail?id=${item.id}&type=${type}`;
-    const category = item.category?.split(">").pop()?.trim() ?? item.category;
+    const category = `${item.majorCategory ?? "null"} > ${item.minorCategory ?? "null"}`;
     await Share.share({
       message: `[GET IT - ${typeLabel}] ${item.title}\n카테고리: ${category} · 📍 ${item.location}\n\n👉 ${url}`,
     });
@@ -139,7 +139,7 @@ export default function DetailScreen() {
   const ctaText = isLost ? "이 물건을 주운 것 같아요" : "이 물건 제 것 같아요";
   const dateLabel = `${item.occurredDate?.replace(/-/g, ".") ?? ""} ${isLost ? "분실" : "습득"}`;
   const ogUrl = `https://www.getitsju.com/detail?id=${item.id}&type=${isLost ? "lost" : "found"}`;
-  const category = item.category?.split(">").pop()?.trim() ?? item.category;
+  const category = `${item.majorCategory ?? "null"} > ${item.minorCategory ?? "null"}`;
 
   return (
     <View style={{ flex: 1, backgroundColor: "#fff" }}>

@@ -97,11 +97,13 @@ export default function RegisterDetailScreen() {
   const router = useRouter();
   const {
     type,
-    category,
+    majorCategory,
+    minorCategory,
     text: initialText,
   } = useLocalSearchParams<{
     type: "found" | "lost";
-    category: string;
+    majorCategory: string;
+    minorCategory: string;
     text: string;
   }>();
   const { token } = useAuth();
@@ -131,7 +133,8 @@ export default function RegisterDetailScreen() {
       try {
         const formData = new FormData();
         formData.append("itemType", type === "found" ? "FOUND" : "LOST");
-        if (category?.trim()) formData.append("category", category.trim());
+        if (majorCategory?.trim()) formData.append("majorCategory", majorCategory.trim());
+        if (minorCategory?.trim()) formData.append("minorCategory", minorCategory.trim());
         if (initialText?.trim()) formData.append("text", initialText.trim());
         if (photo) {
           if (Platform.OS === "web") {
@@ -250,7 +253,8 @@ export default function RegisterDetailScreen() {
 
       const body: Record<string, string> = {
         title: title.trim(),
-        category: category ?? "",
+        majorCategory: majorCategory ?? "",
+        minorCategory: minorCategory ?? "",
         location: location.trim(),
       };
       if (date) {
@@ -439,7 +443,7 @@ export default function RegisterDetailScreen() {
                       maximumDate={new Date()}
                       onChange={(event: any, selected?: Date) => {
                         setShowPicker(false);
-                        if (selected) setDate(selected);
+                        if (selected) setDate(new Date(selected));
                       }}
                     />
                   )}
@@ -502,7 +506,7 @@ export default function RegisterDetailScreen() {
                   style={{ height: 216 }}
                   locale="ko"
                   onChange={(event: any, selected?: Date) => {
-                    if (selected) setDate(selected);
+                    if (selected) setDate(new Date(selected));
                   }}
                 />
               </View>

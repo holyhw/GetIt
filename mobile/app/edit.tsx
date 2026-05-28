@@ -13,9 +13,9 @@ import ArrowRight from "../assets/detail-arrow-right.svg";
 import { useAuth } from "../context/AuthContext";
 import { api } from "../utils/api";
 import type { RegistrationDetail } from "../types/registration";
+import { CategoryFilterModal, type CategoryFilterValue } from "../components/CategoryFilterModal";
 
 const API_BASE_URL = "https://api.getitsju.com";
-const CATEGORIES = ["지갑", "의류", "가방", "전자기기", "기타"];
 
 const DateTimePicker = Platform.OS !== "web" ? require("@react-native-community/datetimepicker").default : null;
 
@@ -84,7 +84,8 @@ export default function EditScreen() {
   const [existingImageUrl, setExistingImageUrl] = useState<string | null>(null);
   const [photo, setPhoto] = useState<string | null>(null);
   const [title, setTitle] = useState("");
-  const [category, setCategory] = useState<string | null>(null);
+  const [category, setCategory] = useState<CategoryFilterValue>(null);
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [location, setLocation] = useState("");
   const [date, setDate] = useState<Date | null>(null);
   const [showPicker, setShowPicker] = useState(false);
@@ -107,8 +108,7 @@ export default function EditScreen() {
         setLocation(data.location ?? "");
         setDescription(data.description ?? "");
 
-        const rawCategory = data.category?.split(">").pop()?.trim() ?? data.category;
-        if (CATEGORIES.includes(rawCategory)) setCategory(rawCategory);
+        if (data.majorCategory && data.minorCategory) setCategory({ major: data.majorCategory, minor: data.minorCategory });
 
         if (data.occurredDate) {
           const parsed = new Date(data.occurredDate);
@@ -141,7 +141,10 @@ export default function EditScreen() {
     if (!location.trim()) { Alert.alert("위치를 입력해주세요."); return; }
 
     const params = new URLSearchParams({ title: title.trim() });
-    if (category) params.append("category", category);
+    if (category) {
+      params.append("majorCategory", category.major);
+      params.append("minorCategory", category.minor);
+    }
     if (location.trim()) params.append("location", location.trim());
     if (date) {
       const y = date.getFullYear();
@@ -278,33 +281,29 @@ export default function EditScreen() {
 
             {/* 카테고리 */}
             <View style={{ marginBottom: 14 }}>
-              <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}>
+              <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 6 }}>
                 <Text style={{ fontSize: 12, fontWeight: "700", color: "#000" }}>카테고리</Text>
                 <RequiredDot width={5} height={5} style={{ marginLeft: 2 }} />
               </View>
-              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
-                {CATEGORIES.map((cat) => {
-                  const selected = category === cat;
-                  return (
-                    <TouchableOpacity
-                      key={cat}
-                      onPress={() => setCategory(selected ? null : cat)}
-                      style={{
-                        height: 30,
-                        paddingHorizontal: 14,
-                        borderRadius: 15,
-                        alignItems: "center",
-                        justifyContent: "center",
-                        backgroundColor: selected ? "#fff" : "#E5E7EB",
-                        borderWidth: selected ? 1.5 : 1,
-                        borderColor: selected ? themeColor : "#D9D9D9",
-                      }}
-                    >
-                      <Text style={{ fontSize: 10, color: selected ? themeColor : "#000", fontWeight: selected ? "600" : "400" }}>{cat}</Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
+              <TouchableOpacity
+                onPress={() => setShowCategoryModal(true)}
+                style={{
+                  height: 34,
+                  backgroundColor: "#E5E7EB",
+                  borderWidth: 1,
+                  borderColor: category ? themeColor : "#D9D9D9",
+                  borderRadius: 10,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  paddingHorizontal: 12,
+                  justifyContent: "space-between",
+                }}
+              >
+                <Text style={{ fontSize: 12, color: category ? "#000" : "#919191" }}>
+                  {category ? `${category.major} > ${category.minor}` : "카테고리를 선택해주세요"}
+                </Text>
+                <ArrowRight width={5} height={9} />
+              </TouchableOpacity>
             </View>
 
             {/* 위치 */}
@@ -390,11 +389,10 @@ export default function EditScreen() {
                       mode="date"
                       display="default"
                       maximumDate={new Date()}
-                      onValueChange={(selected: Date) => {
+                      onChange={(event: any, selected?: Date) => {
                         setShowPicker(false);
-                        setDate(selected);
+                        if (selected) setDate(new Date(selected));
                       }}
-                      onDismiss={() => setShowPicker(false)}
                     />
                   )}
                 </>
@@ -444,8 +442,8 @@ export default function EditScreen() {
                   maximumDate={new Date()}
                   style={{ height: 216 }}
                   locale="ko"
-                  onValueChange={(selected: Date) => {
-                    setDate(selected);
+                  onChange={(event: any, selected?: Date) => {
+                    if (selected) setDate(new Date(selected));
                   }}
                 />
               </View>
@@ -453,6 +451,13 @@ export default function EditScreen() {
           </>
         )}
       </View>
+      <CategoryFilterModal
+        visible={showCategoryModal}
+        value={category}
+        activeColor={themeColor}
+        onSelect={setCategory}
+        onClose={() => setShowCategoryModal(false)}
+      />
     </KeyboardAvoidingView>
   );
 }

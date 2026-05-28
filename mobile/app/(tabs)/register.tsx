@@ -47,8 +47,7 @@ export default function RegisterScreen() {
       Alert.alert("카테고리를 선택해주세요.");
       return;
     }
-    const category = `${selected.main} > ${selected.sub}`;
-    router.push(`/register-photo?type=${type}&category=${encodeURIComponent(category)}`);
+    router.push(`/register-photo?type=${type}&majorCategory=${encodeURIComponent(selected.main)}&minorCategory=${encodeURIComponent(selected.sub)}`);
   };
 
   return (

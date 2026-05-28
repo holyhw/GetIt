@@ -1,12 +1,14 @@
-import { useState, useCallback } from "react";
-import { View, Text, TextInput, ScrollView, TouchableOpacity, Image, FlatList, ActivityIndicator } from "react-native";
+import { useState, useCallback, useRef, useEffect } from "react";
+import { View, Text, TextInput, TouchableOpacity, Image, FlatList, ActivityIndicator, Keyboard, TouchableWithoutFeedback } from "react-native";
 import { useRouter } from "expo-router";
 import Svg, { Circle, Line } from "react-native-svg";
 import { useAuth } from "../../context/AuthContext";
-import type { FilterType, Category, RegistrationItem } from "../../types/registration";
+import { CategoryFilterModal, type CategoryFilterValue } from "../../components/CategoryFilterModal";
+import { DateFilterModal } from "../../components/DateFilterModal";
+import type { DateFilter } from "../../utils/filters";
+import { getDateFilterLabel } from "../../utils/filters";
+import type { FilterType, RegistrationItem, PagedResponse } from "../../types/registration";
 import { api } from "../../utils/api";
-
-const CATEGORIES: Category[] = ["전체", "의류", "전자기기", "지갑/가방", "귀중품", "기타"];
 
 function SearchIcon({ color = "#919191" }: { color?: string }) {
   return (
@@ -66,62 +68,114 @@ export default function SearchScreen() {
 
   const [query, setQuery] = useState("");
   const [submittedQuery, setSubmittedQuery] = useState("");
+  const submittedQueryRef = useRef("");
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [typeFilter, setTypeFilter] = useState<FilterType>("습득물");
-  const [category, setCategory] = useState<Category>("전체");
+  const [categoryFilter, setCategoryFilter] = useState<CategoryFilterValue>(null);
+  const [dateFilter, setDateFilter] = useState<DateFilter>({});
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [showDateModal, setShowDateModal] = useState(false);
   const [results, setResults] = useState<RegistrationItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [page, setPage] = useState(0);
+  const [hasNext, setHasNext] = useState(false);
+  const [total, setTotal] = useState(0);
 
   const isSearched = submittedQuery.trim() !== "";
   const isLostMode = typeFilter === "분실물";
   const activeColor = isLostMode ? "#FF7A00" : "#1E3A5F";
 
-  const fetchResults = useCallback(
-    async (keyword: string) => {
-      if (!keyword.trim()) return;
-      setLoading(true);
-      try {
-        const data = await api.get<RegistrationItem[]>(
-          `/api/registration/search?keyword=${encodeURIComponent(keyword)}`,
-          token ?? ""
-        );
-        setResults(data);
-      } catch {
-        setResults([]);
-      } finally {
-        setLoading(false);
+  // 모든 params를 명시적으로 받아서 stale closure 없음
+  const doFetch = useCallback(async (
+    keyword: string,
+    type: FilterType,
+    cat: CategoryFilterValue,
+    date: DateFilter,
+    pageNum: number,
+    append: boolean,
+  ) => {
+    if (!keyword.trim()) return;
+    if (pageNum === 0) setLoading(true);
+    else setLoadingMore(true);
+    try {
+      const params = new URLSearchParams({
+        keyword,
+        itemType: type === "분실물" ? "LOST" : "FOUND",
+        page: String(pageNum),
+        size: "15",
+      });
+      if (cat) {
+        params.set("majorCategory", cat.major);
+        params.set("minorCategory", cat.minor);
       }
-    },
-    [token],
-  );
+      if (date.start) params.set("startDate", date.start);
+      if (date.end) params.set("endDate", date.end);
+      const data = await api.get<PagedResponse<RegistrationItem>>(
+        `/api/registration/search/filter/page?${params.toString()}`,
+        token ?? ""
+      );
+      setResults(prev => append ? [...prev, ...data.content] : data.content);
+      setHasNext(data.hasNext);
+      setPage(data.page);
+      if (pageNum === 0) setTotal(data.totalElements);
+    } catch {
+      if (!append) setResults([]);
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
+    }
+  }, [token]);
+
+  // typeFilter 변경 시 재검색
+  useEffect(() => {
+    if (!submittedQueryRef.current) return;
+    setResults([]);
+    setPage(0);
+    setHasNext(false);
+    doFetch(submittedQueryRef.current, typeFilter, categoryFilter, dateFilter, 0, false);
+  }, [typeFilter]);
 
   const handleSubmit = () => {
     const trimmed = query.trim();
     if (!trimmed) return;
+    submittedQueryRef.current = trimmed;
     setSubmittedQuery(trimmed);
     setRecentSearches((prev) => [trimmed, ...prev.filter((s) => s !== trimmed)].slice(0, 8));
-    fetchResults(trimmed);
+    setResults([]);
+    setPage(0);
+    setHasNext(false);
+    doFetch(trimmed, typeFilter, categoryFilter, dateFilter, 0, false);
   };
 
   const handleRecentTap = (term: string) => {
     setQuery(term);
+    submittedQueryRef.current = term;
     setSubmittedQuery(term);
-    fetchResults(term);
+    setResults([]);
+    setPage(0);
+    setHasNext(false);
+    doFetch(term, typeFilter, categoryFilter, dateFilter, 0, false);
   };
 
   const handleClear = () => {
     setQuery("");
     setSubmittedQuery("");
+    submittedQueryRef.current = "";
     setResults([]);
   };
 
-  const filtered = results.filter((item) => {
-    const matchType = isLostMode ? item.itemType === "LOST" : item.itemType === "FOUND";
-    const matchCat = category === "전체" || item.category?.includes(category);
-    return matchType && matchCat;
-  });
+  const onEndReached = useCallback(() => {
+    if (!hasNext || loadingMore || loading) return;
+    doFetch(submittedQueryRef.current, typeFilter, categoryFilter, dateFilter, page + 1, true);
+  }, [hasNext, loadingMore, loading, doFetch, typeFilter, categoryFilter, dateFilter, page]);
+
+  const categoryLabel = categoryFilter ? `${categoryFilter.major} > ${categoryFilter.minor}` : "카테고리";
+  const isCategoryActive = categoryFilter !== null;
+  const isDateActive = !!(dateFilter.start || dateFilter.end);
 
   return (
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
     <View style={{ flex: 1, backgroundColor: "#F5F7FA" }}>
       {/* 검색 바 */}
       <View style={{ paddingTop: 64, paddingHorizontal: 20, paddingBottom: 12, backgroundColor: "#F5F7FA" }}>
@@ -214,35 +268,44 @@ export default function SearchScreen() {
             </View>
           </View>
 
-          {/* 카테고리 칩 */}
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0, marginBottom: 8 }} contentContainerStyle={{ paddingHorizontal: 20, gap: 8 }}>
-            {CATEGORIES.map((cat) => {
-              const isActive = category === cat;
-              return (
-                <TouchableOpacity
-                  key={cat}
-                  onPress={() => setCategory(cat)}
-                  style={{
-                    height: 32,
-                    paddingHorizontal: 14,
-                    borderRadius: 16,
-                    alignItems: "center",
-                    justifyContent: "center",
-                    backgroundColor: isActive ? activeColor : "#fff",
-                    borderWidth: 1,
-                    borderColor: isActive ? activeColor : "#E5E7EB",
-                  }}
-                >
-                  <Text style={{ fontSize: 13, fontWeight: "600", color: isActive ? "#fff" : "#757575", letterSpacing: -0.2 }}>{cat}</Text>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
+          {/* 필터 버튼 */}
+          <View style={{ flexDirection: "row", paddingHorizontal: 20, gap: 8, marginBottom: 8 }}>
+            <TouchableOpacity
+              onPress={() => setShowCategoryModal(true)}
+              style={{
+                flexDirection: "row", alignItems: "center", gap: 4,
+                paddingHorizontal: 12, paddingVertical: 7,
+                borderRadius: 20, borderWidth: 1,
+                borderColor: isCategoryActive ? activeColor : "#D9D9D9",
+                backgroundColor: isCategoryActive ? activeColor + "15" : "#fff",
+              }}
+            >
+              <Text style={{ fontSize: 13, fontWeight: "600", color: isCategoryActive ? activeColor : "#434343" }}>
+                {categoryLabel}
+              </Text>
+              <Text style={{ fontSize: 9, color: isCategoryActive ? activeColor : "#919191" }}>▼</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setShowDateModal(true)}
+              style={{
+                flexDirection: "row", alignItems: "center", gap: 4,
+                paddingHorizontal: 12, paddingVertical: 7,
+                borderRadius: 20, borderWidth: 1,
+                borderColor: isDateActive ? activeColor : "#D9D9D9",
+                backgroundColor: isDateActive ? activeColor + "15" : "#fff",
+              }}
+            >
+              <Text style={{ fontSize: 13, fontWeight: "600", color: isDateActive ? activeColor : "#434343" }}>
+                {getDateFilterLabel(dateFilter)}
+              </Text>
+              <Text style={{ fontSize: 9, color: isDateActive ? activeColor : "#919191" }}>▼</Text>
+            </TouchableOpacity>
+          </View>
 
           {/* 결과 수 */}
           <View style={{ paddingHorizontal: 20, paddingTop: 8, paddingBottom: 6 }}>
             <Text style={{ fontSize: 12, color: "#919191", letterSpacing: -0.2 }}>
-              <Text style={{ fontWeight: "700", color: "#000" }}>"{submittedQuery}"</Text> 검색 결과 <Text style={{ fontWeight: "700", color: activeColor }}>{loading ? "-" : filtered.length}</Text>건
+              <Text style={{ fontWeight: "700", color: "#000" }}>"{submittedQuery}"</Text> 검색 결과 <Text style={{ fontWeight: "700", color: activeColor }}>{loading ? "-" : total}</Text>건
             </Text>
           </View>
 
@@ -251,22 +314,60 @@ export default function SearchScreen() {
             <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
               <ActivityIndicator size="large" color="#1E3A5F" />
             </View>
-          ) : filtered.length === 0 ? (
+          ) : results.length === 0 ? (
             <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
               <Text style={{ fontSize: 14, color: "#ABABAB", letterSpacing: -0.3 }}>검색 결과가 없어요</Text>
             </View>
           ) : (
             <FlatList
-              data={filtered}
+              data={results}
               keyExtractor={(item) => item.id.toString()}
               showsVerticalScrollIndicator={false}
               style={{ flex: 1 }}
               contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 100, gap: 10 }}
+              onEndReached={onEndReached}
+              onEndReachedThreshold={0.3}
+              ListFooterComponent={
+                loadingMore ? (
+                  <View style={{ paddingVertical: 16, alignItems: "center" }}>
+                    <ActivityIndicator size="small" color="#1E3A5F" />
+                  </View>
+                ) : null
+              }
               renderItem={({ item }) => <ItemCard item={item} onPress={() => router.push(`/detail?id=${item.id}&type=${item.itemType.toLowerCase()}`)} />}
             />
           )}
         </View>
       )}
+
+      <CategoryFilterModal
+        visible={showCategoryModal}
+        value={categoryFilter}
+        activeColor={activeColor}
+        onSelect={(val) => {
+          setCategoryFilter(val);
+          if (submittedQueryRef.current) {
+            setResults([]); setPage(0); setHasNext(false);
+            doFetch(submittedQueryRef.current, typeFilter, val, dateFilter, 0, false);
+          }
+        }}
+        onClose={() => setShowCategoryModal(false)}
+      />
+
+      <DateFilterModal
+        visible={showDateModal}
+        value={dateFilter}
+        activeColor={activeColor}
+        onSelect={(val) => {
+          setDateFilter(val);
+          if (submittedQueryRef.current) {
+            setResults([]); setPage(0); setHasNext(false);
+            doFetch(submittedQueryRef.current, typeFilter, categoryFilter, val, 0, false);
+          }
+        }}
+        onClose={() => setShowDateModal(false)}
+      />
     </View>
+    </TouchableWithoutFeedback>
   );
 }
