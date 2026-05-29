@@ -1,5 +1,6 @@
 import { useRef, useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, Image, Animated, ScrollView, Dimensions, Platform, ActivityIndicator } from "react-native";
+import { View, Text, TouchableOpacity, Animated, ScrollView, Dimensions, Platform, ActivityIndicator } from "react-native";
+import { CategoryImage } from "../components/CategoryImage";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import Svg, { Circle } from "react-native-svg";
 import BackIcon from "../assets/myinfo-back.svg";
@@ -78,10 +79,12 @@ function CardItem({ item, index, scrollX }: CardProps) {
     <Animated.View style={{ width: CARD_WIDTH, marginRight: CARD_SPACING, transform: isWeb ? [{ scale }] : [{ scale }, { perspective: 1000 }, { rotateY }], opacity }}>
       <View style={{ width: CARD_WIDTH, backgroundColor: "#fff", borderRadius: 10, shadowColor: "#000", shadowOffset: { width: -2, height: 2 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 3, marginBottom: 10 }}>
         <View style={{ margin: 4, borderRadius: 10, overflow: "hidden", width: CARD_WIDTH - 8, height: 255 }}>
-          <Image
-            source={item.imageUrl ? { uri: item.imageUrl } : require("../assets/cap.jpg")}
-            style={{ width: CARD_WIDTH - 8, height: 255, borderRadius: 10 }}
-            resizeMode="cover"
+          <CategoryImage
+            imageUrl={item.imageUrl}
+            majorCategory={item.category}
+            width={CARD_WIDTH - 8}
+            height={255}
+            borderRadius={10}
           />
           <View style={{ position: "absolute", top: 8, left: 8 }}>
             <RankBadge rank={item.rank} />

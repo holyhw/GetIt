@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import { View, Text, FlatList, TouchableOpacity, Image, ActivityIndicator, RefreshControl } from "react-native";
+import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, RefreshControl } from "react-native";
+import { CategoryImage } from "../../components/CategoryImage";
 import { useRouter } from "expo-router";
 import { useAuth } from "../../context/AuthContext";
 import { api } from "../../utils/api";
@@ -240,10 +241,12 @@ function ItemCard({ item, onPress }: { item: RegistrationItem; onPress?: () => v
         paddingVertical: 12,
       }}
     >
-      <Image
-        source={item.imageUrl ? { uri: item.imageUrl } : require("../../assets/cap.jpg")}
-        style={{ width: 131, height: 131, borderRadius: 30, flexShrink: 0 }}
-        resizeMode="cover"
+      <CategoryImage
+        imageUrl={item.imageUrl}
+        majorCategory={item.majorCategory}
+        width={131}
+        height={131}
+        borderRadius={30}
       />
       <View style={{ flex: 1, paddingLeft: 12, alignSelf: "stretch", justifyContent: "center", gap: 3 }}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>

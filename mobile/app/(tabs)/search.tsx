@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from "react";
-import { View, Text, TextInput, TouchableOpacity, Image, FlatList, ActivityIndicator, Keyboard, TouchableWithoutFeedback } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, FlatList, ActivityIndicator, Keyboard, TouchableWithoutFeedback } from "react-native";
+import { CategoryImage } from "../../components/CategoryImage";
 import { useRouter } from "expo-router";
 import Svg, { Circle, Line } from "react-native-svg";
 import { useAuth } from "../../context/AuthContext";
@@ -43,7 +44,7 @@ function ItemCard({ item, onPress }: { item: RegistrationItem; onPress?: () => v
         elevation: 2,
       }}
     >
-      <Image source={item.imageUrl ? { uri: item.imageUrl } : require("../../assets/cap.jpg")} style={{ width: 100, height: 100, borderRadius: 14, flexShrink: 0 }} resizeMode="cover" />
+      <CategoryImage imageUrl={item.imageUrl} majorCategory={item.majorCategory} width={100} height={100} borderRadius={14} />
       <View style={{ flex: 1, paddingLeft: 12, gap: 3 }}>
         <View style={{ alignSelf: "flex-start", backgroundColor: typeColor + "1A", borderRadius: 6, paddingHorizontal: 7, paddingVertical: 2 }}>
           <Text style={{ fontSize: 10, fontWeight: "700", color: typeColor }}>{typeLabel}</Text>

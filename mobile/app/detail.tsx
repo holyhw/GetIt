@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { View, Text, ScrollView, TouchableOpacity, Image, ActivityIndicator, Modal, Alert, Share, SafeAreaView, Platform } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, Image, ActivityIndicator, Modal, Alert, Share, SafeAreaView, Platform, useWindowDimensions } from "react-native";
+import { CategoryImage } from "../components/CategoryImage";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import Head from "expo-router/head";
 import DetailBackIcon from "../assets/detail-back.svg";
@@ -43,6 +44,7 @@ export default function DetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { token, userInfo } = useAuth();
+  const { width: screenWidth } = useWindowDimensions();
 
   const [item, setItem] = useState<RegistrationDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -314,10 +316,12 @@ export default function DetailScreen() {
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
         {/* 히어로 이미지 */}
-        <Image
-          source={item.imageUrl ? { uri: item.imageUrl } : require("../assets/cap.jpg")}
-          style={{ width: "100%", height: 317 }}
-          resizeMode="cover"
+        <CategoryImage
+          imageUrl={item.imageUrl}
+          majorCategory={item.majorCategory}
+          width={screenWidth}
+          height={317}
+          iconSizeRatio={0.3}
         />
 
         {/* 컨텐츠 카드 */}
