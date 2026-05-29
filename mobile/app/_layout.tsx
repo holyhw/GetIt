@@ -1,6 +1,6 @@
 import "../global.css";
 import { Stack, useRouter } from "expo-router";
-import { Platform, View } from "react-native";
+import { Platform, View, Alert } from "react-native";
 import { useEffect, useRef } from "react";
 import * as Notifications from "expo-notifications";
 import { AuthProvider, useAuth } from "../context/AuthContext";
@@ -22,7 +22,9 @@ function AuthHandler() {
   useEffect(() => {
     setUnauthorizedHandler(() => {
       logout();
-      router.replace("/login");
+      Alert.alert("로그인 만료", "세션이 만료되었어요. 다시 로그인해 주세요.", [
+        { text: "확인", onPress: () => router.replace("/login") },
+      ]);
     });
   }, [logout, router]);
 
