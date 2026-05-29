@@ -314,6 +314,7 @@ export default function RegisterPhotoScreen() {
             <TouchableOpacity
               onPress={() => router.back()}
               style={{ marginRight: 8 }}
+              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
             >
               <BackIcon width={11} height={19} />
             </TouchableOpacity>

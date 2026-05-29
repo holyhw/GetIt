@@ -190,7 +190,7 @@ export default function Top5Screen() {
       <View style={{ backgroundColor: "#F5F7FA" }}>
         <View style={{ height: 60 }} />
         <View style={{ height: 51, flexDirection: "row", alignItems: "center", paddingHorizontal: 24 }}>
-          <TouchableOpacity onPress={() => fromRegistration ? router.replace("/(tabs)") : router.canGoBack() ? router.back() : router.replace("/(tabs)")}>
+          <TouchableOpacity onPress={() => fromRegistration ? router.replace("/(tabs)") : router.canGoBack() ? router.back() : router.replace("/(tabs)")} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
             <BackIcon width={11} height={19} />
           </TouchableOpacity>
           <View style={{ flex: 1, alignItems: "center" }}>

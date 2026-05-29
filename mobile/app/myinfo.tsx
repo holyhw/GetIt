@@ -108,7 +108,7 @@ export default function MyInfoScreen() {
     <View style={{ flex: 1, backgroundColor: "#F5F7FA" }}>
       {/* 헤더 */}
       <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 24, paddingTop: 60, paddingBottom: 16 }}>
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity onPress={() => router.back()} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
           <MyInfoBackIcon width={11} height={19} />
         </TouchableOpacity>
 

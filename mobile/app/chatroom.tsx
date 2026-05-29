@@ -146,7 +146,7 @@ export default function ChatRoomScreen() {
             }}
           >
             {/* 뒤로가기 */}
-            <TouchableOpacity onPress={() => router.back()} style={{ marginRight: 20 }}>
+            <TouchableOpacity onPress={() => router.back()} style={{ marginRight: 20 }} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
               <BackIcon width={11} height={19} />
             </TouchableOpacity>
 

@@ -593,7 +593,7 @@ export default function RegisterDetailScreen() {
               paddingHorizontal: 24,
             }}
           >
-            <TouchableOpacity onPress={() => router.back()}>
+            <TouchableOpacity onPress={() => router.back()} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
               <BackIcon width={11} height={19} />
             </TouchableOpacity>
             <View
