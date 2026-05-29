@@ -11,6 +11,7 @@ import {
   ActivityIndicator,
   Animated,
   Easing,
+  Image,
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import BackIcon from "../assets/myinfo-back.svg";
@@ -21,7 +22,7 @@ import ArrowRight from "../assets/detail-arrow-right.svg";
 import { useAuth } from "../context/AuthContext";
 import { matchStore } from "../utils/matchStore";
 import { registerStore } from "../utils/registerStore";
-import type { PreAnalysisStatus } from "../types/preAnalysis";
+import type { PreAnalysisStatus, ReferenceImage } from "../types/preAnalysis";
 import {
   LocationSearchModal,
   type SelectedPlace,
@@ -192,6 +193,81 @@ function MatchingLoadingOverlay() {
   );
 }
 
+function ReferenceImageOverlay({
+  image,
+  imageAction,
+  onUse,
+  onRefresh,
+  onSkip,
+}: {
+  image: ReferenceImage | null;
+  imageAction: "use" | "refresh" | "skip" | null;
+  onUse: () => void;
+  onRefresh: () => void;
+  onSkip: () => void;
+}) {
+  const loading = imageAction !== null;
+  return (
+    <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.65)", alignItems: "center", justifyContent: "center", zIndex: 9998, padding: 24 }}>
+      <View style={{ backgroundColor: "#fff", borderRadius: 20, padding: 20, width: "100%" }}>
+        <Text style={{ fontSize: 16, fontWeight: "700", color: "#000", marginBottom: 4 }}>참고 이미지 선택</Text>
+        <Text style={{ fontSize: 12, color: "#919191", marginBottom: 16 }}>AI가 분실물과 유사한 이미지를 찾았습니다.</Text>
+
+        {image ? (
+          <>
+            {imageAction === "refresh" ? (
+              <View style={{ height: 180, alignItems: "center", justifyContent: "center", marginBottom: 10 }}>
+                <ActivityIndicator size="large" color="#1E3A5F" />
+              </View>
+            ) : (
+              <Image source={{ uri: image.imageUrl }} style={{ width: "100%", height: 180, borderRadius: 12, marginBottom: 10 }} resizeMode="contain" />
+            )}
+            <Text style={{ fontSize: 13, fontWeight: "600", color: "#000", marginBottom: 16 }} numberOfLines={2}>{image.title}</Text>
+          </>
+        ) : (
+          <View style={{ height: 60, alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
+            <Text style={{ fontSize: 13, color: "#919191" }}>참고 이미지를 찾지 못했습니다.</Text>
+          </View>
+        )}
+
+        <View style={{ gap: 8 }}>
+          {image && (
+            <TouchableOpacity
+              onPress={onUse}
+              disabled={loading}
+              style={{ height: 46, borderRadius: 10, backgroundColor: "#1E3A5F", alignItems: "center", justifyContent: "center" }}
+            >
+              {imageAction === "use" ? <ActivityIndicator color="#fff" /> : (
+                <Text style={{ color: "#fff", fontSize: 14, fontWeight: "600" }}>이 이미지로 진행</Text>
+              )}
+            </TouchableOpacity>
+          )}
+          {image && (
+            <TouchableOpacity
+              onPress={onRefresh}
+              disabled={loading}
+              style={{ height: 46, borderRadius: 10, borderWidth: 1, borderColor: "#D9D9D9", alignItems: "center", justifyContent: "center" }}
+            >
+              {imageAction === "refresh" ? <ActivityIndicator color="#434343" /> : (
+                <Text style={{ color: "#434343", fontSize: 14, fontWeight: "600" }}>다시 가져오기</Text>
+              )}
+            </TouchableOpacity>
+          )}
+          <TouchableOpacity
+            onPress={onSkip}
+            disabled={loading}
+            style={{ height: 46, alignItems: "center", justifyContent: "center" }}
+          >
+            {imageAction === "skip" ? <ActivityIndicator color="#919191" /> : (
+              <Text style={{ color: "#919191", fontSize: 13 }}>이미지 없이 진행</Text>
+            )}
+          </TouchableOpacity>
+        </View>
+      </View>
+    </View>
+  );
+}
+
 type InputRowProps = {
   label: string;
   required?: boolean;
@@ -273,66 +349,6 @@ function InputRow({
   );
 }
 
-function AnalysisStatusBadge({ status }: { status: PreAnalysisStatus }) {
-  if (status === "PROCESSING") {
-    return (
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          gap: 6,
-          backgroundColor: "#EFF6FF",
-          borderRadius: 20,
-          paddingHorizontal: 12,
-          paddingVertical: 6,
-        }}
-      >
-        <ActivityIndicator size="small" color="#3B82F6" />
-        <Text style={{ fontSize: 11, fontWeight: "600", color: "#3B82F6" }}>
-          AI 분석 중...
-        </Text>
-      </View>
-    );
-  }
-  if (status === "COMPLETED") {
-    return (
-      <View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          gap: 4,
-          backgroundColor: "#F0FDF4",
-          borderRadius: 20,
-          paddingHorizontal: 12,
-          paddingVertical: 6,
-        }}
-      >
-        <Text style={{ fontSize: 13, color: "#22C55E" }}>✓</Text>
-        <Text style={{ fontSize: 11, fontWeight: "600", color: "#22C55E" }}>
-          분석 완료
-        </Text>
-      </View>
-    );
-  }
-  return (
-    <View
-      style={{
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 4,
-        backgroundColor: "#FEF2F2",
-        borderRadius: 20,
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-      }}
-    >
-      <Text style={{ fontSize: 13, color: "#EF4444" }}>!</Text>
-      <Text style={{ fontSize: 11, fontWeight: "600", color: "#EF4444" }}>
-        분석 실패
-      </Text>
-    </View>
-  );
-}
 
 export default function RegisterDetailScreen() {
   const router = useRouter();
@@ -365,6 +381,10 @@ export default function RegisterDetailScreen() {
     useState<PreAnalysisStatus>("PROCESSING");
   const analysisStatusRef = useRef<PreAnalysisStatus>("PROCESSING");
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [pollingTrigger, setPollingTrigger] = useState(0);
+  const [referenceImage, setReferenceImage] = useState<ReferenceImage | null>(null);
+  const [showImageSelection, setShowImageSelection] = useState(false);
+  const [imageAction, setImageAction] = useState<"use" | "refresh" | "skip" | null>(null);
 
   const isFound = type === "found";
   const themeColor = isFound ? "#1E3A5F" : "#FF7A00";
@@ -415,8 +435,15 @@ export default function RegisterDetailScreen() {
         if (!res.ok) throw new Error();
         const data = await res.json();
         const id: number = data.result.id;
+        const initialStatus: PreAnalysisStatus = data.result.status;
         preAnalysisIdRef.current = id;
         setPreAnalysisId(id);
+        if (initialStatus === "PENDING_IMAGE_SELECTION") {
+          analysisStatusRef.current = "PENDING_IMAGE_SELECTION";
+          setAnalysisStatus("PENDING_IMAGE_SELECTION");
+          setReferenceImage(data.result.referenceImages?.[0] ?? null);
+          setShowImageSelection(true);
+        }
       } catch {
         analysisStatusRef.current = "FAILED";
         setAnalysisStatus("FAILED");
@@ -443,8 +470,13 @@ export default function RegisterDetailScreen() {
         const status: PreAnalysisStatus = data.result.status;
         analysisStatusRef.current = status;
         setAnalysisStatus(status);
-        if (status !== "PROCESSING" && pollingRef.current) {
-          clearInterval(pollingRef.current);
+        if (status === "PENDING_IMAGE_SELECTION") {
+          clearInterval(pollingRef.current!);
+          pollingRef.current = null;
+          setReferenceImage(data.result.referenceImages?.[0] ?? null);
+          setShowImageSelection(true);
+        } else if (status !== "PROCESSING") {
+          clearInterval(pollingRef.current!);
           pollingRef.current = null;
         }
       } catch {}
@@ -455,7 +487,7 @@ export default function RegisterDetailScreen() {
     return () => {
       if (pollingRef.current) clearInterval(pollingRef.current);
     };
-  }, [preAnalysisId, token]);
+  }, [preAnalysisId, token, pollingTrigger]);
 
   const waitForPreAnalysisId = (): Promise<number | null> =>
     new Promise((resolve) => {
@@ -490,6 +522,62 @@ export default function RegisterDetailScreen() {
         }
       }, 500);
     });
+
+  const handleUseImage = async () => {
+    if (!referenceImage || !preAnalysisId || !token) return;
+    setImageAction("use");
+    try {
+      await fetch(`${API_BASE_URL}/api/ai/pre-analysis/${preAnalysisId}/reference-image`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ imageUrl: referenceImage.imageUrl }),
+      });
+      setShowImageSelection(false);
+      analysisStatusRef.current = "PROCESSING";
+      setAnalysisStatus("PROCESSING");
+      setPollingTrigger((t) => t + 1);
+    } catch {
+      Alert.alert("오류", "다시 시도해주세요.");
+    } finally {
+      setImageAction(null);
+    }
+  };
+
+  const handleRefreshImage = async () => {
+    if (!preAnalysisId || !token) return;
+    setImageAction("refresh");
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/ai/pre-analysis/${preAnalysisId}/reference-images/refresh`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      setReferenceImage(data.result.referenceImages?.[0] ?? null);
+    } catch {
+      Alert.alert("오류", "다시 시도해주세요.");
+    } finally {
+      setImageAction(null);
+    }
+  };
+
+  const handleSkipImage = async () => {
+    if (!preAnalysisId || !token) return;
+    setImageAction("skip");
+    try {
+      await fetch(`${API_BASE_URL}/api/ai/pre-analysis/${preAnalysisId}/reference-image/skip`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setShowImageSelection(false);
+      analysisStatusRef.current = "PROCESSING";
+      setAnalysisStatus("PROCESSING");
+      setPollingTrigger((t) => t + 1);
+    } catch {
+      Alert.alert("오류", "다시 시도해주세요.");
+    } finally {
+      setImageAction(null);
+    }
+  };
 
   const handleSubmit = async () => {
     if (!token) return;
@@ -610,7 +698,6 @@ export default function RegisterDetailScreen() {
               </Text>
             </View>
             <View style={{ flex: 1 }} />
-            <AnalysisStatusBadge status={analysisStatus} />
           </View>
         </View>
 
@@ -867,6 +954,17 @@ export default function RegisterDetailScreen() {
           }}
           onClose={() => setShowLocationModal(false)}
         />
+
+        {/* 참고 이미지 선택 오버레이 */}
+        {showImageSelection && (
+          <ReferenceImageOverlay
+            image={referenceImage}
+            imageAction={imageAction}
+            onUse={handleUseImage}
+            onRefresh={handleRefreshImage}
+            onSkip={handleSkipImage}
+          />
+        )}
 
         {/* 분실물 매칭 로딩 오버레이 */}
         {loading && !isFound && <MatchingLoadingOverlay />}
