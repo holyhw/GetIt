@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { View, Text, ScrollView, TouchableOpacity, Image, TextInput, KeyboardAvoidingView, Platform } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, Image, TextInput, KeyboardAvoidingView, Platform, Modal, Alert } from "react-native";
 import { useRouter } from "expo-router";
 import BackIcon from "../assets/myinfo-back.svg";
 import MoreIcon from "../assets/chatroom-more.svg";
@@ -114,6 +114,7 @@ export default function ChatRoomScreen() {
   const router = useRouter();
   const [inputText, setInputText] = useState("");
   const [messages, setMessages] = useState<{ id: number; text: string }[]>([]);
+  const [showMenu, setShowMenu] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
 
   const handleSend = () => {
@@ -179,7 +180,7 @@ export default function ChatRoomScreen() {
             </View>
 
             {/* 더보기 3점 */}
-            <TouchableOpacity style={{ padding: 8 }}>
+            <TouchableOpacity onPress={() => setShowMenu(true)} style={{ padding: 8 }} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
               <MoreIcon width={3} height={15} />
             </TouchableOpacity>
           </View>
@@ -278,6 +279,49 @@ export default function ChatRoomScreen() {
             <SentBubble key={msg.id} text={msg.text} />
           ))}
         </ScrollView>
+
+        {/* ── 더보기 메뉴 바텀시트 ───────────────────────── */}
+        <Modal visible={showMenu} transparent animationType="fade" onRequestClose={() => setShowMenu(false)}>
+          <TouchableOpacity
+            style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.4)" }}
+            activeOpacity={1}
+            onPress={() => setShowMenu(false)}
+          />
+          <View style={{
+            position: "absolute",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            backgroundColor: "#fff",
+            borderTopLeftRadius: 20,
+            borderTopRightRadius: 20,
+            paddingBottom: 34,
+          }}>
+            <View style={{ width: 40, height: 4, backgroundColor: "#D9D9D9", borderRadius: 2, alignSelf: "center", marginTop: 12, marginBottom: 8 }} />
+            <TouchableOpacity
+              onPress={() => {
+                setShowMenu(false);
+                Alert.alert("신고하기", "이 사용자를 신고하시겠어요?", [
+                  { text: "취소", style: "cancel" },
+                  { text: "신고", style: "destructive", onPress: () => {} },
+                ]);
+              }}
+              style={{ paddingHorizontal: 24, paddingVertical: 16 }}
+            >
+              <Text style={{ fontSize: 16, color: "#FF3B30" }}>신고하기</Text>
+            </TouchableOpacity>
+            <View style={{ height: 1, backgroundColor: "#F0F0F0", marginHorizontal: 24 }} />
+            <TouchableOpacity
+              onPress={() => {
+                setShowMenu(false);
+                router.back();
+              }}
+              style={{ paddingHorizontal: 24, paddingVertical: 16 }}
+            >
+              <Text style={{ fontSize: 16, color: "#434343" }}>채팅방 나가기</Text>
+            </TouchableOpacity>
+          </View>
+        </Modal>
 
         {/* ── 입력 바 ────────────────────────────────────── */}
         {/* Figma: y=773, h=79, bg=#F5F7FA */}
