@@ -52,9 +52,11 @@ function ItemCard({ item, onPress }: { item: RegistrationItem; onPress?: () => v
         <Text style={{ fontSize: 15, fontWeight: "700", color: "#000", letterSpacing: -0.32 }} numberOfLines={1}>
           {item.title}
         </Text>
-        <Text style={{ fontSize: 12, color: "#434343", lineHeight: 17, letterSpacing: -0.2 }} numberOfLines={2}>
-          {item.description}
-        </Text>
+        {!!item.description && (
+          <Text style={{ fontSize: 12, color: "#434343", lineHeight: 17, letterSpacing: -0.2 }} numberOfLines={2}>
+            {item.description}
+          </Text>
+        )}
         <Text style={{ fontSize: 11, color: "#919191", letterSpacing: -0.2 }} numberOfLines={1}>
           {item.location} · {date}
         </Text>
