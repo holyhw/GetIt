@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { View, Text, ScrollView, TouchableOpacity, Image, ActivityIndicator, Modal, Alert, Share, SafeAreaView, Platform, useWindowDimensions } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, Image, ActivityIndicator, Modal, Alert, Share, SafeAreaView } from "react-native";
 import { CategoryImage } from "../components/CategoryImage";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import Head from "expo-router/head";
@@ -14,8 +14,6 @@ import { useAuth } from "../context/AuthContext";
 import { api } from "../utils/api";
 import type { RegistrationDetail } from "../types/registration";
 import { NaverMapView } from "../components/NaverMapView";
-import { loadNaverSDK } from "../utils/naverSDK";
-import { NAVER_SEARCH_CLIENT_ID, NAVER_SEARCH_CLIENT_SECRET } from "../utils/mapKeys";
 
 const profilePlaceholder = require("../assets/profile-placeholder.png");
 
@@ -44,7 +42,7 @@ export default function DetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { token, userInfo } = useAuth();
-  const { width: screenWidth } = useWindowDimensions();
+  const [heroWidth, setHeroWidth] = useState(393);
 
   const [item, setItem] = useState<RegistrationDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -72,34 +70,16 @@ export default function DetailScreen() {
     if (!item || mapCoords) return;
     if (!item.location) return;
 
-    if (Platform.OS === "web") {
-      loadNaverSDK(() => {
-        const naver = (window as any).naver;
-        if (!naver?.maps?.Service) return;
-        naver.maps.Service.geocode({ query: item.location }, (status: any, res: any) => {
-          if (status === naver.maps.Service.Status.ERROR) return;
-          const addr = res.v2?.addresses?.[0];
-          if (addr) setMapCoords({ lat: parseFloat(addr.y), lng: parseFloat(addr.x) });
-        });
-      });
-    } else {
-      fetch(
-        `https://openapi.naver.com/v1/search/local.json?query=${encodeURIComponent(item.location)}&display=1`,
-        {
-          headers: {
-            "X-Naver-Client-Id": NAVER_SEARCH_CLIENT_ID,
-            "X-Naver-Client-Secret": NAVER_SEARCH_CLIENT_SECRET,
-          },
-        }
-      )
-        .then((r) => r.json())
-        .then((data) => {
-          const doc = data.items?.[0];
-          if (doc) setMapCoords({ lat: parseInt(doc.mapy) / 1e7, lng: parseInt(doc.mapx) / 1e7 });
-        })
-        .catch(() => {});
-    }
-  }, [item, mapCoords]);
+    api.get<{ items: { mapy: string; mapx: string }[] }>(
+      `/api/search/local?query=${encodeURIComponent(item.location)}`,
+      token ?? ""
+    )
+      .then((data) => {
+        const doc = data.items?.[0];
+        if (doc) setMapCoords({ lat: parseInt(doc.mapy) / 1e7, lng: parseInt(doc.mapx) / 1e7 });
+      })
+      .catch(() => {});
+  }, [item, mapCoords, token]);
 
   if (loading) {
     return (
@@ -314,12 +294,16 @@ export default function DetailScreen() {
         </View>
       )}
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 120 }}
+        onLayout={(e) => setHeroWidth(e.nativeEvent.layout.width)}
+      >
         {/* 히어로 이미지 */}
         <CategoryImage
           imageUrl={item.imageUrl}
           majorCategory={item.majorCategory}
-          width={screenWidth}
+          width={heroWidth}
           height={317}
           iconSizeRatio={0.3}
         />

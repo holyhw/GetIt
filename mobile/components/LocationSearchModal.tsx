@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
-import { View, Text, Modal, TextInput, TouchableOpacity, FlatList, ActivityIndicator, SafeAreaView, Platform } from "react-native";
-import { NAVER_SEARCH_CLIENT_ID, NAVER_SEARCH_CLIENT_SECRET } from "../utils/mapKeys";
-import { loadNaverSDK } from "../utils/naverSDK";
+import { View, Text, Modal, TextInput, TouchableOpacity, FlatList, ActivityIndicator, SafeAreaView } from "react-native";
+import { api } from "../utils/api";
+import { useAuth } from "../context/AuthContext";
 
 type NaverLocalItem = {
   title: string;
@@ -26,18 +26,12 @@ type Props = {
 
 const stripHtml = (s: string) => s.replace(/<[^>]*>/g, "");
 
-async function fetchNaverLocal(query: string): Promise<SelectedPlace[]> {
-  const res = await fetch(
-    `https://openapi.naver.com/v1/search/local.json?query=${encodeURIComponent(query)}&display=5&start=1`,
-    {
-      headers: {
-        "X-Naver-Client-Id": NAVER_SEARCH_CLIENT_ID,
-        "X-Naver-Client-Secret": NAVER_SEARCH_CLIENT_SECRET,
-      },
-    }
+async function searchLocal(query: string, token: string): Promise<SelectedPlace[]> {
+  const data = await api.get<{ items: NaverLocalItem[] }>(
+    `/api/search/local?query=${encodeURIComponent(query)}`,
+    token
   );
-  const data = await res.json();
-  return (data.items ?? []).map((item: NaverLocalItem) => ({
+  return (data.items ?? []).map((item) => ({
     name: stripHtml(item.title),
     address: item.roadAddress || item.address,
     lat: parseInt(item.mapy) / 1e7,
@@ -45,27 +39,8 @@ async function fetchNaverLocal(query: string): Promise<SelectedPlace[]> {
   }));
 }
 
-async function fetchNaverSDKGeocode(query: string): Promise<SelectedPlace[]> {
-  return new Promise((resolve) => {
-    loadNaverSDK(() => {
-      const naver = (window as any).naver;
-      if (!naver?.maps?.Service) { resolve([]); return; }
-      naver.maps.Service.geocode({ query }, (status: any, res: any) => {
-        if (status === naver.maps.Service.Status.ERROR) { resolve([]); return; }
-        resolve(
-          (res.v2?.addresses ?? []).map((item: any) => ({
-            name: item.roadAddress || item.jibunAddress,
-            address: item.jibunAddress || item.roadAddress,
-            lat: parseFloat(item.y),
-            lng: parseFloat(item.x),
-          }))
-        );
-      });
-    });
-  });
-}
-
 export function LocationSearchModal({ visible, onSelect, onClose }: Props) {
+  const { token } = useAuth();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SelectedPlace[]>([]);
   const [loading, setLoading] = useState(false);
@@ -85,9 +60,7 @@ export function LocationSearchModal({ visible, onSelect, onClose }: Props) {
       setLoading(true);
       setSearched(true);
       try {
-        const data = Platform.OS === "web"
-          ? await fetchNaverSDKGeocode(trimmed)
-          : await fetchNaverLocal(trimmed);
+        const data = await searchLocal(trimmed, token ?? "");
         setResults(data);
       } catch {
         setResults([]);
