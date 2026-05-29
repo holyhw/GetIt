@@ -15,9 +15,7 @@ import {
 import { useRouter, useLocalSearchParams } from "expo-router";
 import BackIcon from "../assets/myinfo-back.svg";
 import RequiredDot from "../assets/reg-required.svg";
-import PinIcon from "../assets/reg-pin.svg";
-import CalendarIcon from "../assets/reg-calendar.svg";
-import ArrowRight from "../assets/detail-arrow-right.svg";
+import Svg, { Path } from "react-native-svg";
 import { useAuth } from "../context/AuthContext";
 import { matchStore } from "../utils/matchStore";
 import { registerStore } from "../utils/registerStore";
@@ -259,7 +257,6 @@ function InputRow({
       </View>
       <View
         style={{
-          flex: 1,
           height,
           backgroundColor: "#E5E7EB",
           borderWidth: 1,
@@ -343,6 +340,15 @@ export default function RegisterDetailScreen() {
         .replace(/\. /g, ".")
         .replace(/\.$/, "")
     : "날짜를 선택해주세요";
+
+  // 웹에서 date input 기본 달력 아이콘 숨기기
+  useEffect(() => {
+    if (Platform.OS !== "web") return;
+    const style = document.createElement("style");
+    style.textContent = `input[type="date"]::-webkit-calendar-picker-indicator { display: none; }`;
+    document.head.appendChild(style);
+    return () => { document.head.removeChild(style); };
+  }, []);
 
   // 마운트 시 pre-analysis 처리
   useEffect(() => {
@@ -628,7 +634,7 @@ export default function RegisterDetailScreen() {
             style={{
               flexDirection: "row",
               alignItems: "center",
-              marginBottom: 16,
+              marginBottom: 12,
             }}
           >
             <View
@@ -641,6 +647,42 @@ export default function RegisterDetailScreen() {
             >
               <Text style={{ fontSize: 11, fontWeight: "700", color: "#fff" }}>
                 {isFound ? "습득물 등록" : "분실물 등록"}
+              </Text>
+            </View>
+          </View>
+
+          {/* 안내 배너 */}
+          <View style={{
+            backgroundColor: themeColor + "12",
+            borderRadius: 16,
+            paddingVertical: 14,
+            paddingHorizontal: 16,
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 14,
+            marginBottom: 20,
+            borderWidth: 1,
+            borderColor: themeColor + "25",
+          }}>
+            <View style={{
+              width: 44,
+              height: 44,
+              borderRadius: 22,
+              backgroundColor: themeColor + "20",
+              alignItems: "center",
+              justifyContent: "center",
+            }}>
+              <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
+                <Path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" stroke={themeColor} strokeWidth={1.8} strokeLinejoin="round" />
+                <Path d="M12 11.5C13.1046 11.5 14 10.6046 14 9.5C14 8.39543 13.1046 7.5 12 7.5C10.8954 7.5 10 8.39543 10 9.5C10 10.6046 10.8954 11.5 12 11.5Z" stroke={themeColor} strokeWidth={1.8} />
+              </Svg>
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontSize: 13, fontWeight: "700", color: "#1A1A1A", letterSpacing: -0.3 }}>
+                {isFound ? "습득 장소와 날짜를 입력해 주세요" : "분실 장소와 날짜를 입력해 주세요"}
+              </Text>
+              <Text style={{ fontSize: 11, color: themeColor, marginTop: 3, letterSpacing: -0.2, fontWeight: "500" }}>
+                {isFound ? "AI가 분실자를 자동으로 찾아드릴게요" : "등록하면 AI가 유사한 습득물 Top 5를 보여드려요"}
               </Text>
             </View>
           </View>
@@ -676,7 +718,7 @@ export default function RegisterDetailScreen() {
                 }}
               >
                 <Text
-                  style={{ fontSize: 12, fontWeight: "700", color: "#000" }}
+                  style={{ fontSize: 13, fontWeight: "700", color: "#000" }}
                 >
                   {isFound ? "습득 위치" : "분실 위치"}
                 </Text>
@@ -695,17 +737,22 @@ export default function RegisterDetailScreen() {
                   paddingHorizontal: 10,
                 }}
               >
-                <PinIcon width={9} height={11} style={{ marginRight: 6 }} />
+                <Svg width={14} height={16} viewBox="0 0 9 11" fill="none" style={{ marginRight: 8 }}>
+                  <Path d="M8.5 4.5C8.5 6.9965 5.7305 9.5965 4.8005 10.3995C4.71386 10.4646 4.6084 10.4999 4.5 10.4999C4.3916 10.4999 4.28614 10.4646 4.1995 10.3995C3.2695 9.5965 0.5 6.9965 0.5 4.5C0.5 3.43913 0.921427 2.42172 1.67157 1.67157C2.42172 0.921427 3.43913 0.5 4.5 0.5C5.56087 0.5 6.57828 0.921427 7.32843 1.67157C8.07857 2.42172 8.5 3.43913 8.5 4.5Z" stroke={themeColor} strokeLinecap="round" strokeLinejoin="round" />
+                  <Path d="M4.5 6.00024C5.32843 6.00024 6 5.32867 6 4.50024C6 3.67182 5.32843 3.00024 4.5 3.00024C3.67157 3.00024 3 3.67182 3 4.50024C3 5.32867 3.67157 6.00024 4.5 6.00024Z" stroke={themeColor} strokeLinecap="round" strokeLinejoin="round" />
+                </Svg>
                 <Text
                   style={{
                     flex: 1,
-                    fontSize: 12,
+                    fontSize: 14,
                     color: location ? "#000" : "#919191",
                   }}
                 >
                   {location || "위치를 검색해주세요"}
                 </Text>
-                <ArrowRight width={5} height={9} />
+                <Svg width={7} height={12} viewBox="0 0 5 9" fill="none">
+                    <Path d="M0.5 0.5L4.5 4.5L0.5 8.5" stroke={themeColor} strokeLinecap="round" strokeLinejoin="round" />
+                  </Svg>
               </TouchableOpacity>
             </View>
 
@@ -719,7 +766,7 @@ export default function RegisterDetailScreen() {
                 }}
               >
                 <Text
-                  style={{ fontSize: 12, fontWeight: "700", color: "#000" }}
+                  style={{ fontSize: 13, fontWeight: "700", color: "#000" }}
                 >
                   {isFound ? "습득 날짜" : "분실 날짜"}
                 </Text>
@@ -740,11 +787,12 @@ export default function RegisterDetailScreen() {
                     overflow: "hidden",
                   }}
                 >
-                  <CalendarIcon
-                    width={10}
-                    height={11}
-                    style={{ marginRight: 8 }}
-                  />
+                  <Svg width={14} height={16} viewBox="0 0 10 11" fill="none" style={{ marginRight: 8 }}>
+                    <Path d="M3 0.5V2.5" stroke={themeColor} strokeLinecap="round" strokeLinejoin="round" />
+                    <Path d="M7 0.5V2.5" stroke={themeColor} strokeLinecap="round" strokeLinejoin="round" />
+                    <Path d="M8.5 1.5H1.5C0.947715 1.5 0.5 1.94771 0.5 2.5V9.49998C0.5 10.0523 0.947715 10.5 1.5 10.5H8.5C9.05229 10.5 9.5 10.0523 9.5 9.49998V2.5C9.5 1.94771 9.05229 1.5 8.5 1.5Z" stroke={themeColor} strokeLinecap="round" strokeLinejoin="round" />
+                    <Path d="M0.5 4.49976H9.5" stroke={themeColor} strokeLinecap="round" strokeLinejoin="round" />
+                  </Svg>
                   <input
                     type="date"
                     value={date ? date.toISOString().split("T")[0] : ""}
@@ -756,15 +804,20 @@ export default function RegisterDetailScreen() {
                     style={
                       {
                         flex: 1,
-                        fontSize: 12,
+                        fontSize: 14,
                         border: "none",
                         background: "transparent",
                         outline: "none",
                         color: date ? "#000" : "#919191",
                         fontFamily: "inherit",
+                        WebkitAppearance: "none",
+                        appearance: "none",
                       } as any
                     }
                   />
+                  <Svg width={7} height={12} viewBox="0 0 5 9" fill="none">
+                    <Path d="M0.5 0.5L4.5 4.5L0.5 8.5" stroke={themeColor} strokeLinecap="round" strokeLinejoin="round" />
+                  </Svg>
                 </View>
               ) : (
                 <>
@@ -784,21 +837,24 @@ export default function RegisterDetailScreen() {
                       paddingHorizontal: 10,
                     }}
                   >
-                    <CalendarIcon
-                      width={10}
-                      height={11}
-                      style={{ marginRight: 8 }}
-                    />
+                    <Svg width={14} height={16} viewBox="0 0 10 11" fill="none" style={{ marginRight: 8 }}>
+                      <Path d="M3 0.5V2.5" stroke={themeColor} strokeLinecap="round" strokeLinejoin="round" />
+                      <Path d="M7 0.5V2.5" stroke={themeColor} strokeLinecap="round" strokeLinejoin="round" />
+                      <Path d="M8.5 1.5H1.5C0.947715 1.5 0.5 1.94771 0.5 2.5V9.49998C0.5 10.0523 0.947715 10.5 1.5 10.5H8.5C9.05229 10.5 9.5 10.0523 9.5 9.49998V2.5C9.5 1.94771 9.05229 1.5 8.5 1.5Z" stroke={themeColor} strokeLinecap="round" strokeLinejoin="round" />
+                      <Path d="M0.5 4.49976H9.5" stroke={themeColor} strokeLinecap="round" strokeLinejoin="round" />
+                    </Svg>
                     <Text
                       style={{
                         flex: 1,
-                        fontSize: 12,
+                        fontSize: 14,
                         color: date ? "#000" : "#919191",
                       }}
                     >
                       {dateLabel}
                     </Text>
-                    <ArrowRight width={5} height={9} />
+                    <Svg width={7} height={12} viewBox="0 0 5 9" fill="none">
+                    <Path d="M0.5 0.5L4.5 4.5L0.5 8.5" stroke={themeColor} strokeLinecap="round" strokeLinejoin="round" />
+                  </Svg>
                   </TouchableOpacity>
 
                   {Platform.OS === "android" &&

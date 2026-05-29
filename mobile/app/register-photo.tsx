@@ -43,7 +43,7 @@ function ReferenceImageOverlay({
     <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.65)", alignItems: "center", justifyContent: "center", zIndex: 9998, padding: 24 }}>
       <View style={{ backgroundColor: "#fff", borderRadius: 20, padding: 20, width: "100%" }}>
         <Text style={{ fontSize: 16, fontWeight: "700", color: "#000", marginBottom: 4 }}>참고 이미지 선택</Text>
-        <Text style={{ fontSize: 12, color: "#919191", marginBottom: 16 }}>AI가 분실물과 유사한 이미지를 찾았습니다.</Text>
+        <Text style={{ fontSize: 13, color: "#919191", marginBottom: 16 }}>AI가 분실물과 유사한 이미지를 찾았습니다.</Text>
 
         {image ? (
           <>
@@ -58,7 +58,7 @@ function ReferenceImageOverlay({
           </>
         ) : (
           <View style={{ height: 60, alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
-            <Text style={{ fontSize: 13, color: "#919191" }}>참고 이미지를 찾지 못했습니다.</Text>
+            <Text style={{ fontSize: 14, color: "#919191" }}>참고 이미지를 찾지 못했습니다.</Text>
           </View>
         )}
 
@@ -91,7 +91,7 @@ function ReferenceImageOverlay({
             style={{ height: 46, alignItems: "center", justifyContent: "center" }}
           >
             {imageAction === "skip" ? <ActivityIndicator color="#919191" /> : (
-              <Text style={{ color: "#919191", fontSize: 13 }}>이미지 없이 진행</Text>
+              <Text style={{ color: "#919191", fontSize: 14 }}>이미지 없이 진행</Text>
             )}
           </TouchableOpacity>
         </View>
@@ -359,7 +359,7 @@ export default function RegisterPhotoScreen() {
                 backgroundColor: themeColor,
               }}
             >
-              <Text style={{ fontSize: 11, fontWeight: "700", color: "#fff" }}>
+              <Text style={{ fontSize: 12, fontWeight: "700", color: "#fff" }}>
                 {isFound ? "습득물" : "분실물"}
               </Text>
             </View>
@@ -373,7 +373,7 @@ export default function RegisterPhotoScreen() {
                 }}
               >
                 <Text
-                  style={{ fontSize: 11, fontWeight: "600", color: "#434343" }}
+                  style={{ fontSize: 12, fontWeight: "600", color: "#434343" }}
                 >
                   {categoryDisplay}
                 </Text>
@@ -395,20 +395,14 @@ export default function RegisterPhotoScreen() {
               elevation: 2,
             }}
           >
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                marginBottom: 10,
-              }}
-            >
+            <View style={{ marginBottom: 10 }}>
               <View style={{ flexDirection: "row", alignItems: "center" }}>
                 <Text
-                  style={{ fontSize: 12, fontWeight: "700", color: "#000" }}
+                  style={{ fontSize: 13, fontWeight: "700", color: "#000" }}
                 >
                   사진 등록
                 </Text>
-                <Text style={{ fontSize: 10, color: "#919191", marginLeft: 3 }}>
+                <Text style={{ fontSize: 12, color: "#919191", marginLeft: 3 }}>
                   {photo ? "(1/1)" : "(0/1)"}
                 </Text>
                 {isFound ? (
@@ -416,7 +410,7 @@ export default function RegisterPhotoScreen() {
                 ) : (
                   <Text
                     style={{
-                      fontSize: 10,
+                      fontSize: 12,
                       fontWeight: "700",
                       color: "#919191",
                       marginLeft: 2,
@@ -426,19 +420,12 @@ export default function RegisterPhotoScreen() {
                   </Text>
                 )}
               </View>
-              <View style={{ flex: 1 }} />
-              <InfoIcon width={11} height={11} />
-              <Text
-                style={{
-                  fontSize: 10,
-                  color: "#919191",
-                  marginLeft: 4,
-                  flexShrink: 1,
-                }}
-                numberOfLines={1}
-              >
-                물건의 특징이 잘 보이도록 사진을 등록해주세요.
-              </Text>
+              <View style={{ flexDirection: "row", alignItems: "center", marginTop: 2 }}>
+                <InfoIcon width={11} height={11} />
+                <Text style={{ fontSize: 12, color: "#919191", marginLeft: 4 }}>
+                  물건의 특징이 잘 보이도록 사진을 등록해주세요.
+                </Text>
+              </View>
             </View>
 
             {!photo ? (
@@ -458,7 +445,7 @@ export default function RegisterPhotoScreen() {
                 <CameraIcon width={41} height={35} />
                 <Text
                   style={{
-                    fontSize: 12,
+                    fontSize: 13,
                     fontWeight: "800",
                     color: "#919191",
                     marginTop: 8,
@@ -486,7 +473,7 @@ export default function RegisterPhotoScreen() {
                   <CameraIcon width={41} height={35} />
                   <Text
                     style={{
-                      fontSize: 12,
+                      fontSize: 13,
                       fontWeight: "800",
                       color: "#919191",
                       marginTop: 8,
@@ -528,14 +515,14 @@ export default function RegisterPhotoScreen() {
             <View style={{ marginBottom: 6 }}>
               <View style={{ flexDirection: "row", alignItems: "center" }}>
                 <Text
-                  style={{ fontSize: 12, fontWeight: "700", color: "#000" }}
+                  style={{ fontSize: 13, fontWeight: "700", color: "#000" }}
                 >
                   물건 설명
                 </Text>
                 {isFound ? (
                   <Text
                     style={{
-                      fontSize: 10,
+                      fontSize: 12,
                       fontWeight: "700",
                       color: "#919191",
                       marginLeft: 4,
@@ -548,9 +535,12 @@ export default function RegisterPhotoScreen() {
                   <RequiredDot width={5} height={5} style={{ marginLeft: 2 }} />
                 )}
               </View>
-              <Text style={{ fontSize: 10, color: "#919191", marginTop: 2 }}>
-                AI가 물건을 더 잘 파악할 수 있도록 자세히 설명해주세요.
-              </Text>
+              <View style={{ flexDirection: "row", alignItems: "center", marginTop: 2 }}>
+                <InfoIcon width={11} height={11} />
+                <Text style={{ fontSize: 12, color: "#919191", marginLeft: 4 }}>
+                  AI가 물건을 더 잘 파악할 수 있도록 자세히 설명해주세요.
+                </Text>
+              </View>
             </View>
             <View
               style={{
@@ -568,8 +558,8 @@ export default function RegisterPhotoScreen() {
                 onChangeText={setText}
                 placeholder={
                   isFound
-                    ? "예: 검은 지갑을 주웠어요"
-                    : "예: 학생회관 근처에서 지갑을 잃어버렸어요"
+                    ? "예: 검은색 반지갑이에요. 소가죽 소재이고 표면 모서리가 약간 닳아있어요. 안에 카드가 몇 장 들어있어요."
+                    : "예: 흰색 무선 이어폰이에요. 케이스 뒷면에 곰 스티커가 붙어있고 오른쪽 이어버드에 작은 흠집이 있어요."
                 }
                 placeholderTextColor="#919191"
                 multiline

@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import { View, Text, ScrollView, TouchableOpacity, Alert } from "react-native";
 import { useRouter, useFocusEffect } from "expo-router";
+import Svg, { Circle, Line } from "react-native-svg";
 import BackIcon from "../../assets/myinfo-back.svg";
 import SmartphoneIcon from "../../assets/smartphone.svg";
 import BackpackIcon from "../../assets/backpack.svg";
@@ -95,6 +96,42 @@ export default function RegisterScreen() {
           >
             <Text style={{ fontSize: 12, fontWeight: "700", color: !isFound ? "#fff" : "#919191" }}>분실물 등록</Text>
           </TouchableOpacity>
+        </View>
+
+        {/* 안내 배너 */}
+        <View style={{
+          backgroundColor: themeColor + "12",
+          borderRadius: 16,
+          paddingVertical: 14,
+          paddingHorizontal: 16,
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 14,
+          marginBottom: 20,
+          borderWidth: 1,
+          borderColor: themeColor + "25",
+        }}>
+          <View style={{
+            width: 44,
+            height: 44,
+            borderRadius: 22,
+            backgroundColor: themeColor + "20",
+            alignItems: "center",
+            justifyContent: "center",
+          }}>
+            <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
+              <Circle cx={11} cy={11} r={7} stroke={themeColor} strokeWidth={1.8} />
+              <Line x1="16.5" y1="16.5" x2="21" y2="21" stroke={themeColor} strokeWidth={1.8} strokeLinecap="round" />
+            </Svg>
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontSize: 13, fontWeight: "700", color: "#1A1A1A", letterSpacing: -0.3 }}>
+              {isFound ? "습득하신 물건의 종류를 선택해 주세요" : "분실하신 물건의 종류를 선택해 주세요"}
+            </Text>
+            <Text style={{ fontSize: 11, color: themeColor, marginTop: 3, letterSpacing: -0.2, fontWeight: "500" }}>
+              {isFound ? "AI가 분실자를 찾아드릴게요" : "AI가 비슷한 습득물을 찾아드릴게요"}
+            </Text>
+          </View>
         </View>
 
         {/* 카테고리 목록 */}
