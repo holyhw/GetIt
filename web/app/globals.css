@@ -4,13 +4,13 @@
 @import "../styles/style.css";
 
 @theme {
-  --color-navy: #1E3A5F;
-  --color-orange: #FF7A00;
-  --color-app-bg: #F5F7FA;
-  --color-app-border: #D9D9D9;
+  --color-navy: #1e3a5f;
+  --color-orange: #ff7a00;
+  --color-app-bg: #f5f7fa;
+  --color-app-border: #d9d9d9;
   --color-app-gray: #919191;
-  --color-app-gray-light: #E5E7EB;
-  --color-app-text: #1A1A1A;
+  --color-app-gray-light: #e5e7eb;
+  --color-app-text: #1a1a1a;
   --font-pretendard: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", sans-serif;
 }
 
@@ -22,9 +22,13 @@
 
   @media (min-width: 768px) {
     html {
-      font-size: 20px;
+      font-size: 18px;
     }
   }
+}
+
+html {
+  scrollbar-gutter: stable;
 }
 
 body {
