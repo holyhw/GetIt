@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/authStore";
 import { api } from "@/lib/api";
 import type { ApiNotification } from "@/types/notification";
+import TopHeader from "@/components/TopHeader";
 
 function formatRelativeTime(iso: string): string {
   const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
@@ -135,9 +136,11 @@ export default function NotificationPage() {
   }
 
   return (
-    <div className="min-h-dvh bg-app-bg">
-      {/* 헤더 */}
-      <div className="flex items-center px-6 pt-8 pb-3">
+    <div className="min-h-dvh bg-app-bg md:pt-[72px]">
+      <TopHeader />
+
+      {/* 모바일 헤더 */}
+      <div className="md:hidden flex items-center px-6 pt-8 pb-3">
         <button onClick={() => router.back()} className="cursor-pointer bg-transparent border-none p-1">
           <svg width="11" height="19" viewBox="0 0 11 19" fill="none">
             <path d="M9.5 17.5L1.5 9.5L9.5 1.5" stroke="black" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
@@ -151,14 +154,29 @@ export default function NotificationPage() {
             </div>
           )}
         </div>
-        <button
-          onClick={markAllRead}
+        <button onClick={markAllRead}
           className="text-xs font-semibold tracking-[-0.2px] cursor-pointer bg-transparent border-none"
-          style={{ color: unread > 0 ? "#1E3A5F" : "#C0C0C0" }}
-        >
+          style={{ color: unread > 0 ? "#1E3A5F" : "#C0C0C0" }}>
           모두 읽음
         </button>
       </div>
+
+      <div className="md:max-w-[600px] md:mx-auto">
+        {/* 데스크탑 헤더 */}
+        <div className="hidden md:flex items-center justify-end pt-6 pb-3">
+          <button onClick={markAllRead}
+            disabled={unread === 0}
+            className="flex items-center gap-1.5 px-4 h-[34px] rounded-full text-xs font-semibold cursor-pointer border-none transition-colors"
+            style={{
+              backgroundColor: unread > 0 ? "#1E3A5F" : "#E5E7EB",
+              color: unread > 0 ? "#fff" : "#ABABAB",
+            }}>
+            <svg width="12" height="10" viewBox="0 0 15 11" fill="none">
+              <path d="M1 5.5L5.5 10L14 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            모두 읽음
+          </button>
+        </div>
 
       {/* 목록 */}
       <div className="overflow-y-auto pb-24">
@@ -191,6 +209,7 @@ export default function NotificationPage() {
           </>
         )}
       </div>
+      </div> {/* md:max-w-[600px] */}
     </div>
   );
 }
