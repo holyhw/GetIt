@@ -11,11 +11,11 @@ import KeyIcon from "../assets/key-round.svg";
 export type CategoryFilterValue = { major: string; minor: string } | null;
 
 const CATEGORIES = [
-  { label: "전자기기", Icon: SmartphoneIcon, subcategories: ["스마트폰", "이어폰", "헤드셋", "키보드", "태블릿", "노트북", "보조배터리", "기타"] },
+  { label: "전자기기", Icon: SmartphoneIcon, subcategories: ["스마트폰", "이어폰", "헤드셋", "키보드", "태블릿", "마우스", "보조배터리", "기타"] },
   { label: "가방", Icon: BackpackIcon, subcategories: ["백팩", "토트백", "에코백", "크로스백", "파우치", "기타"] },
   { label: "지갑", Icon: WalletIcon, subcategories: ["반지갑", "장지갑", "카드지갑", "기타"] },
   { label: "패션잡화", Icon: ShirtIcon, subcategories: ["신발", "의류", "안경", "선글라스", "모자", "기타"] },
-  { label: "액세서리", Icon: GemIcon, subcategories: ["반지", "목걸이", "귀걸이", "팔찌", "시계", "기타"] },
+  { label: "액세서리", Icon: GemIcon, subcategories: ["반지", "목걸이", "팔찌", "기타"] },
   { label: "도서/문구", Icon: BookIcon, subcategories: ["책", "기타"] },
   { label: "소지품", Icon: KeyIcon, subcategories: ["열쇠", "텀블러", "우산", "기타"] },
 ];
