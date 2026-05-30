@@ -9,11 +9,11 @@ const NAVY = "#1E3A5F";
 const GRAY = "#919191";
 
 const TABS = [
-  { href: "/", label: "홈" },
-  { href: "/search", label: "검색" },
-  { href: "/register", label: "등록" },
-  { href: "/chat", label: "채팅" },
-  { href: "/mypage", label: "프로필" },
+  { href: "/", label: "홈", protected: false },
+  { href: "/search", label: "검색", protected: false },
+  { href: "/register", label: "등록", protected: true },
+  { href: "/chat", label: "채팅", protected: true },
+  { href: "/mypage", label: "프로필", protected: true },
 ];
 
 export default function TopHeader() {
@@ -30,12 +30,19 @@ export default function TopHeader() {
         </Link>
 
         <nav className="flex items-center gap-1 flex-1">
-          {TABS.map(({ href, label }) => {
+          {TABS.map(({ href, label, protected: isProtected }) => {
             const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
+            const handleClick = (e: React.MouseEvent) => {
+              if (isProtected && !token) {
+                e.preventDefault();
+                router.push("/login");
+              }
+            };
             return (
               <Link
                 key={href}
                 href={href}
+                onClick={handleClick}
                 className="px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
                 style={{
                   color: active ? NAVY : GRAY,

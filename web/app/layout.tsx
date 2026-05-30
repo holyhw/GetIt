@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css";
 import "./globals.css";
+import { AuthHandler } from "@/components/AuthHandler";
 
 export const metadata: Metadata = {
   title: "GET IT",
@@ -15,6 +16,7 @@ export default function RootLayout({
   return (
     <html lang="ko" className="h-full">
       <body className="h-full" suppressHydrationWarning>
+        <AuthHandler />
         {children}
       </body>
     </html>
