@@ -39,11 +39,11 @@ export function CategoryFilterModal({ visible, value, activeColor, onSelect, onC
   if (!visible) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex flex-col justify-end">
+    <div className="fixed inset-0 z-[100] flex flex-col justify-end md:justify-center md:items-center">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
 
-      <div className="relative bg-app-bg rounded-t-[20px] max-h-[80vh] flex flex-col">
-        <div className="w-10 h-1 bg-app-border rounded-full mx-auto mt-3" />
+      <div className="relative bg-app-bg rounded-t-[20px] md:rounded-[20px] max-h-[80vh] flex flex-col md:w-[480px] md:max-h-[85vh]">
+        <div className="w-10 h-1 bg-app-border rounded-full mx-auto mt-3 md:hidden" />
 
         <div className="flex items-center justify-between px-6 pt-4 pb-3">
           <span className="text-base font-bold text-black">카테고리</span>
@@ -57,7 +57,7 @@ export function CategoryFilterModal({ visible, value, activeColor, onSelect, onC
                 <Icon size={24} color="#434343" />
                 <span className="text-[11px] font-semibold text-[#434343] text-center">{label}</span>
               </div>
-              <div className="flex-1 bg-white rounded-xl p-3 shadow-sm flex flex-wrap gap-2">
+              <div className="flex-1 bg-white rounded-xl p-3 shadow-sm grid grid-cols-2 gap-2">
                 {subcategories.map((sub) => {
                   const isSelected = selected?.major === label && selected?.minor === sub;
                   return (
@@ -66,7 +66,6 @@ export function CategoryFilterModal({ visible, value, activeColor, onSelect, onC
                       onClick={() => setSelected(isSelected ? null : { major: label, minor: sub })}
                       className="py-2.5 rounded-lg text-xs cursor-pointer transition-colors"
                       style={{
-                        width: "calc(50% - 4px)",
                         border: `1px solid ${isSelected ? activeColor : "#E5E7EB"}`,
                         backgroundColor: isSelected ? activeColor + "15" : "#F5F7FA",
                         color: isSelected ? activeColor : "#434343",
@@ -82,7 +81,7 @@ export function CategoryFilterModal({ visible, value, activeColor, onSelect, onC
           ))}
         </div>
 
-        <div className="flex gap-2.5 px-6 pt-3 pb-9">
+        <div className="flex gap-2.5 px-6 pt-3 pb-9 md:pb-5">
           <button
             onClick={() => { onSelect(null); onClose(); }}
             className="flex-1 h-[46px] rounded-xl border border-app-border bg-white text-sm font-semibold text-[#434343] cursor-pointer"

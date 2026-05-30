@@ -55,11 +55,11 @@ export function DateFilterModal({ visible, value, activeColor, onSelect, onClose
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex flex-col justify-end">
+    <div className="fixed inset-0 z-[100] flex flex-col justify-end md:justify-center md:items-center">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
 
-      <div className="relative bg-white rounded-t-[20px]">
-        <div className="w-10 h-1 bg-app-border rounded-full mx-auto mt-3" />
+      <div className="relative bg-white rounded-t-[20px] md:rounded-[20px] md:w-[400px]">
+        <div className="w-10 h-1 bg-app-border rounded-full mx-auto mt-3 md:hidden" />
 
         <div className="flex items-center justify-between px-6 pt-4 pb-5">
           <span className="text-base font-bold text-black">날짜</span>
@@ -89,15 +89,20 @@ export function DateFilterModal({ visible, value, activeColor, onSelect, onClose
         </div>
 
         <div className="px-6 pb-2">
-          <input
-            type="date"
-            value={activeTab === "start" ? toYMD(startDate) : toYMD(endDate)}
-            onChange={(e) => handleDateChange(e.target.value)}
-            className="w-full text-base p-3 rounded-xl border border-app-gray-light bg-app-bg text-black outline-none"
-          />
+          <div className="relative">
+            <input
+              type="date"
+              value={activeTab === "start" ? toYMD(startDate) : toYMD(endDate)}
+              onChange={(e) => handleDateChange(e.target.value)}
+              className="w-full text-base p-3 pr-10 rounded-xl border border-app-gray-light bg-app-bg text-black outline-none"
+            />
+            <svg width="18" height="18" viewBox="0 0 10 11" fill="none" className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+              <path d="M3 0.5V2.5M7 0.5V2.5M8.5 1.5H1.5C0.948 1.5 0.5 1.948 0.5 2.5V9.5C0.5 10.052 0.948 10.5 1.5 10.5H8.5C9.052 10.5 9.5 10.052 9.5 9.5V2.5C9.5 1.948 9.052 1.5 8.5 1.5ZM0.5 4.5H9.5" stroke="#919191" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </div>
         </div>
 
-        <div className="flex gap-2.5 px-6 pt-4 pb-9">
+        <div className="flex gap-2.5 px-6 pt-4 pb-9 md:pb-5">
           <button
             onClick={() => { onSelect({}); onClose(); }}
             className="flex-1 h-[46px] rounded-xl border border-app-border bg-white text-sm font-semibold text-[#434343] cursor-pointer"
