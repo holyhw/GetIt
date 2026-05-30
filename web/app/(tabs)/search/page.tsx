@@ -178,8 +178,9 @@ export default function SearchPage() {
 
   return (
     <div className="min-h-dvh bg-app-bg">
+      <div className="md:max-w-[1200px] md:mx-auto">
       {/* 검색 바 (sticky) */}
-      <div className="sticky top-0 z-10 bg-app-bg pt-8 px-5 pb-3">
+      <div className="sticky top-0 md:top-[72px] z-10 bg-app-bg pt-8 px-5 pb-3">
         <div className="bg-white rounded-[14px] h-[46px] flex items-center px-3.5 gap-2 shadow-[0_2px_6px_rgba(0,0,0,0.07)]">
           <SearchIcon />
           <input
@@ -238,27 +239,30 @@ export default function SearchPage() {
         </div>
       ) : (
         <div>
-          {/* 타입 토글 */}
-          <div className="px-5 mb-2.5">
-            <div className="flex bg-app-gray-light rounded-[10px] p-0.5">
-              {(["습득물", "분실물"] as FilterType[]).map((t) => (
-                <button
-                  key={t}
-                  onClick={() => setTypeFilter(t)}
-                  className="flex-1 h-8 rounded-[8px] text-[13px] font-semibold cursor-pointer transition-colors"
-                  style={{
-                    backgroundColor: typeFilter === t ? (t === "습득물" ? "#5F92D5" : "#FFB26B") : "transparent",
-                    color: typeFilter === t ? "#fff" : "#757575",
-                  }}
-                >
-                  {t}
-                </button>
-              ))}
+          {/* 타입 토글 + 필터 버튼 */}
+          {/* 모바일: 별도 줄 / 데스크탑: 한 줄 */}
+          <div className="md:flex md:items-center md:gap-2 md:px-5 md:mb-3 md:border-b md:border-app-gray-light md:pb-3">
+            {/* 토글 */}
+            <div className="px-5 mb-2.5 md:px-0 md:mb-0">
+              <div className="flex bg-app-gray-light rounded-[10px] p-0.5 md:w-auto">
+                {(["습득물", "분실물"] as FilterType[]).map((t) => (
+                  <button
+                    key={t}
+                    onClick={() => setTypeFilter(t)}
+                    className="flex-1 md:flex-none md:w-[72px] h-8 rounded-[8px] text-[13px] font-semibold cursor-pointer transition-colors"
+                    style={{
+                      backgroundColor: typeFilter === t ? (t === "습득물" ? "#5F92D5" : "#FFB26B") : "transparent",
+                      color: typeFilter === t ? "#fff" : "#757575",
+                    }}
+                  >
+                    {t}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
 
-          {/* 필터 버튼 */}
-          <div className="flex gap-2 px-5 mb-2">
+            {/* 필터 버튼 */}
+            <div className="flex gap-2 px-5 mb-2 md:px-0 md:mb-0 md:flex-1 md:justify-end">
             {[
               { label: categoryLabel, active: isCategoryActive, onClick: () => setShowCategoryModal(true) },
               { label: getDateFilterLabel(dateFilter), active: isDateActive, onClick: () => setShowDateModal(true) },
@@ -277,6 +281,7 @@ export default function SearchPage() {
                 <span className="text-[9px]" style={{ color: active ? activeColor : "#919191" }}>▼</span>
               </button>
             ))}
+            </div>
           </div>
 
           {/* 결과 수 */}
@@ -297,7 +302,7 @@ export default function SearchPage() {
               <p className="text-sm text-[#ABABAB] tracking-[-0.3px]">검색 결과가 없어요</p>
             </div>
           ) : (
-            <div className="px-5 pb-24 flex flex-col gap-2.5">
+            <div className="px-5 pb-24 flex flex-col gap-2.5 md:grid md:grid-cols-2 md:gap-4 md:px-6">
               {results.map(item => (
                 <ItemCard
                   key={item.id}
@@ -316,6 +321,7 @@ export default function SearchPage() {
         </div>
       )}
 
+      </div> {/* md:max-w-[1200px] */}
       <CategoryFilterModal
         visible={showCategoryModal}
         value={categoryFilter}

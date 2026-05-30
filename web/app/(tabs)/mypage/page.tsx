@@ -45,10 +45,25 @@ export default function MyPage() {
     router.replace("/");
   };
 
+  const Avatar = () => (
+    <div className="w-[60px] h-[60px] md:w-[80px] md:h-[80px] rounded-full overflow-hidden bg-app-gray-light shrink-0">
+      {userInfo?.profileImageUrl ? (
+        <Image src={userInfo.profileImageUrl} alt="" width={80} height={80} className="w-full h-full object-cover" unoptimized />
+      ) : (
+        <div className="w-full h-full flex items-center justify-center">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="8" r="4" stroke="#ABABAB" strokeWidth="1.8" />
+            <path d="M4 20C4 17 7.58 14 12 14C16.42 14 20 17 20 20" stroke="#ABABAB" strokeWidth="1.8" strokeLinecap="round" />
+          </svg>
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <div className="min-h-dvh bg-app-bg">
-      {/* 헤더 */}
-      <div className="flex items-center px-6 pt-8 pb-4">
+      {/* 모바일 헤더 */}
+      <div className="flex items-center px-6 pt-8 pb-4 md:hidden">
         <div className="flex-1" />
         <h1 className="text-[20px] font-medium text-black tracking-[-0.32px]">마이페이지</h1>
         <div className="flex-1 flex justify-end">
@@ -58,66 +73,90 @@ export default function MyPage() {
         </div>
       </div>
 
-      <div className="overflow-y-auto pb-6">
-        {/* 프로필 카드 */}
-        <div className="mx-[22px] bg-white rounded-lg border border-[#F1F3F7]">
-          <div className="flex pt-5 px-[21px] mb-5">
-            {/* 아바타 */}
-            <div className="w-[60px] h-[60px] rounded-full overflow-hidden bg-app-gray-light shrink-0 mr-2.5">
-              {userInfo?.profileImageUrl ? (
-                <Image src={userInfo.profileImageUrl} alt="" width={60} height={60} className="w-full h-full object-cover" unoptimized />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center">
-                  <svg width="30" height="30" viewBox="0 0 24 24" fill="none">
-                    <circle cx="12" cy="8" r="4" stroke="#ABABAB" strokeWidth="1.8" />
-                    <path d="M4 20C4 17 7.58 14 12 14C16.42 14 20 17 20 20" stroke="#ABABAB" strokeWidth="1.8" strokeLinecap="round" />
-                  </svg>
+      {/* 콘텐츠 */}
+      <div className="md:max-w-[1200px] md:mx-auto md:px-8 md:py-8">
+
+        {/* 모바일 레이아웃 */}
+        <div className="md:hidden">
+          <div className="overflow-y-auto pb-6">
+            <div className="mx-[22px] bg-white rounded-lg border border-[#F1F3F7]">
+              <div className="flex pt-5 px-[21px] mb-5">
+                <div className="mr-2.5"><Avatar /></div>
+                <div className="flex-1 pt-2 flex flex-col gap-2.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-base font-semibold text-black">{userInfo?.name ?? ""}</span>
+                    <button onClick={handleLogout} className="text-xs text-[#464646] cursor-pointer bg-transparent border-none">로그아웃</button>
+                  </div>
+                  <span className="text-sm text-black">{userInfo?.email ?? ""}</span>
                 </div>
-              )}
-            </div>
-            {/* 이름/이메일 */}
-            <div className="flex-1 pt-2 flex flex-col gap-2.5">
-              <div className="flex items-center justify-between">
-                <span className="text-base font-semibold text-black">{userInfo?.name ?? ""}</span>
-                <button onClick={handleLogout} className="text-xs text-[#464646] cursor-pointer bg-transparent border-none">로그아웃</button>
               </div>
-              <span className="text-sm text-black">{userInfo?.email ?? ""}</span>
+              <div className="flex gap-2.5 px-[21px] pb-5">
+                <button onClick={() => router.push("/myitems?type=found")}
+                  className="flex-1 bg-[#F4F7FF] rounded-lg py-5 flex flex-col items-center gap-3 cursor-pointer border-none">
+                  <span className="text-sm font-semibold text-navy">{foundCount}</span>
+                  <span className="text-xs text-navy">등록한 습득물</span>
+                </button>
+                <button onClick={() => router.push("/myitems?type=lost")}
+                  className="flex-1 bg-[#FFF7EF] rounded-lg py-5 flex flex-col items-center gap-3 cursor-pointer border-none">
+                  <span className="text-sm font-semibold text-orange">{lostCount}</span>
+                  <span className="text-xs text-orange">등록한 분실물</span>
+                </button>
+              </div>
+            </div>
+            <div className="mx-6 mt-5">
+              {MENU_ITEMS.map(({ label, href }) => (
+                <button key={label} onClick={() => href && router.push(href)}
+                  className="w-full h-14 flex items-center justify-between pr-5 border-b border-[#E1E4ED] bg-transparent text-left"
+                  style={{ cursor: href ? "pointer" : "default" }}>
+                  <span className="text-base text-black">{label}</span>
+                  <ArrowRight />
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* 데스크탑 레이아웃 */}
+        <div className="hidden md:block max-w-[600px] mx-auto">
+          {/* 프로필 카드 */}
+          <div className="bg-white rounded-xl border border-[#F1F3F7] p-6 mb-4">
+            <div className="flex items-center gap-5 pb-5 border-b border-[#F1F3F7]">
+              <Avatar />
+              <div className="flex-1">
+                <h2 className="text-lg font-bold text-black mb-1">{userInfo?.name ?? ""}</h2>
+                <p className="text-sm text-app-gray">{userInfo?.email ?? ""}</p>
+              </div>
+              <button onClick={handleLogout}
+                className="text-sm text-[#464646] cursor-pointer bg-transparent border border-app-border rounded-full px-4 py-1.5 shrink-0">
+                로그아웃
+              </button>
+            </div>
+            <div className="flex gap-3 pt-5">
+              <button onClick={() => router.push("/myitems?type=found")}
+                className="flex-1 bg-[#F4F7FF] rounded-xl py-5 flex flex-col items-center gap-2 cursor-pointer border-none">
+                <span className="text-xl font-bold text-navy">{foundCount}</span>
+                <span className="text-sm text-navy">등록한 습득물</span>
+              </button>
+              <button onClick={() => router.push("/myitems?type=lost")}
+                className="flex-1 bg-[#FFF7EF] rounded-xl py-5 flex flex-col items-center gap-2 cursor-pointer border-none">
+                <span className="text-xl font-bold text-orange">{lostCount}</span>
+                <span className="text-sm text-orange">등록한 분실물</span>
+              </button>
             </div>
           </div>
 
-          {/* 통계 */}
-          <div className="flex gap-2.5 px-[21px] pb-5">
-            <button
-              onClick={() => router.push("/myitems?type=found")}
-              className="flex-1 bg-[#F4F7FF] rounded-lg py-5 flex flex-col items-center gap-3 cursor-pointer border-none"
-            >
-              <span className="text-sm font-semibold text-navy">{foundCount}</span>
-              <span className="text-xs text-navy">등록한 습득물</span>
-            </button>
-            <button
-              onClick={() => router.push("/myitems?type=lost")}
-              className="flex-1 bg-[#FFF7EF] rounded-lg py-5 flex flex-col items-center gap-3 cursor-pointer border-none"
-            >
-              <span className="text-sm font-semibold text-orange">{lostCount}</span>
-              <span className="text-xs text-orange">등록한 분실물</span>
-            </button>
+          {/* 메뉴 */}
+          <div className="bg-white rounded-xl border border-[#F1F3F7] overflow-hidden">
+            {MENU_ITEMS.map(({ label, href }, idx) => (
+              <button key={label} onClick={() => href && router.push(href)}
+                className={`w-full h-[60px] flex items-center justify-between px-6 bg-transparent text-left transition-colors ${href ? "hover:bg-app-bg cursor-pointer" : "cursor-default"} ${idx < MENU_ITEMS.length - 1 ? "border-b border-[#E1E4ED]" : ""}`}>
+                <span className="text-base text-black">{label}</span>
+                <ArrowRight />
+              </button>
+            ))}
           </div>
         </div>
 
-        {/* 메뉴 */}
-        <div className="mx-6 mt-5">
-          {MENU_ITEMS.map(({ label, href }) => (
-            <button
-              key={label}
-              onClick={() => href && router.push(href)}
-              className="w-full h-14 flex items-center justify-between pr-5 border-b border-[#E1E4ED] bg-transparent cursor-pointer text-left"
-              style={{ cursor: href ? "pointer" : "default" }}
-            >
-              <span className="text-base text-black">{label}</span>
-              <ArrowRight />
-            </button>
-          ))}
-        </div>
       </div>
     </div>
   );

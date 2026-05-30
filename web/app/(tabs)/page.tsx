@@ -97,39 +97,27 @@ export default function HomePage() {
 
   return (
     <div className="min-h-dvh bg-app-bg">
+      <div className="md:max-w-[1200px] md:mx-auto">
       {/* 헤더 + 필터 바 (함께 sticky) */}
-      <div className="sticky top-0 z-10 bg-app-bg">
-        <header className="px-6 pt-8 pb-4 flex items-center">
+      <div className="sticky top-0 md:top-[72px] z-10 bg-app-bg">
+        {/* 모바일 헤더 */}
+        <header className="px-6 pt-8 pb-4 flex items-center md:hidden">
           <div className="flex items-center gap-1">
             <Image src="/logo-text.svg" alt="" width={31} height={30} />
             <Image src="/logo-icon.svg" alt="GET IT" width={93} height={16} />
           </div>
-
           <div className="flex-1" />
-
-          <div className="flex bg-app-gray-light rounded-lg p-0.5 gap-0.5">
+          <div className="flex bg-app-gray-light rounded-[10px] p-0.5 gap-0.5">
             {(["습득물", "분실물"] as FilterType[]).map((type) => (
-              <button
-                key={type}
-                onClick={() => setFilter(type)}
-                className="w-[61px] h-7 rounded-md text-xs font-semibold transition-colors cursor-pointer"
-                style={{
-                  backgroundColor:
-                    filter === type
-                      ? type === "습득물" ? "#5F92D5" : "#FFB26B"
-                      : "transparent",
-                  color: filter === type ? "#fff" : "#000",
-                }}
-              >
+              <button key={type} onClick={() => setFilter(type)}
+                className="w-[61px] h-7 rounded-[8px] text-xs font-semibold transition-colors cursor-pointer"
+                style={{ backgroundColor: filter === type ? (type === "습득물" ? "#5F92D5" : "#FFB26B") : "transparent", color: filter === type ? "#fff" : "#000" }}>
                 {type}
               </button>
             ))}
           </div>
-
-          <button
-            className="ml-3 relative cursor-pointer bg-transparent border-none p-0"
-            onClick={() => router.push(isLoggedIn ? "/notification" : "/login")}
-          >
+          <button className="ml-3 relative cursor-pointer bg-transparent border-none p-0"
+            onClick={() => router.push(isLoggedIn ? "/notification" : "/login")}>
             <BellIcon size={18} />
             {isLoggedIn && unreadCount > 0 && (
               <span className="absolute -top-1 -right-1 bg-[#F4551E] text-white text-[8px] font-bold rounded-md min-w-3 h-3 px-0.5 flex items-center justify-center leading-none">
@@ -139,8 +127,20 @@ export default function HomePage() {
           </button>
         </header>
 
-        {/* 필터 바 */}
-        <div className="flex gap-2 px-4 pb-2">
+        {/* 모바일 필터 바 / 데스크탑 통합 바 */}
+        <div className="flex items-center gap-2 px-4 pb-2 md:pt-4 md:pb-3 md:border-b md:border-app-gray-light">
+          {/* 데스크탑에서만 토글 표시 */}
+          <div className="hidden md:flex bg-app-gray-light rounded-[10px] p-0.5 gap-0.5 mr-2">
+            {(["습득물", "분실물"] as FilterType[]).map((type) => (
+              <button key={type} onClick={() => setFilter(type)}
+                className="w-[72px] h-8 rounded-[8px] text-sm font-semibold transition-colors cursor-pointer"
+                style={{ backgroundColor: filter === type ? (type === "습득물" ? "#5F92D5" : "#FFB26B") : "transparent", color: filter === type ? "#fff" : "#000" }}>
+                {type}
+              </button>
+            ))}
+          </div>
+
+          <div className="md:flex-1" />
           {[
             { label: categoryLabel, active: isCategoryActive, onClick: () => setShowCategoryModal(true) },
             { label: getDateFilterLabel(dateFilter), active: isDateActive, onClick: () => setShowDateModal(true) },
@@ -172,7 +172,7 @@ export default function HomePage() {
           <p className="text-sm text-app-gray">등록된 게시물이 없습니다.</p>
         </div>
       ) : (
-        <div className="px-3 pt-5 pb-4 flex flex-col gap-3 mt-1">
+        <div className="px-3 pt-5 pb-4 mt-1 flex flex-col gap-3 md:grid md:grid-cols-2 md:gap-4 md:px-6">
           {items.map((item) => (
             <ItemCard
               key={item.id}
@@ -193,6 +193,7 @@ export default function HomePage() {
         </div>
       )}
 
+      </div> {/* md:max-w-[1200px] */}
       <CategoryFilterModal
         visible={showCategoryModal}
         value={categoryFilter}

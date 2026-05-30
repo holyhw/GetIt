@@ -11,7 +11,7 @@
   --color-gray-light: #E5E7EB;
   --color-white: #ffffff;
 
-  /* 폰트 크기 */
+  /* 폰트 크기 (모바일) */
   --font-xs: 11px;
   --font-sm: 12px;
   --font-base: 14px;
@@ -30,6 +30,17 @@
   /* 레이아웃 */
   --tab-bar-height: 64px;
   --header-height: 52px;
-  --safe-bottom: env(safe-area-inset-bottom, 0px);
-  --safe-top: env(safe-area-inset-top, 0px);
+  --content-max-width: 1200px;
+}
+
+@media (min-width: 768px) {
+  :root {
+    --font-xs: 13px;
+    --font-sm: 14px;
+    --font-base: 16px;
+    --font-md: 17px;
+    --font-lg: 18px;
+    --font-xl: 20px;
+    --font-2xl: 24px;
+  }
 }

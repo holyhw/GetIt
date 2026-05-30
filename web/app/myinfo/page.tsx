@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/authStore";
 import { api } from "@/lib/api";
 import type { UserInfo } from "@/types/user";
+import TopHeader from "@/components/TopHeader";
 
 const API_BASE = "https://api.getitsju.com";
 
@@ -70,9 +71,10 @@ export default function MyInfoPage() {
   ];
 
   return (
-    <div className="min-h-dvh bg-app-bg">
-      {/* 헤더 */}
-      <div className="flex items-center px-6 pt-8 pb-4">
+    <div className="min-h-dvh bg-app-bg md:pt-[72px]">
+      <TopHeader />
+      {/* 모바일 헤더 */}
+      <div className="md:hidden sticky top-0 z-10 bg-app-bg flex items-center px-6 pt-8 pb-4">
         <button onClick={() => router.back()} className="cursor-pointer bg-transparent border-none p-1">
           <svg width="11" height="19" viewBox="0 0 11 19" fill="none">
             <path d="M9.5 17.5L1.5 9.5L9.5 1.5" stroke="black" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
@@ -81,20 +83,25 @@ export default function MyInfoPage() {
         <div className="flex-1 flex justify-center">
           <h1 className="text-[20px] font-medium text-black tracking-[-0.32px]">내 정보 관리</h1>
         </div>
-        <button
-          onClick={handleSave}
-          disabled={saving}
-          className="w-[46px] h-[26px] rounded-full bg-navy text-white text-xs font-semibold cursor-pointer border-none flex items-center justify-center"
-        >
+        <button onClick={handleSave} disabled={saving}
+          className="w-[46px] h-[26px] rounded-full bg-navy text-white text-xs font-semibold cursor-pointer border-none flex items-center justify-center">
           {saving ? "..." : "저장"}
         </button>
       </div>
 
-      <div className="overflow-y-auto pb-10">
+      <div className="overflow-y-auto pb-10 md:max-w-[600px] md:mx-auto md:mt-8 md:bg-white md:rounded-xl md:border md:border-[#F1F3F7] md:mb-8">
+        {/* 데스크탑 저장 버튼 - 카드 우상단 */}
+        <div className="hidden md:flex justify-end px-6 pt-5">
+          <button onClick={handleSave} disabled={saving}
+            className="px-6 h-[34px] rounded-full bg-navy text-white text-sm font-semibold cursor-pointer border-none">
+            {saving ? "저장 중..." : "저장"}
+          </button>
+        </div>
+
         {/* 프로필 사진 */}
-        <div className="flex flex-col items-center mt-4 mb-6">
+        <div className="flex flex-col items-center mt-4 mb-6 md:mt-2">
           <div className="relative mb-3.5 cursor-pointer" onClick={() => fileInputRef.current?.click()}>
-            <div className="w-[120px] h-[120px] rounded-full overflow-hidden bg-app-gray-light">
+            <div className="w-[120px] h-[120px] md:w-[140px] md:h-[140px] rounded-full overflow-hidden bg-app-gray-light">
               {(draftImage || userInfo?.profileImageUrl) ? (
                 <Image src={draftImage ?? userInfo!.profileImageUrl!} alt="" width={120} height={120} className="w-full h-full object-cover" unoptimized />
               ) : (
@@ -171,7 +178,7 @@ export default function MyInfoPage() {
                     <path d="M1 5.5L5.5 10L14 1" stroke="#1E3A5F" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 ) : (
-                  <span className="text-[10px] text-[#757575]">연결되지 않음</span>
+                  <span className="text-xs text-[#757575]">연결되지 않음</span>
                 )}
               </div>
             );
@@ -182,6 +189,8 @@ export default function MyInfoPage() {
         <div className="flex justify-end px-6 mt-5">
           <button className="text-xs font-semibold text-red-500 cursor-pointer bg-transparent border-none">회원탈퇴</button>
         </div>
+
+
       </div>
     </div>
   );

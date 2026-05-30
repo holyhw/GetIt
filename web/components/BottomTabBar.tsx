@@ -91,7 +91,7 @@ export default function BottomTabBar() {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-50 flex items-center bg-app-bg border-t border-app-gray-light shadow-[0_-2px_8px_rgba(0,0,0,0.06)]"
+      className="md:hidden fixed bottom-0 left-0 right-0 z-50 flex items-center bg-app-bg border-t border-app-gray-light shadow-[0_-2px_8px_rgba(0,0,0,0.06)]"
       style={{
         height: "calc(64px + env(safe-area-inset-bottom, 0px))",
         paddingBottom: "env(safe-area-inset-bottom, 0px)",
