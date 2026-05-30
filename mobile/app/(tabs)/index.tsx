@@ -43,7 +43,11 @@ export default function HomeScreen() {
     const path = `/api/registration/${endpoint}/page?${params.toString()}`;
     try {
       const data = await api.get<PagedResponse<RegistrationItem>>(path, token ?? "");
-      setItems(prev => append ? [...prev, ...data.content] : data.content);
+      setItems(prev => {
+        const combined = append ? [...prev, ...data.content] : data.content;
+        const seen = new Set<number>();
+        return combined.filter(item => { if (seen.has(item.id)) return false; seen.add(item.id); return true; });
+      });
       setHasNext(data.hasNext);
       setPage(data.page);
     } catch {

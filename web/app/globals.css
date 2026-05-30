@@ -1,26 +1,30 @@
 @import "tailwindcss";
+@import "../styles/reset.css";
+@import "../styles/base.css";
+@import "../styles/style.css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  --color-navy: #1E3A5F;
+  --color-orange: #FF7A00;
+  --color-app-bg: #F5F7FA;
+  --color-app-border: #D9D9D9;
+  --color-app-gray: #919191;
+  --color-app-gray-light: #E5E7EB;
+  --color-app-text: #1A1A1A;
+  --font-pretendard: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", sans-serif;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    opacity: 0;
+    cursor: pointer;
   }
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--color-app-bg);
+  color: var(--color-app-text);
+  font-family: var(--font-pretendard);
+  font-size: var(--font-base);
+  letter-spacing: -0.3px;
 }

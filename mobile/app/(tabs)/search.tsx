@@ -118,7 +118,11 @@ export default function SearchScreen() {
         `/api/registration/search/filter/page?${params.toString()}`,
         token ?? ""
       );
-      setResults(prev => append ? [...prev, ...data.content] : data.content);
+      setResults(prev => {
+        const combined = append ? [...prev, ...data.content] : data.content;
+        const seen = new Set<number>();
+        return combined.filter(item => { if (seen.has(item.id)) return false; seen.add(item.id); return true; });
+      });
       setHasNext(data.hasNext);
       setPage(data.page);
       if (pageNum === 0) setTotal(data.totalElements);
