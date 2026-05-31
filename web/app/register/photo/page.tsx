@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthStore } from "@/stores/authStore";
 import { registerStore } from "@/lib/registerStore";
 import type { PreAnalysisStatus, ReferenceImage } from "@/types/match";
+import TopHeader from "@/components/TopHeader";
 
 const API_BASE = "https://api.getitsju.com";
 
@@ -200,8 +201,10 @@ function RegisterPhotoContent() {
 
   return (
     <div className="min-h-dvh bg-app-bg flex flex-col">
-      {/* 헤더 */}
-      <div className="flex items-center h-[51px] px-6 mt-4">
+      <TopHeader />
+
+      {/* 모바일 헤더 */}
+      <div className="flex items-center h-[51px] px-6 mt-4 md:hidden">
         <button onClick={() => router.back()} className="cursor-pointer bg-transparent border-none p-1 mr-2">
           <svg width="11" height="19" viewBox="0 0 11 19" fill="none">
             <path d="M9.5 17.5L1.5 9.5L9.5 1.5" stroke="black" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
@@ -213,86 +216,101 @@ function RegisterPhotoContent() {
         <div className="w-[19px]" />
       </div>
 
-      <div className="flex-1 overflow-y-auto px-6 pt-2 pb-24">
-        {/* 카테고리 태그 */}
-        <div className="flex items-center gap-2 mb-4">
-          <span className="px-3 py-1 rounded-lg text-xs font-bold text-white" style={{ backgroundColor: themeColor }}>
-            {isFound ? "습득물" : "분실물"}
-          </span>
-          {categoryDisplay && (
-            <span className="px-3 py-1 rounded-lg text-xs font-semibold text-[#434343] bg-app-gray-light">{categoryDisplay}</span>
-          )}
-        </div>
+      <div className="flex-1 overflow-y-auto md:pt-[88px]">
+        <div className="max-w-[720px] mx-auto px-6 pt-2 pb-24 md:pb-12">
 
-        {/* 사진 등록 카드 */}
-        <div className="bg-white rounded-[10px] p-3 mb-2.5 shadow-sm">
-          <div className="mb-2.5">
-            <div className="flex items-center gap-1">
-              <span className="text-[13px] font-bold text-black">사진 등록</span>
-              <span className="text-xs text-app-gray">{photoUrl ? "(1/1)" : "(0/1)"}</span>
-              {isFound ? <span className="w-[5px] h-[5px] rounded-full bg-red-500 shrink-0" /> : <span className="text-xs font-bold text-app-gray">(선택)</span>}
-            </div>
-            <div className="flex items-center gap-1 mt-0.5">
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#919191" strokeWidth="2" /><path d="M12 8V13" stroke="#919191" strokeWidth="2" strokeLinecap="round" /><circle cx="12" cy="15.5" r="0.8" fill="#919191" /></svg>
-              <span className="text-xs text-app-gray">물건의 특징이 잘 보이도록 사진을 등록해주세요.</span>
-            </div>
+          {/* 카테고리 태그 */}
+          <div className="flex items-center gap-2 mb-4">
+            <span className="px-3 py-1 rounded-lg text-xs font-bold text-white" style={{ backgroundColor: themeColor }}>
+              {isFound ? "습득물" : "분실물"}
+            </span>
+            {categoryDisplay && (
+              <span className="px-3 py-1 rounded-lg text-xs font-semibold text-[#434343] bg-app-gray-light">{categoryDisplay}</span>
+            )}
           </div>
 
-          {!photoUrl ? (
-            <button onClick={() => fileInputRef.current?.click()} className="w-full h-[130px] border border-dashed border-app-border rounded-[10px] flex flex-col items-center justify-center gap-2 cursor-pointer bg-white">
-              <svg width="41" height="35" viewBox="0 0 24 20" fill="none">
-                <path d="M23 17C23 18.1 22.1 19 21 19H3C1.9 19 1 18.1 1 17V7C1 5.9 1.9 5 3 5H7L9 2H15L17 5H21C22.1 5 23 5.9 23 7V17Z" stroke="#919191" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                <circle cx="12" cy="11" r="4" stroke="#919191" strokeWidth="1.5" />
-              </svg>
-              <span className="text-[13px] font-extrabold text-app-gray">사진 추가</span>
-            </button>
-          ) : (
-            <div className="flex gap-3">
-              <button onClick={() => fileInputRef.current?.click()} className="w-[178px] h-[130px] border border-dashed border-app-border rounded-[10px] flex flex-col items-center justify-center gap-2 cursor-pointer bg-white shrink-0">
+          {/* 사진 등록 카드 */}
+          <div className="bg-white rounded-[10px] p-3 mb-2.5 shadow-sm">
+            <div className="mb-2.5">
+              <div className="flex items-center gap-1">
+                <span className="text-[13px] font-bold text-black">사진 등록</span>
+                <span className="text-xs text-app-gray">{photoUrl ? "(1/1)" : "(0/1)"}</span>
+                {isFound ? <span className="w-[5px] h-[5px] rounded-full bg-red-500 shrink-0" /> : <span className="text-xs font-bold text-app-gray">(선택)</span>}
+              </div>
+              <div className="flex items-center gap-1 mt-0.5">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#919191" strokeWidth="2" /><path d="M12 8V13" stroke="#919191" strokeWidth="2" strokeLinecap="round" /><circle cx="12" cy="15.5" r="0.8" fill="#919191" /></svg>
+                <span className="text-xs text-app-gray">물건의 특징이 잘 보이도록 사진을 등록해주세요.</span>
+              </div>
+            </div>
+
+            {!photoUrl ? (
+              <button onClick={() => fileInputRef.current?.click()} className="w-full h-[130px] border border-dashed border-app-border rounded-[10px] flex flex-col items-center justify-center gap-2 cursor-pointer bg-white">
                 <svg width="41" height="35" viewBox="0 0 24 20" fill="none">
                   <path d="M23 17C23 18.1 22.1 19 21 19H3C1.9 19 1 18.1 1 17V7C1 5.9 1.9 5 3 5H7L9 2H15L17 5H21C22.1 5 23 5.9 23 7V17Z" stroke="#919191" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                   <circle cx="12" cy="11" r="4" stroke="#919191" strokeWidth="1.5" />
                 </svg>
-                <span className="text-[13px] font-extrabold text-app-gray">사진 변경</span>
+                <span className="text-[13px] font-extrabold text-app-gray">사진 추가</span>
               </button>
-              <div className="relative">
-                <div className="w-[131px] h-[131px] rounded-[15px] overflow-hidden">
-                  <img src={photoUrl} alt="" className="w-full h-full object-cover" />
-                </div>
-                <button onClick={() => { setPhotoUrl(null); setPhotoFile(null); }} className="absolute -top-1.5 -right-1.5 w-6 h-6 bg-[#919191] rounded-full flex items-center justify-center cursor-pointer border-none">
-                  <span className="text-white text-xs leading-none">×</span>
+            ) : (
+              <div className="flex gap-3">
+                <button onClick={() => fileInputRef.current?.click()} className="w-[178px] h-[130px] border border-dashed border-app-border rounded-[10px] flex flex-col items-center justify-center gap-2 cursor-pointer bg-white shrink-0">
+                  <svg width="41" height="35" viewBox="0 0 24 20" fill="none">
+                    <path d="M23 17C23 18.1 22.1 19 21 19H3C1.9 19 1 18.1 1 17V7C1 5.9 1.9 5 3 5H7L9 2H15L17 5H21C22.1 5 23 5.9 23 7V17Z" stroke="#919191" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    <circle cx="12" cy="11" r="4" stroke="#919191" strokeWidth="1.5" />
+                  </svg>
+                  <span className="text-[13px] font-extrabold text-app-gray">사진 변경</span>
                 </button>
+                <div className="relative">
+                  <div className="w-[131px] h-[131px] rounded-[15px] overflow-hidden">
+                    <img src={photoUrl} alt="" className="w-full h-full object-cover" />
+                  </div>
+                  <button onClick={() => { setPhotoUrl(null); setPhotoFile(null); }} className="absolute -top-1.5 -right-1.5 w-6 h-6 bg-[#919191] rounded-full flex items-center justify-center cursor-pointer border-none">
+                    <span className="text-white text-xs leading-none">×</span>
+                  </button>
+                </div>
+              </div>
+            )}
+            <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+          </div>
+
+          {/* 물건 설명 카드 */}
+          <div className="bg-white rounded-[10px] p-3 shadow-sm">
+            <div className="mb-1.5">
+              <div className="flex items-center gap-1">
+                <span className="text-[13px] font-bold text-black">물건 설명</span>
+                {isFound ? <span className="text-xs font-bold text-app-gray">(선택)</span> : <span className="w-[5px] h-[5px] rounded-full bg-red-500 shrink-0" />}
+              </div>
+              <div className="flex items-center gap-1 mt-0.5">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#919191" strokeWidth="2" /><path d="M12 8V13" stroke="#919191" strokeWidth="2" strokeLinecap="round" /><circle cx="12" cy="15.5" r="0.8" fill="#919191" /></svg>
+                <span className="text-xs text-app-gray">AI가 물건을 더 잘 파악할 수 있도록 자세히 설명해주세요.</span>
               </div>
             </div>
-          )}
-          <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
-        </div>
-
-        {/* 물건 설명 카드 */}
-        <div className="bg-white rounded-[10px] p-3 shadow-sm">
-          <div className="mb-1.5">
-            <div className="flex items-center gap-1">
-              <span className="text-[13px] font-bold text-black">물건 설명</span>
-              {isFound ? <span className="text-xs font-bold text-app-gray">(선택)</span> : <span className="w-[5px] h-[5px] rounded-full bg-red-500 shrink-0" />}
-            </div>
-            <div className="flex items-center gap-1 mt-0.5">
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#919191" strokeWidth="2" /><path d="M12 8V13" stroke="#919191" strokeWidth="2" strokeLinecap="round" /><circle cx="12" cy="15.5" r="0.8" fill="#919191" /></svg>
-              <span className="text-xs text-app-gray">AI가 물건을 더 잘 파악할 수 있도록 자세히 설명해주세요.</span>
-            </div>
+            <textarea
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              placeholder={isFound
+                ? "예: 검은색 반지갑이에요. 소가죽 소재이고 표면 모서리가 약간 닳아있어요. 안에 카드가 몇 장 들어있어요."
+                : "예: 흰색 무선 이어폰이에요. 케이스 뒷면에 곰 스티커가 붙어있고 오른쪽 이어버드에 작은 흠집이 있어요."}
+              className="w-full h-[300px] bg-app-gray-light border border-app-border rounded-[10px] px-3 py-2.5 text-sm text-black resize-none outline-none placeholder:text-app-gray"
+            />
           </div>
-          <textarea
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            placeholder={isFound
-              ? "예: 검은색 반지갑이에요. 소가죽 소재이고 표면 모서리가 약간 닳아있어요. 안에 카드가 몇 장 들어있어요."
-              : "예: 흰색 무선 이어폰이에요. 케이스 뒷면에 곰 스티커가 붙어있고 오른쪽 이어버드에 작은 흠집이 있어요."}
-            className="w-full h-[300px] bg-app-gray-light border border-app-border rounded-[10px] px-3 py-2.5 text-sm text-black resize-none outline-none placeholder:text-app-gray"
-          />
+
+          {/* 데스크탑 CTA */}
+          <div className="hidden md:block mt-8">
+            <button
+              onClick={handleNext}
+              disabled={analyzing}
+              className="w-full h-[46px] rounded-[10px] text-white text-sm font-semibold tracking-[-0.32px] border-none cursor-pointer"
+              style={{ backgroundColor: themeColor }}
+            >
+              다음
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* CTA */}
-      <div className="fixed bottom-0 left-0 right-0 bg-app-bg px-7 pt-3 pb-6 z-10">
+      {/* 모바일 CTA */}
+      <div className="fixed bottom-0 left-0 right-0 bg-app-bg px-7 pt-3 pb-6 z-10 md:hidden">
         <button
           onClick={handleNext}
           disabled={analyzing}
@@ -305,11 +323,18 @@ function RegisterPhotoContent() {
 
       {/* AI 분석 로딩 */}
       {analyzing && !showImageSelection && (
-        <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center" style={{ backgroundColor: "rgba(10,18,42,0.88)" }}>
-          <button onClick={() => { if (pollingRef.current) clearInterval(pollingRef.current); setAnalyzing(false); setPreAnalysisId(null); }} className="absolute top-16 right-6 text-white/60 text-2xl bg-transparent border-none cursor-pointer">✕</button>
-          <div className="w-8 h-8 border-2 border-orange border-t-transparent rounded-full animate-spin mb-4" />
-          <p className="text-white text-base font-semibold tracking-[-0.3px]">AI 분석 중...</p>
-          <p className="text-white/45 text-xs mt-2">잠시만 기다려주세요</p>
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-2xl px-8 py-7 flex flex-col items-center w-[280px] shadow-xl">
+            <div className="w-10 h-10 border-2 border-orange border-t-transparent rounded-full animate-spin mb-4" />
+            <p className="text-black text-base font-semibold tracking-[-0.3px]">AI 분석 중...</p>
+            <p className="text-app-gray text-xs mt-1.5">잠시만 기다려주세요</p>
+            <button
+              onClick={() => { if (pollingRef.current) clearInterval(pollingRef.current); setAnalyzing(false); setPreAnalysisId(null); }}
+              className="mt-5 text-xs text-app-gray cursor-pointer bg-transparent border-none hover:text-black transition-colors"
+            >
+              취소
+            </button>
+          </div>
         </div>
       )}
 

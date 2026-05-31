@@ -5,6 +5,7 @@ import { useAuthStore } from "@/stores/authStore";
 import { matchStore } from "@/lib/matchStore";
 import { CategoryImage } from "@/components/CategoryImage";
 import type { MatchResultResponse } from "@/types/match";
+import TopHeader from "@/components/TopHeader";
 
 const CARD_WIDTH = 273;
 
@@ -96,6 +97,7 @@ function Top5Content() {
   if (data.length === 0) {
     return (
       <div className="min-h-dvh bg-app-bg flex flex-col items-center justify-center gap-4">
+        <TopHeader />
         <p className="text-sm text-app-gray">매칭 결과가 없습니다.</p>
         <button onClick={goBack} className="text-sm text-navy font-semibold cursor-pointer bg-transparent border-none">돌아가기</button>
       </div>
@@ -103,12 +105,13 @@ function Top5Content() {
   }
 
   const currentItem = data[currentIndex];
-  const SIDE_OFFSET = (393 - CARD_WIDTH) / 2;
 
   return (
     <div className="min-h-dvh bg-app-bg flex flex-col">
-      {/* 헤더 */}
-      <div className="flex items-center h-[51px] px-6 mt-4">
+      <TopHeader />
+
+      {/* 모바일 헤더 */}
+      <div className="flex items-center h-[51px] px-6 mt-4 md:hidden">
         <button onClick={goBack} className="cursor-pointer bg-transparent border-none p-1">
           <svg width="11" height="19" viewBox="0 0 11 19" fill="none">
             <path d="M9.5 17.5L1.5 9.5L9.5 1.5" stroke="black" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
@@ -120,15 +123,14 @@ function Top5Content() {
         <div className="w-[19px]" />
       </div>
 
-      <div className="flex-1 overflow-y-auto pb-28">
-        {/* TOP X / N */}
+      {/* 모바일 레이아웃 */}
+      <div className="flex-1 overflow-y-auto pb-28 md:hidden">
         <div className="flex items-baseline justify-center mt-2 mb-4 gap-1">
           <span className="text-[20px] font-extrabold text-black">TOP </span>
           <span className="text-[32px] font-extrabold text-[#3B82F6]">{currentIndex + 1}</span>
           <span className="text-base font-medium text-black"> / {data.length}</span>
         </div>
 
-        {/* 카드 캐러셀 */}
         <div
           ref={scrollRef}
           onScroll={handleScroll}
@@ -136,8 +138,8 @@ function Top5Content() {
           style={{
             scrollSnapType: "x mandatory",
             scrollbarWidth: "none",
-            paddingLeft: SIDE_OFFSET,
-            paddingRight: SIDE_OFFSET - 20,
+            paddingLeft: `calc((100% - ${CARD_WIDTH}px) / 2)`,
+            paddingRight: `calc((100% - ${CARD_WIDTH}px) / 2)`,
             gap: 20,
           }}
         >
@@ -187,14 +189,12 @@ function Top5Content() {
           })}
         </div>
 
-        {/* 페이지 도트 */}
         <div className="flex justify-center items-center gap-3 mt-4 mb-4">
           {data.map((_, i) => (
             <div key={i} className="w-2 h-2 rounded-full" style={{ backgroundColor: i === currentIndex ? "#1E3A5F" : "#D6D6D6" }} />
           ))}
         </div>
 
-        {/* AI 선정이유 */}
         <div className="mx-6 bg-white rounded-[10px] p-3 shadow-sm">
           <p className="text-xs font-bold text-black mb-2.5">AI 선정이유</p>
           <div className="bg-app-gray-light border border-app-border rounded-[10px] min-h-[178px] p-2">
@@ -203,8 +203,84 @@ function Top5Content() {
         </div>
       </div>
 
-      {/* 하단 버튼 */}
-      <div className="fixed bottom-0 left-0 right-0 bg-app-bg flex px-[37px] pt-3 pb-6 gap-3 z-10">
+      {/* 데스크탑 레이아웃 - 랭킹 리스트 */}
+      <div className="hidden md:block flex-1 overflow-y-auto pt-[88px] pb-16">
+        <div className="max-w-[720px] mx-auto px-8">
+
+          <div className="flex flex-col gap-3">
+            {data.map((item, i) => {
+              const pct = Math.round(item.similarity * 100);
+              const date = item.occurredDate?.replace(/-/g, ".") ?? "";
+              const isSelected = i === currentIndex;
+              return (
+                <div
+                  key={i}
+                  className={`bg-white rounded-2xl shadow-sm overflow-hidden border-2 transition-colors cursor-pointer ${isSelected ? "border-[#3B82F6]" : "border-transparent"}`}
+                  onClick={() => setCurrentIndex(i)}
+                >
+                  {/* 기본 행 */}
+                  <div className="flex items-center gap-4 p-4">
+                    <div className="w-[70px] h-[70px] rounded-xl overflow-hidden shrink-0">
+                      <CategoryImage imageUrl={item.imageUrl} majorCategory={item.category} width={70} height={70} borderRadius={12} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <RankBadge rank={item.rank} />
+                        <p className="text-sm font-semibold text-black truncate">{item.title}</p>
+                      </div>
+                      <div className="flex items-center gap-3 text-xs text-[#434343]">
+                        <span className="flex items-center gap-1">
+                          <svg width="8" height="10" viewBox="0 0 9 11" fill="none" className="shrink-0">
+                            <path d="M8.5 4.5C8.5 6.9965 5.7305 9.5965 4.5 10.5C3.2695 9.5965 0.5 6.9965 0.5 4.5C0.5 2.01 2.237 0.5 4.5 0.5C6.763 0.5 8.5 2.01 8.5 4.5Z" stroke="#1E3A5F" strokeLinecap="round" strokeLinejoin="round" />
+                            <circle cx="4.5" cy="4.5" r="1.5" stroke="#1E3A5F" strokeLinecap="round" />
+                          </svg>
+                          {item.location}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <svg width="9" height="10" viewBox="0 0 10 11" fill="none" className="shrink-0">
+                            <path d="M3 0.5V2.5M7 0.5V2.5M8.5 1.5H1.5C0.948 1.5 0.5 1.948 0.5 2.5V9.5C0.5 10.052 0.948 10.5 1.5 10.5H8.5C9.052 10.5 9.5 10.052 9.5 9.5V2.5C9.5 1.948 9.052 1.5 8.5 1.5ZM0.5 4.5H9.5" stroke="#1E3A5F" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                          {date}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="shrink-0">
+                      <SimilarityBadge percentage={pct} />
+                    </div>
+                  </div>
+
+                  {/* 펼쳐지는 AI 선정이유 + 버튼 */}
+                  {isSelected && (
+                    <div className="px-4 pb-4 border-t border-[#F0F0F0]">
+                      <p className="text-xs font-bold text-black mt-3 mb-1.5">AI 선정이유</p>
+                      <div className="bg-app-bg border border-app-border rounded-[10px] p-3 mb-3">
+                        <p className="text-xs text-black leading-relaxed">{item.explanation ?? ""}</p>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); router.push("/chat"); }}
+                          className="flex-1 h-[40px] rounded-[10px] border border-navy bg-white flex items-center justify-center gap-1.5 text-sm font-semibold text-navy cursor-pointer"
+                        >
+                          채팅하기
+                        </button>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); router.push(`/detail/${item.registrationId}?type=found`); }}
+                          className="flex-1 h-[40px] rounded-[10px] bg-navy flex items-center justify-center gap-1.5 text-sm font-semibold text-white cursor-pointer border-none"
+                        >
+                          상세보기
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* 모바일 하단 버튼 */}
+      <div className="fixed bottom-0 left-0 right-0 bg-app-bg flex px-[37px] pt-3 pb-6 gap-3 z-10 md:hidden">
         <button
           onClick={() => router.push("/chat")}
           className="flex-1 h-[46px] rounded-[10px] border border-navy bg-white flex items-center justify-center gap-1.5 text-sm font-semibold text-navy cursor-pointer"

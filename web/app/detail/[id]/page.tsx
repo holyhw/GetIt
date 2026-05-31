@@ -6,6 +6,7 @@ import { api } from "@/lib/api";
 import { useAuthStore } from "@/stores/authStore";
 import React from "react";
 import type { RegistrationDetail } from "@/types/registration";
+import type { UserInfo } from "@/types/user";
 import { SmartphoneIcon, BackpackIcon, WalletIcon, ShirtIcon, GemIcon, BookIcon, KeyRoundIcon } from "@/components/icons";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -85,8 +86,14 @@ export default function DetailPage() {
   const [showDeleteError, setShowDeleteError] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   const [mapCoords, setMapCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [myUserId, setMyUserId] = useState<number | null>(null);
 
   const id = params?.id;
+
+  useEffect(() => {
+    if (!token) return;
+    api.get<UserInfo>("/api/users/me", token).then((d) => setMyUserId(d.id)).catch(() => {});
+  }, [token]);
 
   useEffect(() => {
     if (!id) return;
@@ -131,6 +138,7 @@ export default function DetailPage() {
   }
 
   const isLost = item.itemType === "LOST";
+  const isOwner = myUserId !== null && myUserId === item.userId;
   const ctaColor = isLost ? "#FF7A00" : "#1E3A5F";
   const ctaText = isLost ? "이 물건을 주운 것 같아요" : "이 물건 제 것 같아요";
   const dateLabel = `${item.occurredDate?.replace(/-/g, ".") ?? ""} ${isLost ? "분실" : "습득"}`;
@@ -391,24 +399,33 @@ export default function DetailPage() {
           <div className="absolute inset-0 bg-black/40" onClick={() => setShowMore(false)} />
           <div className="relative bg-white rounded-t-[20px] pb-8 md:rounded-2xl md:pb-2 md:w-[360px]">
             <div className="w-10 h-1 bg-app-border rounded-full mx-auto mt-3 mb-2 md:hidden" />
-            <button
-              onClick={() => { setShowMore(false); router.push(`/edit?id=${item.id}`); }}
-              className="w-full px-6 py-[18px] border-b border-[#F0F0F0] text-left cursor-pointer"
-            >
-              <p className="text-base font-semibold text-[#434343]">수정하기</p>
-              <p className="text-xs text-app-gray mt-0.5">게시물 내용을 수정합니다</p>
-            </button>
-            {!item.matched && (
-              <button onClick={handleMatchComplete} className="w-full px-6 py-[18px] border-b border-[#F0F0F0] text-left cursor-pointer">
-                <p className="text-base font-semibold text-navy">매칭 완료</p>
-                <p className="text-xs text-app-gray mt-0.5">물건을 찾았어요</p>
+            {isOwner ? (
+              <>
+                {!item.matched && (
+                  <button onClick={handleMatchComplete} className="w-full px-6 py-[18px] border-b border-[#F0F0F0] text-left cursor-pointer">
+                    <p className="text-base font-semibold text-navy">매칭 완료</p>
+                    <p className="text-xs text-app-gray mt-0.5">물건을 찾았어요</p>
+                  </button>
+                )}
+                <button
+                  onClick={() => { setShowMore(false); router.push(`/edit?id=${item.id}`); }}
+                  className="w-full px-6 py-[18px] border-b border-[#F0F0F0] text-left cursor-pointer"
+                >
+                  <p className="text-base font-semibold text-[#434343]">수정하기</p>
+                  <p className="text-xs text-app-gray mt-0.5">게시물 내용을 수정합니다</p>
+                </button>
+                <button onClick={() => { setShowMore(false); setShowDeleteConfirm(true); }} className="w-full px-6 py-[18px] text-left cursor-pointer">
+                  <p className="text-base font-semibold text-red-500">게시물 삭제</p>
+                  <p className="text-xs text-app-gray mt-0.5">이 게시물을 삭제합니다</p>
+                </button>
+              </>
+            ) : (
+              <button onClick={handleReport} className="w-full px-6 py-[18px] text-left cursor-pointer">
+                <p className="text-base font-semibold text-red-500">신고하기</p>
+                <p className="text-xs text-app-gray mt-0.5">부적절한 게시물을 신고합니다</p>
               </button>
             )}
-            <button onClick={() => { setShowMore(false); setShowDeleteConfirm(true); }} className="w-full px-6 py-[18px] text-left cursor-pointer">
-              <p className="text-base font-semibold text-red-500">게시물 삭제</p>
-              <p className="text-xs text-app-gray mt-0.5">이 게시물을 삭제합니다</p>
-            </button>
-            <button onClick={handleReport} className="hidden md:block w-full px-6 py-[18px] border-t border-[#F0F0F0] text-left cursor-pointer">
+            <button onClick={() => setShowMore(false)} className="hidden md:block w-full px-6 py-[18px] border-t border-[#F0F0F0] text-left cursor-pointer">
               <p className="text-base font-semibold text-app-gray">닫기</p>
             </button>
           </div>
