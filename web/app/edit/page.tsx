@@ -7,6 +7,7 @@ import { api } from "@/lib/api";
 import type { RegistrationDetail } from "@/types/registration";
 import { CategoryFilterModal, type CategoryFilterValue } from "@/components/CategoryFilterModal";
 import { LocationSearchModal } from "@/components/LocationSearchModal";
+import TopHeader from "@/components/TopHeader";
 
 const API_BASE = "https://api.getitsju.com";
 
@@ -106,8 +107,10 @@ function EditContent() {
 
   return (
     <div className="min-h-dvh bg-app-bg flex flex-col">
-      {/* 헤더 */}
-      <div className="flex items-center h-[51px] px-6 mt-4">
+      <TopHeader />
+
+      {/* 모바일 헤더 */}
+      <div className="flex items-center h-[51px] px-6 mt-4 md:hidden">
         <button onClick={() => router.back()} className="cursor-pointer bg-transparent border-none p-1 mr-2">
           <svg width="11" height="19" viewBox="0 0 11 19" fill="none">
             <path d="M9.5 17.5L1.5 9.5L9.5 1.5" stroke="black" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
@@ -119,32 +122,39 @@ function EditContent() {
         <div className="w-[19px]" />
       </div>
 
-      <div className="flex-1 overflow-y-auto px-6 pt-2 pb-24">
+      <div className="flex-1 overflow-y-auto md:pt-[88px]">
+      <div className="max-w-[720px] mx-auto px-6 pt-2 pb-24">
         {/* 사진 */}
         <div className="bg-white rounded-[10px] p-3 mb-2.5 shadow-sm">
-          <div className="flex items-center mb-2.5">
-            <span className="text-xs font-bold text-black">사진 등록</span>
-            <span className="text-[10px] text-app-gray ml-1">{displayImage ? "(1/1)" : "(0/1)"}</span>
-            <span className="text-[10px] font-bold text-app-gray ml-1">(선택)</span>
+          <div className="mb-2.5">
+            <div className="flex items-center gap-1">
+              <span className="text-[13px] font-bold text-black">사진 등록</span>
+              <span className="text-xs text-app-gray">{displayImage ? "(1/1)" : "(0/1)"}</span>
+              <span className="text-xs font-bold text-app-gray">(선택)</span>
+            </div>
+            <div className="flex items-center gap-1 mt-0.5">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#919191" strokeWidth="2" /><path d="M12 8V13" stroke="#919191" strokeWidth="2" strokeLinecap="round" /><circle cx="12" cy="15.5" r="0.8" fill="#919191" /></svg>
+              <span className="text-xs text-app-gray">물건의 특징이 잘 보이도록 사진을 등록해주세요.</span>
+            </div>
           </div>
           {!displayImage ? (
-            <button onClick={() => fileInputRef.current?.click()} className="w-full h-[130px] border border-dashed border-app-border rounded-[10px] flex flex-col items-center justify-center gap-2 cursor-pointer bg-white border-none">
+            <button onClick={() => fileInputRef.current?.click()} className="w-full h-[130px] border border-dashed border-app-border rounded-[10px] flex flex-col items-center justify-center gap-2 cursor-pointer bg-white">
               <svg width="41" height="35" viewBox="0 0 24 20" fill="none">
                 <path d="M23 17C23 18.1 22.1 19 21 19H3C1.9 19 1 18.1 1 17V7C1 5.9 1.9 5 3 5H7L9 2H15L17 5H21C22.1 5 23 5.9 23 7V17Z" stroke="#919191" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                 <circle cx="12" cy="11" r="4" stroke="#919191" strokeWidth="1.5" />
               </svg>
-              <span className="text-xs font-extrabold text-app-gray">사진 추가</span>
+              <span className="text-[13px] font-extrabold text-app-gray">사진 추가</span>
             </button>
           ) : (
             <div className="flex gap-3">
-              <button onClick={() => fileInputRef.current?.click()} className="w-[178px] h-[130px] border border-dashed border-app-border rounded-[10px] flex flex-col items-center justify-center gap-2 cursor-pointer bg-white shrink-0">
+              <button onClick={() => fileInputRef.current?.click()} className="flex-1 h-[130px] border border-dashed border-app-border rounded-[10px] flex flex-col items-center justify-center gap-2 cursor-pointer bg-white">
                 <svg width="41" height="35" viewBox="0 0 24 20" fill="none">
                   <path d="M23 17C23 18.1 22.1 19 21 19H3C1.9 19 1 18.1 1 17V7C1 5.9 1.9 5 3 5H7L9 2H15L17 5H21C22.1 5 23 5.9 23 7V17Z" stroke="#919191" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                   <circle cx="12" cy="11" r="4" stroke="#919191" strokeWidth="1.5" />
                 </svg>
-                <span className="text-xs font-extrabold text-app-gray">사진 변경</span>
+                <span className="text-[13px] font-extrabold text-app-gray">사진 변경</span>
               </button>
-              <div className="relative">
+              <div className="relative w-[131px] shrink-0">
                 <div className="w-[131px] h-[131px] rounded-[15px] overflow-hidden">
                   <img src={displayImage} alt="" className="w-full h-full object-cover" />
                 </div>
@@ -176,12 +186,11 @@ function EditContent() {
               <span className="w-[5px] h-[5px] rounded-full bg-red-500" />
             </div>
             <button onClick={() => setShowCategoryModal(true)}
-              className="w-full h-[34px] bg-app-gray-light border rounded-[10px] flex items-center justify-between px-3 cursor-pointer"
-              style={{ borderColor: category ? themeColor : "#D9D9D9" }}>
+              className="w-full h-[34px] bg-app-gray-light border border-app-border rounded-[10px] flex items-center justify-between px-3 cursor-pointer">
               <span className="text-xs" style={{ color: category ? "#000" : "#919191" }}>
                 {category ? `${category.major} > ${category.minor}` : "카테고리를 선택해주세요"}
               </span>
-              <svg width="5" height="9" viewBox="0 0 5 9" fill="none">
+              <svg width="5" height="9" viewBox="0 0 5 9" fill="none" className="shrink-0">
                 <path d="M0.5 0.5L4.5 4.5L0.5 8.5" stroke={themeColor} strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </button>
@@ -202,6 +211,9 @@ function EditContent() {
               <span className="flex-1 text-xs" style={{ color: location ? "#000" : "#919191" }}>
                 {location || "위치를 검색해주세요"}
               </span>
+              <svg width="5" height="9" viewBox="0 0 5 9" fill="none" className="shrink-0">
+                <path d="M0.5 0.5L4.5 4.5L0.5 8.5" stroke={themeColor} strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
             </button>
           </div>
 
@@ -217,6 +229,9 @@ function EditContent() {
               </svg>
               <input type="date" value={date} onChange={(e) => setDate(e.target.value)}
                 className="flex-1 text-xs text-black bg-transparent outline-none" />
+              <svg width="5" height="9" viewBox="0 0 5 9" fill="none" className="shrink-0">
+                <path d="M0.5 0.5L4.5 4.5L0.5 8.5" stroke={themeColor} strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
             </div>
           </div>
 
@@ -232,14 +247,17 @@ function EditContent() {
           </div>
         </div>
       </div>
+      </div>
 
-      {/* CTA */}
-      <div className="fixed bottom-0 left-0 right-0 bg-app-bg px-7 pt-3 pb-6 z-10">
-        <button onClick={handleSubmit} disabled={loading}
-          className="w-full h-[46px] rounded-[10px] text-white text-sm font-semibold tracking-[-0.32px] border-none cursor-pointer"
-          style={{ backgroundColor: themeColor }}>
-          {loading ? "수정 중..." : "수정 완료"}
-        </button>
+      {/* CTA - 모바일/데스크탑 모두 fixed */}
+      <div className="fixed bottom-0 left-0 right-0 bg-app-bg pt-3 pb-6 z-10 px-7 md:px-0">
+        <div className="md:max-w-[720px] md:mx-auto md:px-6">
+          <button onClick={handleSubmit} disabled={loading}
+            className="w-full h-[46px] rounded-[10px] text-white text-sm font-semibold tracking-[-0.32px] border-none cursor-pointer"
+            style={{ backgroundColor: themeColor }}>
+            {loading ? "수정 중..." : "수정 완료"}
+          </button>
+        </div>
       </div>
 
       <CategoryFilterModal visible={showCategoryModal} value={category} activeColor={themeColor} onSelect={setCategory} onClose={() => setShowCategoryModal(false)} />

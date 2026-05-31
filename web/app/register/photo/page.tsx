@@ -253,14 +253,14 @@ function RegisterPhotoContent() {
               </button>
             ) : (
               <div className="flex gap-3">
-                <button onClick={() => fileInputRef.current?.click()} className="w-[178px] h-[130px] border border-dashed border-app-border rounded-[10px] flex flex-col items-center justify-center gap-2 cursor-pointer bg-white shrink-0">
+                <button onClick={() => fileInputRef.current?.click()} className="flex-1 h-[130px] border border-dashed border-app-border rounded-[10px] flex flex-col items-center justify-center gap-2 cursor-pointer bg-white">
                   <svg width="41" height="35" viewBox="0 0 24 20" fill="none">
                     <path d="M23 17C23 18.1 22.1 19 21 19H3C1.9 19 1 18.1 1 17V7C1 5.9 1.9 5 3 5H7L9 2H15L17 5H21C22.1 5 23 5.9 23 7V17Z" stroke="#919191" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                     <circle cx="12" cy="11" r="4" stroke="#919191" strokeWidth="1.5" />
                   </svg>
                   <span className="text-[13px] font-extrabold text-app-gray">사진 변경</span>
                 </button>
-                <div className="relative">
+                <div className="relative w-[131px] shrink-0">
                   <div className="w-[131px] h-[131px] rounded-[15px] overflow-hidden">
                     <img src={photoUrl} alt="" className="w-full h-full object-cover" />
                   </div>
