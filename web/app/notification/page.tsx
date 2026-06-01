@@ -22,7 +22,7 @@ function formatRelativeTime(iso: string): string {
 }
 
 function isToday(iso: string): boolean {
-  const d = new Date(iso), now = new Date();
+  const d = parseUTC(iso), now = new Date();
   return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
 }
 
@@ -129,9 +129,10 @@ export default function NotificationPage() {
     } finally {
       setLoading(false);
     }
-  }, [token]);
+  }, [token, setUnreadCount]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchNotifs();
   }, [fetchNotifs]);
 
@@ -140,7 +141,11 @@ export default function NotificationPage() {
     if (!notif.read) {
       try {
         await api.patch(`/api/notifications/${notif.id}/read`, token, {});
-        setNotifs((prev) => prev.map((n) => n.id === notif.id ? { ...n, read: true } : n));
+        setNotifs((prev) => {
+          const updated = prev.map((n) => n.id === notif.id ? { ...n, read: true } : n);
+          setUnreadCount(updated.filter((n) => !n.read).length);
+          return updated;
+        });
       } catch {}
     }
     if (notif.targetType === "REGISTRATION" && notif.targetId) {
@@ -155,6 +160,7 @@ export default function NotificationPage() {
     try {
       await api.patch("/api/notifications/read-all", token, {});
       setNotifs((prev) => prev.map((n) => ({ ...n, read: true })));
+      setUnreadCount(0);
     } catch {}
   };
 
@@ -162,7 +168,11 @@ export default function NotificationPage() {
     if (!token) return;
     try {
       await api.delete(`/api/notifications/${id}`, token);
-      setNotifs((prev) => prev.filter((n) => n.id !== id));
+      setNotifs((prev) => {
+        const updated = prev.filter((n) => n.id !== id);
+        setUnreadCount(updated.filter((n) => !n.read).length);
+        return updated;
+      });
     } catch {}
   };
 
