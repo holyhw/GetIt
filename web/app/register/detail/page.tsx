@@ -36,6 +36,7 @@ function RegisterDetailContent() {
   const [loading, setLoading] = useState(false);
   const [matchingMsgIdx, setMatchingMsgIdx] = useState(0);
 
+  const dateInputRef = useRef<HTMLInputElement>(null);
   const preAnalysisIdRef = useRef<number | null>(null);
   const analysisStatusRef = useRef<PreAnalysisStatus>("PROCESSING");
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -269,11 +270,12 @@ function RegisterDetailContent() {
                 <span className="text-[13px] font-bold text-black">{isFound ? "습득 날짜" : "분실 날짜"}</span>
                 <span className="w-[5px] h-[5px] rounded-full bg-red-500" />
               </div>
-              <label className="h-11 bg-app-gray-light border border-app-border rounded-[10px] flex items-center px-2.5 gap-2 cursor-pointer">
+              <div onClick={() => dateInputRef.current?.showPicker()} className="h-11 bg-app-gray-light border border-app-border rounded-[10px] flex items-center px-2.5 gap-2 cursor-pointer">
                 <svg width="14" height="16" viewBox="0 0 10 11" fill="none" className="shrink-0">
                   <path d="M3 0.5V2.5M7 0.5V2.5M8.5 1.5H1.5C0.948 1.5 0.5 1.948 0.5 2.5V9.5C0.5 10.052 0.948 10.5 1.5 10.5H8.5C9.052 10.5 9.5 10.052 9.5 9.5V2.5C9.5 1.948 9.052 1.5 8.5 1.5ZM0.5 4.5H9.5" stroke={themeColor} strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
                 <input
+                  ref={dateInputRef}
                   type="date"
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
@@ -282,7 +284,7 @@ function RegisterDetailContent() {
                 <svg width="7" height="12" viewBox="0 0 5 9" fill="none" className="shrink-0">
                   <path d="M0.5 0.5L4.5 4.5L0.5 8.5" stroke={themeColor} strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
-              </label>
+              </div>
             </div>
           </div>
 
