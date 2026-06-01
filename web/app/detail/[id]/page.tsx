@@ -9,9 +9,13 @@ type Props = { params: Promise<{ id: string }> };
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
   try {
-    const res = await fetch(`${API_BASE}/api/registration/${id}`, { cache: "no-store" });
-    if (!res.ok) throw new Error();
-    const item = await res.json();
+    const res = await fetch(`${API_BASE}/api/registration/${id}`, {
+      cache: "no-store",
+      headers: { Authorization: "Bearer " },
+    });
+    if (!res.ok) throw new Error(`status ${res.status}`);
+    const data = await res.json();
+    const item = data.result;
     const typeLabel = item.itemType === "LOST" ? "분실물" : "습득물";
     const description = [typeLabel, item.location, item.occurredDate?.replace(/-/g, ".")]
       .filter(Boolean)
