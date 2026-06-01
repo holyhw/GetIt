@@ -32,14 +32,14 @@ export default function LoginPage() {
   return (
     <>
       {/* 모바일 레이아웃 */}
-      <div className="md:hidden min-h-dvh bg-app-bg relative">
-        <button onClick={() => router.back()} className="absolute top-14 left-6 z-10 p-1">
+      <div className="md:hidden flex flex-col min-h-dvh bg-app-bg">
+        <button onClick={() => router.back()} className="self-start mt-14 ml-6 p-1">
           <Image src="/back-arrow.svg" alt="뒤로" width={11} height={19} />
         </button>
-        <div className="flex justify-center pt-[262px]">
+        <div className="flex-1 flex items-center justify-center">
           <Image src="/getit-logo.svg" alt="GET IT" width={180} height={149} />
         </div>
-        <div className="absolute bottom-[72px] left-6 right-6">
+        <div className="px-6 pb-10">
           <div className="flex items-center mb-7">
             <div className="flex-1 h-px bg-app-border" />
             <span className="mx-3 text-xs font-semibold text-app-gray">로그인/회원가입</span>
