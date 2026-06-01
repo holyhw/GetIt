@@ -20,6 +20,7 @@ import MyInfoGoogleIcon from "../assets/myinfo-google.svg";
 import MyInfoCheckIcon from "../assets/myinfo-check.svg";
 import MyInfoArrowIcon from "../assets/myinfo-arrow.svg";
 import { useAuth } from "../context/AuthContext";
+import { api } from "../utils/api";
 import type { UserInfo } from "../types/user";
 
 const API_BASE_URL = "https://api.getitsju.com";
@@ -57,30 +58,32 @@ export default function MyInfoScreen() {
     const name = draftNickname.trim() || userInfo.name;
     setSaving(true);
     try {
+      const url = `${API_BASE_URL}/api/users/me?name=${encodeURIComponent(name)}`;
       const formData = new FormData();
+
       if (draftImage) {
         if (Platform.OS === "web") {
-          const res = await fetch(draftImage);
-          const blob = await res.blob();
+          const imageRes = await fetch(draftImage);
+          const blob = await imageRes.blob();
           formData.append("profileImage", blob, "profile.jpg");
         } else {
           formData.append("profileImage", { uri: draftImage, type: "image/jpeg", name: "profile.jpg" } as any);
         }
       }
 
-      const res = await fetch(`${API_BASE_URL}/api/users/me?name=${encodeURIComponent(name)}`, {
+      const res = await fetch(url, {
         method: "PATCH",
         headers: { Authorization: `Bearer ${token}` },
-        body: formData,
+        ...(draftImage ? { body: formData } : {}),
       });
 
-      if (!res.ok) throw new Error(`오류: ${res.status}`);
+      if (!res.ok) throw new Error(`${res.status}`);
       const data = await res.json();
       updateUserInfo(data.result);
       setEditingNickname(false);
       router.back();
-    } catch {
-      Alert.alert("저장 실패", "잠시 후 다시 시도해주세요.");
+    } catch (e) {
+      Alert.alert("저장 실패", String(e));
     } finally {
       setSaving(false);
     }

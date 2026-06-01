@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, RefreshControl } from "react-native";
 import { CategoryImage } from "../../components/CategoryImage";
-import { useRouter } from "expo-router";
+import { useRouter, useFocusEffect } from "expo-router";
 import { useAuth } from "../../context/AuthContext";
 import { api } from "../../utils/api";
 import type { FilterType, RegistrationItem, PagedResponse } from "../../types/registration";
@@ -12,7 +12,6 @@ import { CategoryFilterModal, type CategoryFilterValue } from "../../components/
 import { DateFilterModal } from "../../components/DateFilterModal";
 import type { DateFilter } from "../../utils/filters";
 import { getDateFilterLabel } from "../../utils/filters";
-import { fetchGroupedUnreadCount } from "../../utils/fetchUnreadCount";
 
 const PAGE_SIZE = 15;
 
@@ -76,10 +75,14 @@ export default function HomeScreen() {
     fetchItems(page + 1, true).finally(() => setLoadingMore(false));
   }, [hasNext, loadingMore, loading, fetchItems, page]);
 
-  useEffect(() => {
-    if (!token) return;
-    fetchGroupedUnreadCount(token).then((count) => setUnreadCount(count));
-  }, [token]);
+  useFocusEffect(
+    useCallback(() => {
+      if (!token) return;
+      api.get<{ count: number }>("/api/notifications/unread-count", token)
+      .then((res) => setUnreadCount(res.count ?? 0))
+      .catch(() => {});
+    }, [token])
+  );
 
   const activeColor = filter === "분실물" ? "#FF7A00" : "#1E3A5F";
   const categoryLabel = categoryFilter ? `${categoryFilter.major} > ${categoryFilter.minor}` : "카테고리";

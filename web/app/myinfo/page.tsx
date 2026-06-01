@@ -34,13 +34,17 @@ export default function MyInfoPage() {
     const name = draftNickname.trim() || userInfo.name;
     setSaving(true);
     try {
-      const formData = new FormData();
-      if (draftFile) formData.append("profileImage", draftFile);
-      const res = await fetch(`${API_BASE}/api/users/me?name=${encodeURIComponent(name)}`, {
+      const url = `${API_BASE}/api/users/me?name=${encodeURIComponent(name)}`;
+      const options: RequestInit = {
         method: "PATCH",
         headers: { Authorization: `Bearer ${token}` },
-        body: formData,
-      });
+      };
+      if (draftFile) {
+        const formData = new FormData();
+        formData.append("profileImage", draftFile);
+        options.body = formData;
+      }
+      const res = await fetch(url, options);
       if (!res.ok) throw new Error();
       const data = await res.json();
       setUserInfo(data.result);

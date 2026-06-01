@@ -4,7 +4,6 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/authStore";
 import { useNotifStore } from "@/stores/notifStore";
-import { fetchGroupedUnreadCount } from "@/lib/fetchUnreadCount";
 import { api } from "@/lib/api";
 import { BellIcon } from "@/components/icons";
 import type { UserInfo } from "@/types/user";
@@ -42,7 +41,8 @@ export default function MyPage() {
       .then((d) => setFoundCount(d.length)).catch(() => {});
     api.get<{ id: number }[]>("/api/registration/me?itemType=LOST", token)
       .then((d) => setLostCount(d.length)).catch(() => {});
-    fetchGroupedUnreadCount(token).then((count) => setStoreCount(count));
+    api.get<{ count: number }>("/api/notifications/unread-count", token)
+      .then((d) => setStoreCount(d.count)).catch(() => {});
   }, [token]);
 
   const handleLogout = () => {

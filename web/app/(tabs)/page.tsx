@@ -11,7 +11,6 @@ import { DateFilterModal } from "@/components/DateFilterModal";
 import { BellIcon } from "@/components/icons";
 import { useAuthStore } from "@/stores/authStore";
 import { useNotifStore } from "@/stores/notifStore";
-import { fetchGroupedUnreadCount } from "@/lib/fetchUnreadCount";
 
 const PAGE_SIZE = 15;
 
@@ -71,7 +70,8 @@ export default function HomePage() {
 
   useEffect(() => {
     if (!token) return;
-    fetchGroupedUnreadCount(token).then((count) => setStoreCount(count));
+    api.get<{ count: number }>("/api/notifications/unread-count", token)
+      .then((d) => setStoreCount(d.count)).catch(() => {});
   }, [token]);
 
   useEffect(() => {

@@ -120,6 +120,7 @@ export default function NotificationScreen() {
   const { token } = useAuth();
   const [notifs, setNotifs] = useState<ApiNotification[]>([]);
   const [chatUnreadMap, setChatUnreadMap] = useState<Map<number, number>>(new Map());
+  const [totalUnread, setTotalUnread] = useState(0);
   const [loading, setLoading] = useState(true);
 
   const fetchNotifs = useCallback(async () => {
@@ -148,6 +149,7 @@ export default function NotificationScreen() {
 
       setNotifs(grouped);
       setChatUnreadMap(unreadMap);
+      setTotalUnread(all.filter((n) => !n.read).length);
     } catch {
       setNotifs([]);
     } finally {
@@ -167,7 +169,10 @@ export default function NotificationScreen() {
     if (!notif.read) {
       try {
         await api.patch(`/api/notifications/${notif.id}/read`, token, {});
+        const decrease = notif.type === "CHAT_MESSAGE" && notif.targetId
+          ? (chatUnreadMap.get(notif.targetId) ?? 1) : 1;
         setNotifs((prev) => prev.map((n) => (n.id === notif.id ? { ...n, read: true } : n)));
+        setTotalUnread((prev) => Math.max(0, prev - decrease));
       } catch {}
     }
     if (notif.targetType === "REGISTRATION" && notif.targetId) {
@@ -182,18 +187,25 @@ export default function NotificationScreen() {
     try {
       await api.patch("/api/notifications/read-all", token, {});
       setNotifs((prev) => prev.map((n) => ({ ...n, read: true })));
+      setTotalUnread(0);
     } catch {}
   };
 
   const deleteNotif = async (id: number) => {
     if (!token) return;
     try {
+      const target = notifs.find((n) => n.id === id);
       await api.delete(`/api/notifications/${id}`, token);
       setNotifs((prev) => prev.filter((n) => n.id !== id));
+      if (target && !target.read) {
+        const decrease = target.type === "CHAT_MESSAGE" && target.targetId
+          ? (chatUnreadMap.get(target.targetId) ?? 1) : 1;
+        setTotalUnread((prev) => Math.max(0, prev - decrease));
+      }
     } catch {}
   };
 
-  const unread = notifs.filter((n) => !n.read).length;
+  const unread = totalUnread;
   const todayNotifs = notifs.filter((n) => isToday(n.createdDate));
   const beforeNotifs = notifs.filter((n) => !isToday(n.createdDate));
 

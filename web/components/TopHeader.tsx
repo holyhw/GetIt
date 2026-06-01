@@ -6,7 +6,7 @@ import { useAuthStore } from "@/stores/authStore";
 import { useNotifStore } from "@/stores/notifStore";
 import { BellIcon } from "./icons";
 import { useState, useEffect } from "react";
-import { fetchGroupedUnreadCount } from "@/lib/fetchUnreadCount";
+import { api } from "@/lib/api";
 
 const NAVY = "#1E3A5F";
 const GRAY = "#919191";
@@ -28,7 +28,9 @@ export default function TopHeader() {
 
   useEffect(() => {
     if (!token) return;
-    fetchGroupedUnreadCount(token).then((count) => setStoreCount(count));
+    api.get<{ count: number }>("/api/notifications/unread-count", token)
+      .then((d) => setStoreCount(d.count))
+      .catch(() => {});
   }, [token, setStoreCount]);
 
   return (

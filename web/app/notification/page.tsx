@@ -122,8 +122,8 @@ export default function NotificationPage() {
       });
       setNotifs(grouped);
       setChatUnreadMap(chatUnreadMap);
-      const groupedUnread = grouped.filter((n) => !n.read).length;
-      setUnreadCount(groupedUnread);
+      const totalUnread = all.filter((n) => !n.read).length;
+      setUnreadCount(totalUnread);
     } catch {
       setNotifs([]);
     } finally {
@@ -141,11 +141,11 @@ export default function NotificationPage() {
     if (!notif.read) {
       try {
         await api.patch(`/api/notifications/${notif.id}/read`, token, {});
-        setNotifs((prev) => {
-          const updated = prev.map((n) => n.id === notif.id ? { ...n, read: true } : n);
-          setUnreadCount(updated.filter((n) => !n.read).length);
-          return updated;
-        });
+        const decrease = notif.type === "CHAT_MESSAGE" && notif.targetId
+          ? (chatUnreadMap.get(notif.targetId) ?? 1)
+          : 1;
+        setNotifs((prev) => prev.map((n) => n.id === notif.id ? { ...n, read: true } : n));
+        setUnreadCount((prev) => Math.max(0, prev - decrease));
       } catch {}
     }
     if (notif.targetType === "REGISTRATION" && notif.targetId) {
@@ -167,12 +167,15 @@ export default function NotificationPage() {
   const deleteNotif = async (id: number) => {
     if (!token) return;
     try {
+      const target = notifs.find((n) => n.id === id);
       await api.delete(`/api/notifications/${id}`, token);
-      setNotifs((prev) => {
-        const updated = prev.filter((n) => n.id !== id);
-        setUnreadCount(updated.filter((n) => !n.read).length);
-        return updated;
-      });
+      setNotifs((prev) => prev.filter((n) => n.id !== id));
+      if (target && !target.read) {
+        const decrease = target.type === "CHAT_MESSAGE" && target.targetId
+          ? (chatUnreadMap.get(target.targetId) ?? 1)
+          : 1;
+        setUnreadCount((prev) => Math.max(0, prev - decrease));
+      }
     } catch {}
   };
 

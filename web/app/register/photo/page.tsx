@@ -41,7 +41,7 @@ function ReferenceImageOverlay({ image, imageAction, onUse, onRefresh, onSkip }:
         )}
         <div className="flex flex-col gap-2">
           {image && (
-            <button onClick={onUse} disabled={!!imageAction} className="h-[46px] rounded-[10px] bg-navy text-white text-sm font-semibold cursor-pointer border-none">
+            <button onClick={onUse} disabled={!!imageAction} className="h-[46px] rounded-[10px] bg-orange text-white text-sm font-semibold cursor-pointer border-none">
               {imageAction === "use" ? "처리 중..." : "이 이미지로 진행"}
             </button>
           )}

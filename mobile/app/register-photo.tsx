@@ -67,7 +67,7 @@ function ReferenceImageOverlay({
             <TouchableOpacity
               onPress={onUse}
               disabled={loading}
-              style={{ height: 46, borderRadius: 10, backgroundColor: "#1E3A5F", alignItems: "center", justifyContent: "center" }}
+              style={{ height: 46, borderRadius: 10, backgroundColor: "#FF7A00", alignItems: "center", justifyContent: "center" }}
             >
               {imageAction === "use" ? <ActivityIndicator color="#fff" /> : (
                 <Text style={{ color: "#fff", fontSize: 14, fontWeight: "600" }}>이 이미지로 진행</Text>
