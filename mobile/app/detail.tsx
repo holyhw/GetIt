@@ -51,6 +51,7 @@ export default function DetailScreen() {
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [showDeleteError, setShowDeleteError] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
+  const [chatLoading, setChatLoading] = useState(false);
   const [mapCoords, setMapCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [showFullMap, setShowFullMap] = useState(false);
 
@@ -159,6 +160,32 @@ export default function DetailScreen() {
       setActionLoading(false);
     }
   };
+  const handleChat = async () => {
+    if (!token) { router.push("/login"); return; }
+    setChatLoading(true);
+    try {
+      const room = await api.post<{
+        id: number; targetRegistrationId: number; targetTitle: string;
+        targetItemType: string; otherUserName: string; otherUserProfileImageUrl: string | null;
+      }>("/api/chat/rooms", token, { targetRegistrationId: item.id });
+      router.push({
+        pathname: "/chatroom",
+        params: {
+          roomId: room.id,
+          name: room.otherUserName,
+          title: room.targetTitle,
+          itemType: room.targetItemType,
+          registrationId: room.targetRegistrationId,
+          ...(room.otherUserProfileImageUrl && { profileImage: room.otherUserProfileImageUrl }),
+        },
+      });
+    } catch {
+      Alert.alert("오류", "채팅방을 열 수 없습니다.");
+    } finally {
+      setChatLoading(false);
+    }
+  };
+
   const ctaColor = isLost ? "#FF7A00" : "#1E3A5F";
   const ctaText = isLost ? "이 물건을 주운 것 같아요" : "이 물건 제 것 같아요";
   const dateLabel = `${item.occurredDate?.replace(/-/g, ".") ?? ""} ${isLost ? "분실" : "습득"}`;
@@ -441,15 +468,19 @@ export default function DetailScreen() {
       </ScrollView>
 
       {/* 하단 CTA */}
-      <View style={{ position: "absolute", bottom: 0, left: 0, right: 0, backgroundColor: "#F5F7FA", paddingHorizontal: 28, paddingTop: 12, paddingBottom: 22 }}>
-        <TouchableOpacity
-          activeOpacity={0.85}
-          style={{ backgroundColor: ctaColor, height: 46, borderRadius: 10, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 }}
-        >
-          <DetailChatIcon width={18} height={18} />
-          <Text style={{ color: "#fff", fontSize: 14, fontWeight: "600" }}>{ctaText}</Text>
-        </TouchableOpacity>
-      </View>
+      {!isOwner && (
+        <View style={{ position: "absolute", bottom: 0, left: 0, right: 0, backgroundColor: "#F5F7FA", paddingHorizontal: 28, paddingTop: 12, paddingBottom: 22 }}>
+          <TouchableOpacity
+            activeOpacity={0.85}
+            onPress={handleChat}
+            disabled={chatLoading}
+            style={{ backgroundColor: ctaColor, height: 46, borderRadius: 10, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, opacity: chatLoading ? 0.6 : 1 }}
+          >
+            <DetailChatIcon width={18} height={18} />
+            <Text style={{ color: "#fff", fontSize: 14, fontWeight: "600" }}>{chatLoading ? "잠시만요..." : ctaText}</Text>
+          </TouchableOpacity>
+        </View>
+      )}
     </View>
   );
 }

@@ -130,6 +130,8 @@ export default function NotificationScreen() {
     }
     if (notif.targetType === "REGISTRATION" && notif.targetId) {
       router.push(`/detail?id=${notif.targetId}`);
+    } else if (notif.targetType === "CHAT_ROOM" && notif.targetId) {
+      router.push(`/chatroom?roomId=${notif.targetId}`);
     }
   };
 
