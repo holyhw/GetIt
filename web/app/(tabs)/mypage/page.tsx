@@ -60,6 +60,24 @@ export default function MyPage() {
     </div>
   );
 
+  if (!token) {
+    return (
+      <div className="min-h-dvh bg-app-bg flex flex-col items-center justify-center gap-4 px-6">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="8" r="4" stroke="#ABABAB" strokeWidth="1.8" />
+          <path d="M4 20C4 17 7.58 14 12 14C16.42 14 20 17 20 20" stroke="#ABABAB" strokeWidth="1.8" strokeLinecap="round" />
+        </svg>
+        <p className="text-sm text-app-gray text-center">로그인 후 이용할 수 있어요</p>
+        <button
+          onClick={() => router.push("/login")}
+          className="h-11 px-8 rounded-[10px] bg-navy text-white text-sm font-semibold cursor-pointer"
+        >
+          로그인하기
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-dvh bg-app-bg">
       {/* 모바일 헤더 */}

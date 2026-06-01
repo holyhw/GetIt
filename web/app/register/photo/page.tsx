@@ -131,7 +131,7 @@ function RegisterPhotoContent() {
   };
 
   const handleNext = async () => {
-    if (!token) { alert("로그인이 필요합니다."); return; }
+    if (!token) { router.push("/login"); return; }
     if (isFound && !photoFile) { alert("습득물 사진을 등록해주세요."); return; }
     if (!isFound && !text.trim()) { alert("물건 설명을 입력해주세요."); return; }
 

@@ -22,7 +22,7 @@ export default function MyInfoPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (!token) return;
+    if (!token) { router.replace("/login"); return; }
     api.get<UserInfo>("/api/users/me", token).then((d) => {
       setUserInfo(d);
       setDraftNickname(d.name);

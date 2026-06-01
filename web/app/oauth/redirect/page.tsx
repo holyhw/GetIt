@@ -13,8 +13,9 @@ export default function OAuthRedirectPage() {
     if (token) {
       login(token);
       router.replace("/");
+    } else {
+      router.replace("/login");
     }
-    // 토큰 없으면 그냥 홈으로 (강제 로그인 리다이렉트 제거)
   }, [login, router]);
 
   return (
