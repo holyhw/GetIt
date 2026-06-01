@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/authStore";
+import { useNotifStore } from "@/stores/notifStore";
 import { api } from "@/lib/api";
 import type { ApiNotification } from "@/types/notification";
 import TopHeader from "@/components/TopHeader";
@@ -55,7 +56,7 @@ function NotifIcon({ type }: { type: string }) {
   );
 }
 
-function NotifRow({ notif, onPress, onDelete }: { notif: ApiNotification; onPress: () => void; onDelete: () => void }) {
+function NotifRow({ notif, onPress, onDelete, unreadCount }: { notif: ApiNotification; onPress: () => void; onDelete: () => void; unreadCount?: number }) {
   return (
     <div
       onClick={onPress}
@@ -74,7 +75,11 @@ function NotifRow({ notif, onPress, onDelete }: { notif: ApiNotification; onPres
         <p className="text-xs text-[#434343] leading-[17px] tracking-[-0.2px]">{notif.message}</p>
       </div>
       <div className="flex flex-col items-center gap-2 shrink-0">
-        {!notif.read && <div className="w-[7px] h-[7px] rounded-full bg-[#F4551E]" />}
+        {!notif.read && (
+          unreadCount && unreadCount > 1
+            ? <span className="text-[10px] font-bold text-white bg-[#F4551E] rounded-md min-w-[18px] h-[18px] px-1 flex items-center justify-center leading-none">{unreadCount > 99 ? "99+" : unreadCount}</span>
+            : <div className="w-[7px] h-[7px] rounded-full bg-[#F4551E]" />
+        )}
         <button
           onClick={(e) => { e.stopPropagation(); onDelete(); }}
           className="text-base text-[#C0C0C0] leading-none bg-transparent border-none cursor-pointer p-1"
@@ -90,13 +95,35 @@ export default function NotificationPage() {
   const router = useRouter();
   const { token } = useAuthStore();
   const [notifs, setNotifs] = useState<ApiNotification[]>([]);
+  const [chatUnreadMap, setChatUnreadMap] = useState<Map<number, number>>(new Map());
   const [loading, setLoading] = useState(true);
+  const setUnreadCount = useNotifStore((s) => s.setUnreadCount);
 
   const fetchNotifs = useCallback(async () => {
     if (!token) return;
     try {
       const data = await api.get<ApiNotification[]>("/api/notifications", token);
-      setNotifs(data ?? []);
+      const all = data ?? [];
+      // 채팅방별 안읽음 개수 계산
+      const chatUnreadMap = new Map<number, number>();
+      all.forEach((n) => {
+        if (n.type === "CHAT_MESSAGE" && !n.read && n.targetId) {
+          chatUnreadMap.set(n.targetId, (chatUnreadMap.get(n.targetId) ?? 0) + 1);
+        }
+      });
+      // 채팅방별 최신 1개만 유지
+      const seen = new Set<string>();
+      const grouped = all.filter((n) => {
+        if (n.type !== "CHAT_MESSAGE") return true;
+        const key = `chat_${n.targetId}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+      setNotifs(grouped);
+      setChatUnreadMap(chatUnreadMap);
+      const groupedUnread = grouped.filter((n) => !n.read).length;
+      setUnreadCount(groupedUnread);
     } catch {
       setNotifs([]);
     } finally {
@@ -207,7 +234,7 @@ export default function NotificationPage() {
                 <p className="text-xs font-bold text-app-gray px-6 py-2.5 tracking-[-0.2px]">오늘</p>
                 <div className="px-4 flex flex-col gap-2">
                   {todayNotifs.map((n) => (
-                    <NotifRow key={n.id} notif={n} onPress={() => markRead(n)} onDelete={() => deleteNotif(n.id)} />
+                    <NotifRow key={n.id} notif={n} onPress={() => markRead(n)} onDelete={() => deleteNotif(n.id)} unreadCount={n.type === "CHAT_MESSAGE" && n.targetId ? chatUnreadMap.get(n.targetId) : undefined} />
                   ))}
                 </div>
               </div>
@@ -217,7 +244,7 @@ export default function NotificationPage() {
                 <p className="text-xs font-bold text-app-gray px-6 py-2.5 tracking-[-0.2px]">이전</p>
                 <div className="px-4 flex flex-col gap-2">
                   {beforeNotifs.map((n) => (
-                    <NotifRow key={n.id} notif={n} onPress={() => markRead(n)} onDelete={() => deleteNotif(n.id)} />
+                    <NotifRow key={n.id} notif={n} onPress={() => markRead(n)} onDelete={() => deleteNotif(n.id)} unreadCount={n.type === "CHAT_MESSAGE" && n.targetId ? chatUnreadMap.get(n.targetId) : undefined} />
                   ))}
                 </div>
               </div>

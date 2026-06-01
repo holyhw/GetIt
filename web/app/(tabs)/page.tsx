@@ -10,6 +10,8 @@ import { CategoryFilterModal, type CategoryFilterValue } from "@/components/Cate
 import { DateFilterModal } from "@/components/DateFilterModal";
 import { BellIcon } from "@/components/icons";
 import { useAuthStore } from "@/stores/authStore";
+import { useNotifStore } from "@/stores/notifStore";
+import { fetchGroupedUnreadCount } from "@/lib/fetchUnreadCount";
 
 const PAGE_SIZE = 15;
 
@@ -23,7 +25,8 @@ export default function HomePage() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [page, setPage] = useState(0);
   const [hasNext, setHasNext] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(0);
+  const storeCount = useNotifStore((s) => s.unreadCount);
+  const setStoreCount = useNotifStore((s) => s.setUnreadCount);
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilterValue>(null);
   const [dateFilter, setDateFilter] = useState<DateFilter>({});
   const [showCategoryModal, setShowCategoryModal] = useState(false);
@@ -68,9 +71,7 @@ export default function HomePage() {
 
   useEffect(() => {
     if (!token) return;
-    api.get<{ count: number }>("/api/notifications/unread-count", token)
-      .then((res) => setUnreadCount(res.count ?? 0))
-      .catch(() => {});
+    fetchGroupedUnreadCount(token).then((count) => setStoreCount(count));
   }, [token]);
 
   useEffect(() => {
@@ -119,9 +120,9 @@ export default function HomePage() {
           <button className="ml-3 relative cursor-pointer bg-transparent border-none p-0"
             onClick={() => router.push(isLoggedIn ? "/notification" : "/login")}>
             <BellIcon size={18} />
-            {isLoggedIn && unreadCount > 0 && (
+            {isLoggedIn && storeCount > 0 && (
               <span className="absolute -top-1 -right-1 bg-[#F4551E] text-white text-[8px] font-bold rounded-md min-w-3 h-3 px-0.5 flex items-center justify-center leading-none">
-                {unreadCount > 99 ? "99+" : unreadCount}
+                {storeCount > 99 ? "99+" : storeCount}
               </span>
             )}
           </button>
