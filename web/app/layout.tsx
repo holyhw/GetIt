@@ -5,7 +5,22 @@ import { AuthHandler } from "@/components/AuthHandler";
 
 export const metadata: Metadata = {
   title: "GET IT",
-  description: "분실물·습득물 매칭 서비스",
+  description: "분실물과 습득물을 AI로 매칭해드립니다",
+  metadataBase: new URL("https://www.getitsju.com"),
+  openGraph: {
+    title: "GET IT",
+    description: "분실물과 습득물을 AI로 매칭해드립니다",
+    url: "https://www.getitsju.com",
+    siteName: "GET IT",
+    locale: "ko_KR",
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "GET IT",
+    description: "분실물과 습득물을 AI로 매칭해드립니다",
+  },
+  themeColor: "#1E3A5F",
 };
 
 export default function RootLayout({
