@@ -5,9 +5,10 @@ import { useAuthStore } from "@/stores/authStore";
 import { api } from "@/lib/api";
 import Image from "next/image";
 import { Client } from "@stomp/stompjs";
+import SockJS from "sockjs-client";
 
 const API_BASE = "https://api.getitsju.com";
-const WS_URL = "wss://api.getitsju.com/ws/chat";
+const WS_HTTP_URL = "https://api.getitsju.com/ws/chat";
 
 type Message = {
   id: number;
@@ -127,7 +128,7 @@ export default function ChatRoomPage() {
   useEffect(() => {
     if (!roomId || !token) return;
     const client = new Client({
-      brokerURL: WS_URL,
+      webSocketFactory: () => new SockJS(`${WS_HTTP_URL}?access_token=${token}`),
       connectHeaders: { Authorization: `Bearer ${token}` },
       reconnectDelay: 5000,
       onConnect: () => {
