@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuthStore } from "@/stores/authStore";
 import Image from "next/image";
@@ -22,9 +22,13 @@ type ChatRoom = {
   unreadCount: number;
 };
 
+function parseUTC(iso: string): Date {
+  return new Date(iso.endsWith("Z") || iso.includes("+") ? iso : iso + "Z");
+}
+
 function formatTime(dateStr: string | null): string {
   if (!dateStr) return "";
-  const date = new Date(dateStr);
+  const date = parseUTC(dateStr);
   const now = new Date();
   const diffMins = Math.floor((now.getTime() - date.getTime()) / 60000);
   if (diffMins < 1) return "방금";
@@ -48,7 +52,7 @@ export default function ChatListPanel() {
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState<FilterKey>("전체");
 
-  useEffect(() => {
+  const fetchRooms = useCallback(() => {
     if (!token) { setLoading(false); return; }
     fetch(`${API_BASE}/api/chat/rooms`, {
       headers: { Authorization: `Bearer ${token}` },
@@ -59,6 +63,19 @@ export default function ChatListPanel() {
       .finally(() => setLoading(false));
   }, [token]);
 
+  useEffect(() => { fetchRooms(); }, [fetchRooms]);
+
+  // 채팅방에서 나와 목록으로 돌아올 때 재조회
+  useEffect(() => {
+    if (pathname === "/chat") fetchRooms();
+  }, [pathname, fetchRooms]);
+
+  // 탭/창 포커스 시 재조회
+  useEffect(() => {
+    window.addEventListener("focus", fetchRooms);
+    return () => window.removeEventListener("focus", fetchRooms);
+  }, [fetchRooms]);
+
   const filtered = activeFilter === "전체" ? rooms
     : rooms.filter((r) => activeFilter === "분실" ? r.targetItemType === "LOST" : r.targetItemType === "FOUND");
 
@@ -68,6 +85,7 @@ export default function ChatListPanel() {
     : rooms.filter(r => r.targetItemType === "FOUND").length;
 
   const handleChatClick = (room: ChatRoom) => {
+    setRooms((prev) => prev.map((r) => r.id === room.id ? { ...r, unreadCount: 0 } : r));
     const params = new URLSearchParams({
       name: room.otherUserName,
       title: room.targetTitle,

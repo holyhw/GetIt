@@ -6,13 +6,17 @@ import { api } from "@/lib/api";
 import type { ApiNotification } from "@/types/notification";
 import TopHeader from "@/components/TopHeader";
 
+function parseUTC(iso: string): Date {
+  return new Date(iso.endsWith("Z") || iso.includes("+") ? iso : iso + "Z");
+}
+
 function formatRelativeTime(iso: string): string {
-  const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
+  const diff = Math.floor((Date.now() - parseUTC(iso).getTime()) / 60000);
   if (diff < 1) return "방금 전";
   if (diff < 60) return `${diff}분 전`;
   const h = Math.floor(diff / 60);
   if (h < 24) return `${h}시간 전`;
-  const d = new Date(iso);
+  const d = parseUTC(iso);
   return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")}`;
 }
 
@@ -107,6 +111,8 @@ export default function NotificationPage() {
     }
     if (notif.targetType === "REGISTRATION" && notif.targetId) {
       router.push(`/detail/${notif.targetId}`);
+    } else if (notif.targetType === "CHAT_ROOM" && notif.targetId) {
+      router.push(`/chat/${notif.targetId}`);
     }
   };
 
