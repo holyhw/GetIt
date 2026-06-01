@@ -8,8 +8,12 @@ import { api } from "../utils/api";
 import type { ApiNotification } from "../types/notification";
 
 
+function parseUTC(iso: string): Date {
+  return new Date(iso.endsWith("Z") || iso.includes("+") ? iso : iso + "Z");
+}
+
 function formatRelativeTime(isoString: string): string {
-  const date = new Date(isoString);
+  const date = parseUTC(isoString);
   const now = new Date();
   const diffMin = Math.floor((now.getTime() - date.getTime()) / 60000);
   if (diffMin < 1) return "방금 전";
@@ -23,7 +27,7 @@ function formatRelativeTime(isoString: string): string {
 }
 
 function isToday(isoString: string): boolean {
-  const date = new Date(isoString);
+  const date = parseUTC(isoString);
   const now = new Date();
   return (
     date.getFullYear() === now.getFullYear() &&
@@ -43,6 +47,16 @@ function NotifIcon({ type }: { type: string }) {
       </View>
     );
   }
+  if (type === "CHAT_MESSAGE") {
+    return (
+      <View style={{ width: 42, height: 42, borderRadius: 21, backgroundColor: "#EEF3FB", alignItems: "center", justifyContent: "center" }}>
+        <Svg width={20} height={20} viewBox="0 0 23 25" fill="none">
+          <Path d="M15.5889 10.1607C15.5889 10.7497 15.3735 11.3145 14.9901 11.731C14.6067 12.1475 14.0867 12.3814 13.5445 12.3814H6.21308C5.6709 12.3815 5.15097 12.6156 4.76765 13.0321L2.51671 15.4771C2.41521 15.5874 2.2859 15.6624 2.14512 15.6928C2.00435 15.7232 1.85843 15.7076 1.72583 15.648C1.59322 15.5883 1.47987 15.4873 1.40012 15.3577C1.32037 15.228 1.2778 15.0756 1.27778 14.9197V3.49851C1.27778 2.90953 1.49317 2.34468 1.87658 1.92821C2.25999 1.51175 2.78001 1.27778 3.32223 1.27778H13.5445C14.0867 1.27778 14.6067 1.51175 14.9901 1.92821C15.3735 2.34468 15.5889 2.90953 15.5889 3.49851V10.1607Z" stroke="#1E3A5F" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
+          <Path d="M19.6778 9.05026C20.22 9.05026 20.74 9.28423 21.1234 9.7007C21.5068 10.1172 21.7222 10.682 21.7222 11.271V22.6922C21.7222 22.8481 21.6796 23.0005 21.5999 23.1301C21.5201 23.2598 21.4068 23.3608 21.2742 23.4205C21.1416 23.4801 20.9956 23.4957 20.8549 23.4653C20.7141 23.4349 20.5848 23.3598 20.4833 23.2496L18.2323 20.8046C17.849 20.3881 17.3291 20.154 16.7869 20.1539H9.45551C8.91329 20.1539 8.39328 19.9199 8.00987 19.5035C7.62646 19.087 7.41106 18.5222 7.41106 17.9332V16.8228" stroke="#1E3A5F" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
+        </Svg>
+      </View>
+    );
+  }
   return (
     <View style={{ width: 42, height: 42, borderRadius: 21, backgroundColor: "#F0F0F0", alignItems: "center", justifyContent: "center" }}>
       <Svg width={20} height={20} viewBox="0 0 20 20" fill="none">
@@ -54,7 +68,7 @@ function NotifIcon({ type }: { type: string }) {
   );
 }
 
-function NotifRow({ notif, onPress, onDelete }: { notif: ApiNotification; onPress: () => void; onDelete: () => void }) {
+function NotifRow({ notif, onPress, onDelete, unreadCount }: { notif: ApiNotification; onPress: () => void; onDelete: () => void; unreadCount?: number }) {
   return (
     <TouchableOpacity
       activeOpacity={0.85}
@@ -85,7 +99,13 @@ function NotifRow({ notif, onPress, onDelete }: { notif: ApiNotification; onPres
 
       <View style={{ alignItems: "center", gap: 8 }}>
         {!notif.read && (
-          <View style={{ width: 7, height: 7, borderRadius: 3.5, backgroundColor: "#F4551E" }} />
+          unreadCount && unreadCount > 1 ? (
+            <View style={{ backgroundColor: "#F4551E", borderRadius: 6, minWidth: 18, height: 18, paddingHorizontal: 4, alignItems: "center", justifyContent: "center" }}>
+              <Text style={{ fontSize: 10, fontWeight: "700", color: "#fff" }}>{unreadCount > 99 ? "99+" : unreadCount}</Text>
+            </View>
+          ) : (
+            <View style={{ width: 7, height: 7, borderRadius: 3.5, backgroundColor: "#F4551E" }} />
+          )
         )}
         <TouchableOpacity onPress={onDelete} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
           <Text style={{ fontSize: 16, color: "#C0C0C0", lineHeight: 16 }}>×</Text>
@@ -99,13 +119,35 @@ export default function NotificationScreen() {
   const router = useRouter();
   const { token } = useAuth();
   const [notifs, setNotifs] = useState<ApiNotification[]>([]);
+  const [chatUnreadMap, setChatUnreadMap] = useState<Map<number, number>>(new Map());
   const [loading, setLoading] = useState(true);
 
   const fetchNotifs = useCallback(async () => {
     if (!token) return;
     try {
       const data = await api.get<ApiNotification[]>("/api/notifications", token);
-      setNotifs(data ?? []);
+      const all = data ?? [];
+
+      // 채팅방별 안읽음 개수 계산
+      const unreadMap = new Map<number, number>();
+      all.forEach((n) => {
+        if (n.type === "CHAT_MESSAGE" && !n.read && n.targetId) {
+          unreadMap.set(n.targetId, (unreadMap.get(n.targetId) ?? 0) + 1);
+        }
+      });
+
+      // 채팅방별 최신 1개만 유지
+      const seen = new Set<string>();
+      const grouped = all.filter((n) => {
+        if (n.type !== "CHAT_MESSAGE") return true;
+        const key = `chat_${n.targetId}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+
+      setNotifs(grouped);
+      setChatUnreadMap(unreadMap);
     } catch {
       setNotifs([]);
     } finally {
@@ -191,7 +233,7 @@ export default function NotificationScreen() {
             <Text style={{ fontSize: 12, fontWeight: "700", color: "#919191", paddingHorizontal: 24, paddingVertical: 10, letterSpacing: -0.2 }}>오늘</Text>
             <View style={{ paddingHorizontal: 16, gap: 8 }}>
               {todayNotifs.map((n) => (
-                <NotifRow key={n.id} notif={n} onPress={() => markRead(n)} onDelete={() => deleteNotif(n.id)} />
+                <NotifRow key={n.id} notif={n} onPress={() => markRead(n)} onDelete={() => deleteNotif(n.id)} unreadCount={n.type === "CHAT_MESSAGE" && n.targetId ? chatUnreadMap.get(n.targetId) : undefined} />
               ))}
             </View>
           </View>
@@ -202,7 +244,7 @@ export default function NotificationScreen() {
             <Text style={{ fontSize: 12, fontWeight: "700", color: "#919191", paddingHorizontal: 24, paddingVertical: 10, letterSpacing: -0.2 }}>이전</Text>
             <View style={{ paddingHorizontal: 16, gap: 8 }}>
               {beforeNotifs.map((n) => (
-                <NotifRow key={n.id} notif={n} onPress={() => markRead(n)} onDelete={() => deleteNotif(n.id)} />
+                <NotifRow key={n.id} notif={n} onPress={() => markRead(n)} onDelete={() => deleteNotif(n.id)} unreadCount={n.type === "CHAT_MESSAGE" && n.targetId ? chatUnreadMap.get(n.targetId) : undefined} />
               ))}
             </View>
           </View>

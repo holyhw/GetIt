@@ -12,6 +12,7 @@ import { CategoryFilterModal, type CategoryFilterValue } from "../../components/
 import { DateFilterModal } from "../../components/DateFilterModal";
 import type { DateFilter } from "../../utils/filters";
 import { getDateFilterLabel } from "../../utils/filters";
+import { fetchGroupedUnreadCount } from "../../utils/fetchUnreadCount";
 
 const PAGE_SIZE = 15;
 
@@ -77,9 +78,7 @@ export default function HomeScreen() {
 
   useEffect(() => {
     if (!token) return;
-    api.get<{ count: number }>("/api/notifications/unread-count", token)
-      .then((res) => setUnreadCount(res.count ?? 0))
-      .catch(() => {});
+    fetchGroupedUnreadCount(token).then((count) => setUnreadCount(count));
   }, [token]);
 
   const activeColor = filter === "분실물" ? "#FF7A00" : "#1E3A5F";

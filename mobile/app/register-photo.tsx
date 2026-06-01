@@ -191,7 +191,7 @@ export default function RegisterPhotoScreen() {
   const handleNext = async () => {
     Keyboard.dismiss();
     if (!token) {
-      showAlert("로그인이 필요합니다.");
+      router.push("/login");
       return;
     }
     if (isFound && !photo) {
