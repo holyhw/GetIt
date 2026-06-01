@@ -30,6 +30,7 @@ export default function MyPage() {
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [foundCount, setFoundCount] = useState(0);
   const [lostCount, setLostCount] = useState(0);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     if (!token) return;
@@ -38,6 +39,8 @@ export default function MyPage() {
       .then((d) => setFoundCount(d.length)).catch(() => {});
     api.get<{ id: number }[]>("/api/registration/me?itemType=LOST", token)
       .then((d) => setLostCount(d.length)).catch(() => {});
+    api.get<{ count: number }>("/api/notifications/unread-count", token)
+      .then((d) => setUnreadCount(d.count)).catch(() => {});
   }, [token]);
 
   const handleLogout = () => {
@@ -85,8 +88,13 @@ export default function MyPage() {
         <div className="flex-1" />
         <h1 className="text-[20px] font-medium text-black tracking-[-0.32px]">마이페이지</h1>
         <div className="flex-1 flex justify-end">
-          <button onClick={() => router.push("/notification")} className="cursor-pointer bg-transparent border-none p-0">
+          <button onClick={() => router.push("/notification")} className="relative cursor-pointer bg-transparent border-none p-0">
             <BellIcon size={18} />
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 bg-[#F4551E] text-white text-[8px] font-bold rounded-md min-w-3 h-3 px-0.5 flex items-center justify-center leading-none">
+                {unreadCount > 99 ? "99+" : unreadCount}
+              </span>
+            )}
           </button>
         </div>
       </div>

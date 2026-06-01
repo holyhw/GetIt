@@ -46,9 +46,12 @@ function NotifIcon({ type }: { type: string }) {
 
 function NotifRow({ notif, onPress, onDelete }: { notif: ApiNotification; onPress: () => void; onDelete: () => void }) {
   return (
-    <button
+    <div
       onClick={onPress}
-      className="w-full flex items-start gap-3 rounded-[14px] p-3.5 text-left cursor-pointer border-none shadow-[0_1px_4px_rgba(0,0,0,0.05)]"
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => e.key === "Enter" && onPress()}
+      className="w-full flex items-start gap-3 rounded-[14px] p-3.5 text-left cursor-pointer shadow-[0_1px_4px_rgba(0,0,0,0.05)]"
       style={{ backgroundColor: notif.read ? "#fff" : "#EEF3FB" }}
     >
       <NotifIcon type={notif.type} />
@@ -68,7 +71,7 @@ function NotifRow({ notif, onPress, onDelete }: { notif: ApiNotification; onPres
           ×
         </button>
       </div>
-    </button>
+    </div>
   );
 }
 

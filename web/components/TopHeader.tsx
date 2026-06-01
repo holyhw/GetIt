@@ -4,6 +4,8 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/authStore";
 import { BellIcon } from "./icons";
+import { useState, useEffect } from "react";
+import { api } from "@/lib/api";
 
 const NAVY = "#1E3A5F";
 const GRAY = "#919191";
@@ -20,6 +22,14 @@ export default function TopHeader() {
   const pathname = usePathname();
   const router = useRouter();
   const { token } = useAuthStore();
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    if (!token) return;
+    api.get<{ count: number }>("/api/notifications/unread-count", token)
+      .then((d) => setUnreadCount(d.count))
+      .catch(() => {});
+  }, [token]);
 
   return (
     <header className="hidden md:flex fixed top-0 left-0 right-0 z-50 h-[72px] bg-white border-b border-app-gray-light">
@@ -57,9 +67,14 @@ export default function TopHeader() {
 
         <button
           onClick={() => router.push(token ? "/notification" : "/login")}
-          className="cursor-pointer bg-transparent border-none p-0 shrink-0"
+          className="relative cursor-pointer bg-transparent border-none p-0 shrink-0"
         >
           <BellIcon size={18} />
+          {token && unreadCount > 0 && (
+            <span className="absolute -top-1 -right-1 bg-[#F4551E] text-white text-[8px] font-bold rounded-md min-w-3 h-3 px-0.5 flex items-center justify-center leading-none">
+              {unreadCount > 99 ? "99+" : unreadCount}
+            </span>
+          )}
         </button>
       </div>
     </header>
