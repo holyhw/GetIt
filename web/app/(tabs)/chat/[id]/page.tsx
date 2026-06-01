@@ -255,7 +255,7 @@ export default function ChatRoomPage() {
   const typeColor = targetItemType === "LOST" ? "#FF7A00" : "#1E3A5F";
   const typeLabel = targetItemType === "LOST" ? "분실" : "습득";
   const grouped = groupByDate(messages);
-  const lastUnreadSentId = [...messages].reverse().find((m) => m.senderId === myUserId && !m.read)?.id;
+  const lastSentId = [...messages].reverse().find((m) => m.senderId === myUserId)?.id;
 
   return (
     <div className="flex flex-col h-[calc(100dvh-64px)] md:h-full bg-app-bg">
@@ -334,7 +334,7 @@ export default function ChatRoomPage() {
             typeof item === "string" ? (
               <DateChip key={`date-${i}`} date={item} />
             ) : item.senderId === myUserId ? (
-              <SentBubble key={item.id} text={item.content} time={formatTime(item.createdDate)} read={item.read} showUnread={item.id === lastUnreadSentId} />
+              <SentBubble key={item.id} text={item.content} time={formatTime(item.createdDate)} read={item.id === lastSentId ? item.read : undefined} showUnread={item.id === lastSentId && !item.read} />
             ) : (
               <ReceivedBubble key={item.id} text={item.content} time={formatTime(item.createdDate)} />
             )
