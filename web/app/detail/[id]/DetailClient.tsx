@@ -87,6 +87,7 @@ export default function DetailClient() {
   const [actionLoading, setActionLoading] = useState(false);
   const [mapCoords, setMapCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [myUserId, setMyUserId] = useState<number | null>(null);
+  const [chatLoading, setChatLoading] = useState(false);
 
   const id = params?.id;
 
@@ -145,6 +146,32 @@ export default function DetailClient() {
   const category = `${item.majorCategory ?? ""} > ${item.minorCategory ?? ""}`;
 
   const handleBack = () => fromRegistration ? router.replace("/") : router.back();
+
+  const handleChat = async () => {
+    if (!token) { router.push("/login"); return; }
+    setChatLoading(true);
+    try {
+      const res = await fetch("https://api.getitsju.com/api/chat/rooms", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ targetRegistrationId: item.id }),
+      });
+      const data = await res.json();
+      const room = data.result;
+      const params = new URLSearchParams({
+        name: room.otherUserName,
+        title: room.targetTitle,
+        itemType: room.targetItemType,
+        registrationId: String(room.targetRegistrationId),
+      });
+      if (room.otherUserProfileImageUrl) params.set("profileImage", room.otherUserProfileImageUrl);
+      router.push(`/chat/${room.id}?${params.toString()}`);
+    } catch {
+      alert("채팅방을 열 수 없습니다.");
+    } finally {
+      setChatLoading(false);
+    }
+  };
 
   const handleShare = async () => {
     const url = `${window.location.origin}/detail/${item.id}`;
@@ -368,30 +395,36 @@ export default function DetailClient() {
           </div>
 
           {/* 데스크탑 CTA */}
-          <div className="hidden md:block mt-6">
-            <button
-              className="w-full h-[50px] rounded-[10px] flex items-center justify-center gap-2 text-sm font-semibold text-white cursor-pointer"
-              style={{ backgroundColor: ctaColor }}
-              onClick={() => router.push("/chat")}
-            >
-              <ChatIcon />
-              {ctaText}
-            </button>
-          </div>
+          {!isOwner && (
+            <div className="hidden md:block mt-6">
+              <button
+                className="w-full h-[50px] rounded-[10px] flex items-center justify-center gap-2 text-sm font-semibold text-white cursor-pointer disabled:opacity-60"
+                style={{ backgroundColor: ctaColor }}
+                onClick={handleChat}
+                disabled={chatLoading}
+              >
+                <ChatIcon />
+                {chatLoading ? "잠시만요..." : ctaText}
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
       {/* 하단 CTA (모바일만) */}
-      <div className="fixed bottom-0 left-0 right-0 bg-app-bg px-7 pt-3 pb-6 z-50 md:hidden">
-        <button
-          className="w-full h-[46px] rounded-[10px] flex items-center justify-center gap-2 text-sm font-semibold text-white cursor-pointer"
-          style={{ backgroundColor: ctaColor }}
-          onClick={() => router.push("/chat")}
-        >
-          <ChatIcon />
-          {ctaText}
-        </button>
-      </div>
+      {!isOwner && (
+        <div className="fixed bottom-0 left-0 right-0 bg-app-bg px-7 pt-3 pb-6 z-50 md:hidden">
+          <button
+            className="w-full h-[46px] rounded-[10px] flex items-center justify-center gap-2 text-sm font-semibold text-white cursor-pointer disabled:opacity-60"
+            style={{ backgroundColor: ctaColor }}
+            onClick={handleChat}
+            disabled={chatLoading}
+          >
+            <ChatIcon />
+            {chatLoading ? "잠시만요..." : ctaText}
+          </button>
+        </div>
+      )}
 
       {/* 더보기 바텀시트 / 데스크탑 모달 */}
       {showMore && (

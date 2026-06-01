@@ -1,6 +1,56 @@
 "use client";
-import { useState, useRef, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { useRouter, useParams, useSearchParams } from "next/navigation";
+import { useAuthStore } from "@/stores/authStore";
+import { api } from "@/lib/api";
+import Image from "next/image";
+import { Client } from "@stomp/stompjs";
+
+const API_BASE = "https://api.getitsju.com";
+const WS_URL = "wss://api.getitsju.com/ws/chat";
+
+type Message = {
+  id: number;
+  roomId: number;
+  senderId: number;
+  senderName: string;
+  content: string;
+  read: boolean;
+  createdDate: string;
+};
+
+type UserInfo = { id: number; name: string };
+
+function formatTime(dateStr: string): string {
+  const date = new Date(dateStr);
+  const hours = date.getHours();
+  const mins = date.getMinutes().toString().padStart(2, "0");
+  const ampm = hours < 12 ? "오전" : "오후";
+  return `${ampm} ${hours % 12 || 12}:${mins}`;
+}
+
+function formatDateChip(dateStr: string): string {
+  const date = new Date(dateStr);
+  const days = ["일", "월", "화", "수", "목", "금", "토"];
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}.${m}.${d}  ${days[date.getDay()]}`;
+}
+
+function groupByDate(messages: Message[]): (Message | string)[] {
+  const result: (Message | string)[] = [];
+  let lastDate = "";
+  for (const msg of messages) {
+    const dateKey = new Date(msg.createdDate).toDateString();
+    if (dateKey !== lastDate) {
+      result.push(formatDateChip(msg.createdDate));
+      lastDate = dateKey;
+    }
+    result.push(msg);
+  }
+  return result;
+}
 
 function ReceivedBubble({ text, time }: { text: string; time?: string }) {
   return (
@@ -39,28 +89,84 @@ function DateChip({ date }: { date: string }) {
 
 export default function ChatRoomPage() {
   const router = useRouter();
+  const params = useParams<{ id: string }>();
+  const searchParams = useSearchParams();
+  const { token } = useAuthStore();
+
+  const roomId = params?.id;
+  const otherUserName = searchParams.get("name") ?? "";
+  const targetTitle = searchParams.get("title") ?? "";
+  const targetItemType = searchParams.get("itemType") as "FOUND" | "LOST" | null;
+  const targetRegistrationId = searchParams.get("registrationId");
+  const otherUserProfileImageUrl = searchParams.get("profileImage");
+
+  const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState("");
-  const [messages, setMessages] = useState<{ id: number; text: string }[]>([]);
   const [showMenu, setShowMenu] = useState(false);
+  const [myUserId, setMyUserId] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const stompClientRef = useRef<Client | null>(null);
 
   useEffect(() => {
-    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    if (!token) return;
+    api.get<UserInfo>("/api/users/me", token).then((d) => setMyUserId(d.id)).catch(() => {});
+  }, [token]);
+
+  useEffect(() => {
+    if (!roomId || !token) return;
+    fetch(`${API_BASE}/api/chat/rooms/${roomId}/messages`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((r) => r.json())
+      .then((d) => setMessages(d.result ?? []))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [roomId, token]);
+
+  useEffect(() => {
+    if (!roomId || !token) return;
+    const client = new Client({
+      brokerURL: WS_URL,
+      connectHeaders: { Authorization: `Bearer ${token}` },
+      reconnectDelay: 5000,
+      onConnect: () => {
+        client.subscribe(`/user/queue/chat/rooms/${roomId}`, (frame) => {
+          const msg: Message = JSON.parse(frame.body);
+          setMessages((prev) => prev.some((m) => m.id === msg.id) ? prev : [...prev, msg]);
+        });
+      },
+    });
+    client.activate();
+    stompClientRef.current = client;
+    return () => { client.deactivate(); };
+  }, [roomId, token]);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
   }, [messages]);
 
-  const handleSend = () => {
+  const handleSend = useCallback(() => {
     const trimmed = inputText.trim();
-    if (!trimmed) return;
-    setMessages((prev) => [...prev, { id: Date.now(), text: trimmed }]);
+    if (!trimmed || !stompClientRef.current?.connected) return;
+    stompClientRef.current.publish({
+      destination: `/app/chat/rooms/${roomId}/messages`,
+      body: JSON.stringify({ content: trimmed }),
+    });
     setInputText("");
-  };
+  }, [inputText, roomId]);
+
+  const typeColor = targetItemType === "LOST" ? "#FF7A00" : "#1E3A5F";
+  const typeLabel = targetItemType === "LOST" ? "분실" : "습득";
+  const grouped = groupByDate(messages);
 
   return (
     <div className="flex flex-col h-dvh md:h-full bg-app-bg md:bg-white">
       {/* 헤더 */}
       <div className="bg-app-bg md:bg-white border-b border-app-gray-light shrink-0">
         <div className="h-[51px] md:h-[80px] flex items-center px-6 gap-5">
-          {/* 모바일에서만 뒤로가기 */}
           <button onClick={() => router.push("/chat")} className="md:hidden cursor-pointer bg-transparent border-none p-1 shrink-0">
             <svg width="11" height="19" viewBox="0 0 11 19" fill="none">
               <path d="M9.5 17.5L1.5 9.5L9.5 1.5" stroke="black" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
@@ -68,25 +174,19 @@ export default function ChatRoomPage() {
           </button>
 
           <div className="relative shrink-0">
-            <div className="w-[37px] h-[37px] md:w-[48px] md:h-[48px] rounded-[15px] bg-[#7487FF] flex items-center justify-center">
-              <span className="text-base md:text-xl font-semibold text-white tracking-[-0.32px]">이</span>
-            </div>
-            <div className="absolute -right-0.5 bottom-0">
-              <svg width="12" height="12" viewBox="0 0 20 20" fill="none">
-                <circle cx="10" cy="10" r="10" fill="white" />
-                <circle cx="10" cy="10" r="8" fill="#22C55E" />
-              </svg>
+            <div className="w-[37px] h-[37px] md:w-[48px] md:h-[48px] rounded-[15px] overflow-hidden bg-[#7487FF] flex items-center justify-center">
+              {otherUserProfileImageUrl ? (
+                <Image src={otherUserProfileImageUrl} alt="" width={48} height={48} className="w-full h-full object-cover" unoptimized />
+              ) : (
+                <span className="text-base md:text-xl font-semibold text-white tracking-[-0.32px]">
+                  {otherUserName.charAt(0)}
+                </span>
+              )}
             </div>
           </div>
 
           <div className="flex-1 min-w-0">
-            <p className="text-base md:text-lg font-semibold text-black tracking-[-0.32px]">이찬원</p>
-            <div className="flex items-center gap-1 mt-0.5">
-              <svg width="6" height="6" viewBox="0 0 6 6" fill="none">
-                <circle cx="3" cy="3" r="3" fill="#22C55E" />
-              </svg>
-              <span className="text-[10px] md:text-xs text-app-gray tracking-[-0.32px]">지금 활동중</span>
-            </div>
+            <p className="text-base md:text-lg font-semibold text-black tracking-[-0.32px]">{otherUserName}</p>
           </div>
 
           <button onClick={() => setShowMenu(true)} className="cursor-pointer bg-transparent border-none p-2 shrink-0">
@@ -101,44 +201,55 @@ export default function ChatRoomPage() {
 
       {/* 메시지 영역 */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-3 pt-4 pb-4 flex flex-col">
-        <div className="bg-white rounded-[15px] h-[74px] md:h-[88px] flex items-center p-3 shadow-sm mb-4 shrink-0">
-          <div className="w-[50px] h-[50px] md:w-[62px] md:h-[62px] rounded-[15px] bg-app-gray-light shrink-0" />
-          <div className="flex-1 ml-3 min-w-0">
-            <div className="flex items-center gap-1.5 mb-1.5">
-              <span className="bg-navy rounded-[9px] w-[30px] md:w-[36px] h-[18px] md:h-[22px] flex items-center justify-center text-[10px] md:text-xs font-bold text-white shrink-0">습득</span>
-              <span className="text-[10px] md:text-xs font-semibold text-black tracking-[-0.32px]">매칭 유사도 </span>
-              <span className="text-[10px] md:text-xs font-black text-orange tracking-[-0.32px]">92%</span>
+        {targetTitle && (
+          <div className="bg-white rounded-[15px] h-[74px] md:h-[88px] flex items-center p-3 shadow-sm mb-4 shrink-0">
+            <div className="w-[50px] h-[50px] md:w-[62px] md:h-[62px] rounded-[15px] bg-app-gray-light shrink-0" />
+            <div className="flex-1 ml-3 min-w-0">
+              <div className="mb-1.5">
+                <span className="rounded-[9px] px-2 h-[18px] inline-flex items-center text-[10px] font-bold text-white"
+                  style={{ backgroundColor: typeColor }}>
+                  {typeLabel}
+                </span>
+              </div>
+              <p className="text-base md:text-lg font-bold text-black tracking-[-0.32px] truncate">{targetTitle}</p>
             </div>
-            <p className="text-base md:text-lg font-bold text-black tracking-[-0.32px] truncate">검은색 kodak 모자</p>
+            {targetRegistrationId && (
+              <button
+                onClick={() => router.push(`/detail/${targetRegistrationId}?type=${targetItemType?.toLowerCase() ?? "found"}`)}
+                className="bg-[#D9D9D9] rounded-[10px] w-[47px] md:w-[56px] h-[26px] md:h-[32px] text-xs md:text-sm font-semibold text-black cursor-pointer border-none shrink-0">
+                상세
+              </button>
+            )}
           </div>
-          <button onClick={() => router.push("/detail/1")}
-            className="bg-[#D9D9D9] rounded-[10px] w-[47px] md:w-[56px] h-[26px] md:h-[32px] text-xs md:text-sm font-semibold text-black cursor-pointer border-none shrink-0">
-            상세
-          </button>
-        </div>
+        )}
 
-        <DateChip date="2026.05.12  화" />
-        <ReceivedBubble text="안녕하세요, 강남역에서 잃어버린 모자 사진 보고 연락드렸어요!" />
-        <ReceivedBubble text="혹시 모자 챙 안쪽에 작은 얼룩 같은거 있을까요?" time="오후 2:34" />
-        <SentBubble text="네 안녕하세여. 잠시만요, 사진 한 번 더 찍어볼게요" />
-        <SentBubble text="여기 챙 안쪽이에요. 이거 맞으실까요?" read time="오후 2:34" />
-        {messages.map((msg) => <SentBubble key={msg.id} text={msg.text} />)}
+        {loading ? (
+          <div className="flex justify-center pt-12">
+            <div className="w-6 h-6 border-2 border-app-gray-light border-t-navy rounded-full animate-spin" />
+          </div>
+        ) : (
+          grouped.map((item, i) =>
+            typeof item === "string" ? (
+              <DateChip key={`date-${i}`} date={item} />
+            ) : item.senderId === myUserId ? (
+              <SentBubble key={item.id} text={item.content} time={formatTime(item.createdDate)} read={item.read} />
+            ) : (
+              <ReceivedBubble key={item.id} text={item.content} time={formatTime(item.createdDate)} />
+            )
+          )
+        )}
       </div>
 
       {/* 입력 바 */}
-      <div className="flex items-center px-6 py-5 bg-app-bg md:bg-white gap-2 shrink-0">
-        <button className="cursor-pointer bg-transparent border-none shrink-0">
-          <svg width="29" height="29" viewBox="0 0 29 29" fill="none">
-            <path d="M14.5 28C21.9558 28 28 21.9558 28 14.5C28 7.04416 21.9558 1 14.5 1C7.04416 1 1 7.04416 1 14.5C1 21.9558 7.04416 28 14.5 28Z" stroke="#1E3A5F" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M9.09996 14.5H19.9" stroke="#1E3A5F" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            <path d="M14.5 9.1001V19.9001" stroke="#1E3A5F" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </button>
-        <div className="flex-1 h-[39px] bg-app-bg rounded-[20px] px-3.5 flex items-center">
-          <input value={inputText} onChange={(e) => setInputText(e.target.value)}
+      <div className="flex items-center px-6 py-5 bg-app-bg md:bg-white gap-2 shrink-0 border-t border-app-gray-light md:border-none">
+        <div className="flex-1 h-[39px] bg-white border border-app-border rounded-[20px] px-3.5 flex items-center shadow-[0_0_4px_rgba(0,0,0,0.08)]">
+          <input
+            value={inputText}
+            onChange={(e) => setInputText(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSend()}
             placeholder="메세지 입력"
-            className="w-full text-xs font-semibold text-black tracking-[-0.32px] outline-none bg-transparent placeholder:text-[#B2B6BD]" />
+            className="w-full text-xs font-semibold text-black tracking-[-0.32px] outline-none bg-transparent placeholder:text-[#B2B6BD]"
+          />
         </div>
         <button onClick={handleSend} className="cursor-pointer bg-transparent border-none shrink-0">
           <svg width="27" height="27" viewBox="0 0 27 27" fill="none">
@@ -149,17 +260,20 @@ export default function ChatRoomPage() {
         </button>
       </div>
 
+      {/* 더보기 바텀시트 */}
       {showMenu && (
         <div className="fixed inset-0 z-50 flex flex-col justify-end">
           <div className="absolute inset-0 bg-black/40" onClick={() => setShowMenu(false)} />
           <div className="relative bg-white rounded-t-[20px] pb-8">
             <div className="w-10 h-1 bg-app-border rounded-full mx-auto mt-3 mb-2" />
-            <button onClick={() => { setShowMenu(false); if (confirm("이 사용자를 신고하시겠어요?")) {} }}
+            <button
+              onClick={() => { setShowMenu(false); if (confirm("이 사용자를 신고하시겠어요?")) {} }}
               className="w-full px-6 py-4 text-left cursor-pointer bg-transparent border-none">
               <span className="text-base text-red-500">신고하기</span>
             </button>
             <div className="h-px bg-[#F0F0F0] mx-6" />
-            <button onClick={() => { setShowMenu(false); router.push("/chat"); }}
+            <button
+              onClick={() => { setShowMenu(false); router.push("/chat"); }}
               className="w-full px-6 py-4 text-left cursor-pointer bg-transparent border-none">
               <span className="text-base text-[#434343]">채팅방 나가기</span>
             </button>
