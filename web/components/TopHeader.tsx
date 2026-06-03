@@ -17,6 +17,7 @@ const TABS = [
   { href: "/register", label: "등록", protected: true },
   { href: "/chat", label: "채팅", protected: true },
   { href: "/mypage", label: "프로필", protected: true },
+  { href: "/db", label: "DB", protected: false },
 ];
 
 export default function TopHeader() {

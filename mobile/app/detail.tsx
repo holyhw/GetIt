@@ -188,7 +188,9 @@ export default function DetailScreen() {
 
   const ctaColor = isLost ? "#FF7A00" : "#1E3A5F";
   const ctaText = isLost ? "이 물건을 주운 것 같아요" : "이 물건 제 것 같아요";
-  const dateLabel = `${item.occurredDate?.replace(/-/g, ".") ?? ""} ${isLost ? "분실" : "습득"}`;
+  const dateLabel = item.occurredDate
+    ? `${item.occurredDate.replace(/-/g, ".")} ${isLost ? "분실" : "습득"}`
+    : (isLost ? "분실" : "습득");
   const ogUrl = `https://www.getitsju.com/detail?id=${item.id}&type=${isLost ? "lost" : "found"}`;
   const category = `${item.majorCategory ?? "null"} > ${item.minorCategory ?? "null"}`;
 
@@ -382,33 +384,48 @@ export default function DetailScreen() {
             {item.description || "상세 설명이 없습니다."}
           </Text>
 
+          {/* AI 분석 */}
+          {!!item.items?.[0]?.vlm_result?.caption && (
+            <>
+              <Text style={{ fontSize: 12, fontWeight: "700", color: "#000", marginBottom: 8 }}>AI 분석</Text>
+              <View style={{ backgroundColor: ctaColor + "15", borderRadius: 10, padding: 12, marginBottom: 16 }}>
+                <Text style={{ fontSize: 12, color: "#434343", lineHeight: 16 }}>
+                  {item.items[0].vlm_result!.caption}
+                </Text>
+              </View>
+            </>
+          )}
+
           <Divider />
 
           {/* 위치 */}
-          <Text style={{ fontSize: 12, fontWeight: "700", color: "#000", marginTop: 16, marginBottom: 18 }}>
-            {isLost ? "분실 위치" : "습득 위치"}
-          </Text>
-          <View style={{ shadowColor: "#000", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 3 }}>
-            <View style={{ borderTopLeftRadius: 8, borderTopRightRadius: 8, overflow: "hidden", height: 120 }}>
-              {mapCoords ? (
-                <NaverMapView lat={mapCoords.lat} lng={mapCoords.lng} height={120} interactive={false} borderRadius={0} />
-              ) : (
-                <View style={{ flex: 1, backgroundColor: "#E5E7EB", alignItems: "center", justifyContent: "center" }}>
-                  <ActivityIndicator size="small" color="#919191" />
+          {!!item.location && (
+            <>
+              <Text style={{ fontSize: 12, fontWeight: "700", color: "#000", marginTop: 16, marginBottom: 18 }}>
+                {isLost ? "분실 위치" : "습득 위치"}
+              </Text>
+              <View style={{ shadowColor: "#000", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 3 }}>
+                <View style={{ borderTopLeftRadius: 8, borderTopRightRadius: 8, overflow: "hidden", height: 120 }}>
+                  {mapCoords ? (
+                    <NaverMapView lat={mapCoords.lat} lng={mapCoords.lng} height={120} interactive={false} borderRadius={0} />
+                  ) : (
+                    <View style={{ flex: 1, backgroundColor: "#E5E7EB", alignItems: "center", justifyContent: "center" }}>
+                      <ActivityIndicator size="small" color="#919191" />
+                    </View>
+                  )}
                 </View>
-              )}
-            </View>
-            <TouchableOpacity
-              onPress={() => mapCoords && setShowFullMap(true)}
-              style={{ backgroundColor: "#F5F7FA", height: 33, borderBottomLeftRadius: 8, borderBottomRightRadius: 8, flexDirection: "row", alignItems: "center", paddingHorizontal: 16 }}
-            >
-              <DetailPinIcon width={9} height={11} />
-              <Text style={{ flex: 1, marginLeft: 7, fontSize: 10, color: "#000" }}>{item.location}</Text>
-              {mapCoords && <DetailArrowIcon width={5} height={9} />}
-            </TouchableOpacity>
-          </View>
-
-          <Divider />
+                <TouchableOpacity
+                  onPress={() => mapCoords && setShowFullMap(true)}
+                  style={{ backgroundColor: "#F5F7FA", height: 33, borderBottomLeftRadius: 8, borderBottomRightRadius: 8, flexDirection: "row", alignItems: "center", paddingHorizontal: 16 }}
+                >
+                  <DetailPinIcon width={9} height={11} />
+                  <Text style={{ flex: 1, marginLeft: 7, fontSize: 10, color: "#000" }}>{item.location}</Text>
+                  {mapCoords && <DetailArrowIcon width={5} height={9} />}
+                </TouchableOpacity>
+              </View>
+              <Divider />
+            </>
+          )}
 
           {/* AI 매칭 섹션 */}
           <View style={{ marginTop: 16 }}>

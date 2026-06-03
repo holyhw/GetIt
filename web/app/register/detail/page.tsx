@@ -9,7 +9,7 @@ import { LocationSearchModal } from "@/components/LocationSearchModal";
 import TopHeader from "@/components/TopHeader";
 
 const API_BASE = "https://api.getitsju.com";
-const MATCHING_MESSAGES = ["분실물 정보 분석 중...", "유사한 습득물 검색 중...", "매칭 결과 생성 중..."];
+const MATCHING_MESSAGES = ["등록된 습득물 탐색 중...", "유사도 분석 중...", "결과 정리 중..."];
 
 function RegisterDetailContent() {
   const router = useRouter();
@@ -35,11 +35,17 @@ function RegisterDetailContent() {
   const [date, setDate] = useState("");
   const [loading, setLoading] = useState(false);
   const [matchingMsgIdx, setMatchingMsgIdx] = useState(0);
+  const [description, setDescription] = useState(initialText);
+  const [editedCaption, setEditedCaption] = useState("");
+  const [aiCaptionLoaded, setAiCaptionLoaded] = useState(false);
+  const [aiCaption, setAiCaption] = useState<string | null>(null);
+  const [analysisStatus, setAnalysisStatus] = useState<"PROCESSING" | "COMPLETED" | "FAILED">("PROCESSING");
 
   const dateInputRef = useRef<HTMLInputElement>(null);
   const preAnalysisIdRef = useRef<number | null>(null);
   const analysisStatusRef = useRef<PreAnalysisStatus>("PROCESSING");
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const cancelledRef = useRef(false);
 
   useEffect(() => {
     if (!token) return;
@@ -61,9 +67,19 @@ function RegisterDetailContent() {
     }
 
     if (preAnalysisIdParam) {
-      preAnalysisIdRef.current = parseInt(preAnalysisIdParam);
+      const id = parseInt(preAnalysisIdParam);
+      preAnalysisIdRef.current = id;
       analysisStatusRef.current = "COMPLETED";
       registerStore.clear();
+      fetch(`${API_BASE}/api/ai/pre-analysis/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then((r) => r.json())
+        .then((data) => {
+          const caption = data.result?.vlmResult?.caption;
+          if (caption) setAiCaption(caption);
+        })
+        .catch(() => {});
       return;
     }
 
@@ -111,6 +127,10 @@ function RegisterDetailContent() {
         if (status !== "PROCESSING") {
           analysisStatusRef.current = status;
           clearInterval(pollingRef.current!);
+          if (status === "COMPLETED") {
+            const caption = data.result?.vlmResult?.caption;
+            if (caption) setAiCaption(caption);
+          }
         }
       } catch {}
     };
@@ -119,6 +139,14 @@ function RegisterDetailContent() {
   };
 
   useEffect(() => () => { if (pollingRef.current) clearInterval(pollingRef.current); }, []);
+
+  useEffect(() => {
+    if (aiCaption) {
+      setEditedCaption(aiCaption);
+      setAiCaptionLoaded(true);
+      setAnalysisStatus("COMPLETED");
+    }
+  }, [aiCaption]);
 
   const waitForAnalysis = (): Promise<PreAnalysisStatus> =>
     new Promise((resolve) => {
@@ -131,7 +159,6 @@ function RegisterDetailContent() {
   const handleSubmit = async () => {
     if (!token) return;
     if (!title.trim()) { alert("제목을 입력해주세요."); return; }
-    if (!location.trim()) { alert("위치를 입력해주세요."); return; }
 
     setLoading(true);
     let idx = 0;
@@ -148,10 +175,11 @@ function RegisterDetailContent() {
         title: title.trim(),
         majorCategory,
         minorCategory,
-        location: location.trim(),
+        ...(location.trim() && { location: location.trim() }),
         ...(selectedLat && { latitude: selectedLat }),
         ...(selectedLng && { longitude: selectedLng }),
-        ...(initialText.trim() && { description: initialText.trim() }),
+        ...(description.trim() && { description: description.trim() }),
+        ...(editedCaption.trim() && { caption: editedCaption.trim() }),
         ...(date && { occurredDate: date }),
       };
 
@@ -166,7 +194,9 @@ function RegisterDetailContent() {
       });
       if (!res.ok) throw new Error(`오류: ${res.status}`);
       const data = await res.json();
+      console.log("[registration] 응답:", JSON.stringify(data.result, null, 2));
 
+      if (cancelledRef.current) return;
       if (isFound) {
         router.replace(`/detail/${data.result.id}?type=found&fromRegistration=true`);
       } else {
@@ -241,11 +271,32 @@ function RegisterDetailContent() {
               />
             </div>
 
+            {/* AI 분석 캡션 */}
+            <div className="mb-[18px]">
+              <div className="flex items-center gap-1.5 mb-2">
+                <span className="text-[13px] font-bold text-black">AI 분석</span>
+                {analysisStatus === "PROCESSING" ? (
+                  <div className="flex items-center gap-1">
+                    <div className="w-3 h-3 border border-t-transparent rounded-full animate-spin" style={{ borderColor: themeColor }} />
+                    <span className="text-[10px] font-semibold" style={{ color: themeColor }}>분석 중...</span>
+                  </div>
+                ) : aiCaptionLoaded ? (
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ backgroundColor: themeColor + "20", color: themeColor }}>✨ AI 생성</span>
+                ) : null}
+              </div>
+              <textarea
+                value={editedCaption}
+                onChange={(e) => { setEditedCaption(e.target.value); if (aiCaptionLoaded) setAiCaptionLoaded(false); }}
+                placeholder={analysisStatus === "PROCESSING" ? "AI가 분석하고 있어요..." : "AI 분석 결과가 여기에 표시됩니다"}
+                className="w-full min-h-[100px] bg-app-gray-light border border-app-border rounded-[10px] px-3.5 py-2.5 text-sm text-black resize-none outline-none placeholder:text-app-gray"
+              />
+            </div>
+
             {/* 위치 */}
             <div className="mb-3.5">
               <div className="flex items-center gap-1 mb-1.5">
                 <span className="text-[13px] font-bold text-black">{isFound ? "습득 위치" : "분실 위치"}</span>
-                <span className="w-[5px] h-[5px] rounded-full bg-red-500" />
+                <span className="text-xs font-bold text-app-gray">(선택)</span>
               </div>
               <button
                 onClick={() => setShowLocationModal(true)}
@@ -268,20 +319,24 @@ function RegisterDetailContent() {
             <div className="mb-3.5">
               <div className="flex items-center gap-1 mb-1.5">
                 <span className="text-[13px] font-bold text-black">{isFound ? "습득 날짜" : "분실 날짜"}</span>
-                <span className="w-[5px] h-[5px] rounded-full bg-red-500" />
+                <span className="text-xs font-bold text-app-gray">(선택)</span>
               </div>
-              <div onClick={() => dateInputRef.current?.showPicker()} className="h-11 bg-app-gray-light border border-app-border rounded-[10px] flex items-center px-2.5 gap-2 cursor-pointer">
-                <svg width="14" height="16" viewBox="0 0 10 11" fill="none" className="shrink-0">
+              <div onClick={() => dateInputRef.current?.showPicker()} className="h-11 bg-app-gray-light border border-app-border rounded-[10px] flex items-center px-2.5 gap-2 cursor-pointer relative overflow-hidden">
+                <svg width="14" height="16" viewBox="0 0 10 11" fill="none" className="shrink-0 pointer-events-none">
                   <path d="M3 0.5V2.5M7 0.5V2.5M8.5 1.5H1.5C0.948 1.5 0.5 1.948 0.5 2.5V9.5C0.5 10.052 0.948 10.5 1.5 10.5H8.5C9.052 10.5 9.5 10.052 9.5 9.5V2.5C9.5 1.948 9.052 1.5 8.5 1.5ZM0.5 4.5H9.5" stroke={themeColor} strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
+                <span className="flex-1 text-sm pointer-events-none select-none" style={{ color: date ? "#000" : "#919191" }}>
+                  {date ? date.replace(/-/g, ".") : "날짜를 선택해주세요"}
+                </span>
                 <input
                   ref={dateInputRef}
                   type="date"
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
-                  className="flex-1 text-sm text-black bg-transparent outline-none cursor-pointer"
+                  className="absolute opacity-0 w-0 h-0 pointer-events-none"
+                  tabIndex={-1}
                 />
-                <svg width="7" height="12" viewBox="0 0 5 9" fill="none" className="shrink-0">
+                <svg width="7" height="12" viewBox="0 0 5 9" fill="none" className="shrink-0 pointer-events-none">
                   <path d="M0.5 0.5L4.5 4.5L0.5 8.5" stroke={themeColor} strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </div>
@@ -316,18 +371,26 @@ function RegisterDetailContent() {
 
       {/* 분실물 매칭 로딩 오버레이 */}
       {loading && !isFound && (
-        <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center" style={{ backgroundColor: "rgba(10,18,42,0.97)" }}>
-          <div className="relative w-[220px] h-[220px] flex items-center justify-center mb-9">
-            {[0, 1, 2].map((i) => (
-              <div key={i} className="absolute w-full h-full rounded-full border border-orange animate-ping" style={{ animationDelay: `${i * 0.7}s`, animationDuration: "2.1s" }} />
-            ))}
-            <div className="w-[82px] h-[82px] rounded-full bg-orange flex items-center justify-center text-4xl shadow-[0_0_28px_rgba(255,122,0,0.7)]">🔍</div>
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/45">
+          <div className="bg-white rounded-3xl px-10 py-11 flex flex-col items-center w-[360px] shadow-2xl">
+            <div className="relative w-[140px] h-[140px] flex items-center justify-center mb-7">
+              {[0, 1, 2].map((i) => (
+                <div key={i} className="absolute rounded-full animate-ping"
+                  style={{ width: 60, height: 60, border: "1.5px solid #FF7A00", animationDelay: `${i * 0.7}s`, animationDuration: "2.1s" }} />
+              ))}
+              <div className="w-16 h-16 rounded-full flex items-center justify-center text-3xl"
+                style={{ backgroundColor: "#FF7A00", boxShadow: "0 0 24px rgba(255,122,0,0.5)" }}>
+                🔍
+              </div>
+            </div>
+            <p className="text-[20px] font-bold text-black tracking-[-0.4px]">GET IT이 찾아드릴게요</p>
+            <p className="text-sm font-medium mt-2 tracking-[-0.2px] text-orange">{MATCHING_MESSAGES[matchingMsgIdx]}</p>
+            <p className="text-[13px] text-app-gray mt-1">나가도 알림으로 받아볼 수 있어요</p>
+            <button onClick={() => { cancelledRef.current = true; setLoading(false); router.replace("/"); }}
+              className="mt-6 px-6 py-2 rounded-full border border-app-border text-[13px] text-app-gray cursor-pointer bg-transparent hover:bg-app-gray-light transition-colors">
+              홈으로
+            </button>
           </div>
-          <p className="text-white text-[22px] font-bold tracking-[-0.5px]">분실물 매칭 중</p>
-          <p className="text-orange text-sm mt-2.5 tracking-[-0.3px]">{MATCHING_MESSAGES[matchingMsgIdx]}</p>
-          <p className="text-white/28 text-[11px] mt-2">잠시만 기다려주세요</p>
-          <p className="text-white/40 text-[11px] mt-8 text-center tracking-[-0.2px]">나가도 결과는 알림으로 알려드려요</p>
-          <button onClick={() => { setLoading(false); router.replace("/"); }} className="mt-3 px-7 py-2.5 rounded-[20px] border border-white/25 text-white/70 text-[13px] font-semibold cursor-pointer bg-transparent">홈으로</button>
         </div>
       )}
 

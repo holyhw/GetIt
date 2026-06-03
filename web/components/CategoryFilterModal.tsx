@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { SmartphoneIcon, BackpackIcon, WalletIcon, ShirtIcon, GemIcon, BookIcon, KeyRoundIcon } from "./icons";
 
-export type CategoryFilterValue = { major: string; minor: string } | null;
+export type CategoryFilterValue = { major: string; minor?: string } | null;
 
 type IconComponent = React.ComponentType<{ size?: number; color?: string }>;
 
@@ -22,9 +22,10 @@ type Props = {
   activeColor: string;
   onSelect: (value: CategoryFilterValue) => void;
   onClose: () => void;
+  allowMajorOnly?: boolean;
 };
 
-export function CategoryFilterModal({ visible, value, activeColor, onSelect, onClose }: Props) {
+export function CategoryFilterModal({ visible, value, activeColor, onSelect, onClose, allowMajorOnly }: Props) {
   const [selected, setSelected] = useState<CategoryFilterValue>(value);
 
   useEffect(() => {
@@ -51,34 +52,53 @@ export function CategoryFilterModal({ visible, value, activeColor, onSelect, onC
         </div>
 
         <div className="overflow-y-auto px-6 pb-4 flex flex-col gap-3">
-          {CATEGORIES.map(({ label, Icon, subcategories }) => (
-            <div key={label} className="flex items-start gap-3">
-              <div className="w-[52px] flex flex-col items-center gap-1 pt-3 shrink-0">
-                <Icon size={24} color="#434343" />
-                <span className="text-[11px] font-semibold text-[#434343] text-center">{label}</span>
-              </div>
-              <div className="flex-1 bg-white rounded-xl p-3 shadow-sm grid grid-cols-2 gap-2">
-                {subcategories.map((sub) => {
-                  const isSelected = selected?.major === label && selected?.minor === sub;
-                  return (
+          {CATEGORIES.map(({ label, Icon, subcategories }) => {
+            const isMajorSelected = selected?.major === label && !selected?.minor;
+            return (
+              <div key={label} className="flex items-start gap-3">
+                <div className="w-[52px] flex flex-col items-center gap-1 pt-3 shrink-0">
+                  <Icon size={24} color="#434343" />
+                  <span className="text-[11px] font-semibold text-[#434343] text-center">{label}</span>
+                </div>
+                <div className="flex-1 bg-white rounded-xl p-3 shadow-sm flex flex-col gap-2">
+                  {allowMajorOnly && (
                     <button
-                      key={sub}
-                      onClick={() => setSelected(isSelected ? null : { major: label, minor: sub })}
-                      className="py-2.5 rounded-lg text-xs cursor-pointer transition-colors"
+                      onClick={() => setSelected(isMajorSelected ? null : { major: label })}
+                      className="w-full py-2.5 rounded-lg text-xs cursor-pointer transition-colors col-span-2"
                       style={{
-                        border: `1px solid ${isSelected ? activeColor : "#E5E7EB"}`,
-                        backgroundColor: isSelected ? activeColor + "15" : "#F5F7FA",
-                        color: isSelected ? activeColor : "#434343",
-                        fontWeight: isSelected ? 600 : 400,
+                        border: `1px solid ${isMajorSelected ? activeColor : "#E5E7EB"}`,
+                        backgroundColor: isMajorSelected ? activeColor + "15" : "#F0F4FF",
+                        color: isMajorSelected ? activeColor : "#1E3A5F",
+                        fontWeight: isMajorSelected ? 700 : 600,
                       }}
                     >
-                      {sub}
+                      {label} 전체
                     </button>
-                  );
-                })}
+                  )}
+                  <div className="grid grid-cols-2 gap-2">
+                    {subcategories.map((sub) => {
+                      const isSelected = selected?.major === label && selected?.minor === sub;
+                      return (
+                        <button
+                          key={sub}
+                          onClick={() => setSelected(isSelected ? null : { major: label, minor: sub })}
+                          className="py-2.5 rounded-lg text-xs cursor-pointer transition-colors"
+                          style={{
+                            border: `1px solid ${isSelected ? activeColor : "#E5E7EB"}`,
+                            backgroundColor: isSelected ? activeColor + "15" : "#F5F7FA",
+                            color: isSelected ? activeColor : "#434343",
+                            fontWeight: isSelected ? 600 : 400,
+                          }}
+                        >
+                          {sub}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         <div className="flex gap-2.5 px-6 pt-3 pb-9 md:pb-5">

@@ -142,7 +142,9 @@ export default function DetailClient() {
   const isOwner = myUserId !== null && myUserId === item.userId;
   const ctaColor = isLost ? "#FF7A00" : "#1E3A5F";
   const ctaText = isLost ? "이 물건을 주운 것 같아요" : "이 물건 제 것 같아요";
-  const dateLabel = `${item.occurredDate?.replace(/-/g, ".") ?? ""} ${isLost ? "분실" : "습득"}`;
+  const dateLabel = item.occurredDate
+    ? `${item.occurredDate.replace(/-/g, ".")} ${isLost ? "분실" : "습득"}`
+    : (isLost ? "분실" : "습득");
   const category = `${item.majorCategory ?? ""} > ${item.minorCategory ?? ""}`;
 
   const handleBack = () => fromRegistration ? router.replace("/") : router.back();
@@ -320,40 +322,53 @@ export default function DetailClient() {
             {item.description || "상세 설명이 없습니다."}
           </p>
 
+          {/* AI 분석 */}
+          {!!item.items?.[0]?.vlm_result?.caption && (
+            <>
+              <p className="text-xs font-bold text-black mb-2">AI 분석</p>
+              <div className="rounded-[10px] p-3 mb-4" style={{ backgroundColor: ctaColor + "15" }}>
+                <p className="text-xs text-[#434343] leading-4">{item.items[0].vlm_result!.caption}</p>
+              </div>
+            </>
+          )}
+
           <Divider />
 
           {/* 위치 */}
-          <p className="text-xs font-bold text-black mt-4 mb-[18px]">
-            {isLost ? "분실 위치" : "습득 위치"}
-          </p>
-          <div className="rounded-lg overflow-hidden shadow-sm mb-4 isolate">
-            {mapCoords ? (
-              <NaverMapView lat={mapCoords.lat} lng={mapCoords.lng} height={120} interactive={false} borderRadius={0} />
-            ) : (
-              <div className="h-[120px] bg-app-gray-light flex items-center justify-center">
-                <div className="w-5 h-5 border-2 border-app-border border-t-app-gray rounded-full animate-spin" />
+          {!!item.location && (
+            <>
+              <p className="text-xs font-bold text-black mt-4 mb-[18px]">
+                {isLost ? "분실 위치" : "습득 위치"}
+              </p>
+              <div className="rounded-lg overflow-hidden shadow-sm mb-4 isolate">
+                {mapCoords ? (
+                  <NaverMapView lat={mapCoords.lat} lng={mapCoords.lng} height={120} interactive={false} borderRadius={0} />
+                ) : (
+                  <div className="h-[120px] bg-app-gray-light flex items-center justify-center">
+                    <div className="w-5 h-5 border-2 border-app-border border-t-app-gray rounded-full animate-spin" />
+                  </div>
+                )}
+                <a
+                  href={`https://map.naver.com/v5/search/${encodeURIComponent(item.location)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center px-4 h-[33px] bg-app-bg gap-1.5 no-underline"
+                >
+                  <svg width="9" height="11" viewBox="0 0 9 11" fill="none" className="shrink-0">
+                    <path d="M8.5 4.5C8.5 6.9965 5.7305 9.5965 4.8005 10.3995C4.71386 10.4646 4.6084 10.4999 4.5 10.4999C4.3916 10.4999 4.28614 10.4646 4.1995 10.3995C3.2695 9.5965 0.5 6.9965 0.5 4.5C0.5 3.43913 0.921427 2.42172 1.67157 1.67157C2.42172 0.921427 3.43913 0.5 4.5 0.5C5.56087 0.5 6.57828 0.921427 7.32843 1.67157C8.07857 2.42172 8.5 3.43913 8.5 4.5Z" stroke="#1E3A5F" strokeLinecap="round" strokeLinejoin="round" />
+                    <path d="M4.5 6.00024C5.32843 6.00024 6 5.32867 6 4.50024C6 3.67182 5.32843 3.00024 4.5 3.00024C3.67157 3.00024 3 3.67182 3 4.50024C3 5.32867 3.67157 6.00024 4.5 6.00024Z" stroke="#1E3A5F" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  <span className="flex-1 text-[10px] text-black truncate">{item.location}</span>
+                  {mapCoords && (
+                    <svg width="5" height="9" viewBox="0 0 5 9" fill="none" className="shrink-0">
+                      <path d="M0.5 0.5L4.5 4.5L0.5 8.5" stroke="#1E3A5F" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  )}
+                </a>
               </div>
-            )}
-            <a
-              href={`https://map.naver.com/v5/search/${encodeURIComponent(item.location)}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center px-4 h-[33px] bg-app-bg gap-1.5 no-underline"
-            >
-              <svg width="9" height="11" viewBox="0 0 9 11" fill="none" className="shrink-0">
-                <path d="M8.5 4.5C8.5 6.9965 5.7305 9.5965 4.8005 10.3995C4.71386 10.4646 4.6084 10.4999 4.5 10.4999C4.3916 10.4999 4.28614 10.4646 4.1995 10.3995C3.2695 9.5965 0.5 6.9965 0.5 4.5C0.5 3.43913 0.921427 2.42172 1.67157 1.67157C2.42172 0.921427 3.43913 0.5 4.5 0.5C5.56087 0.5 6.57828 0.921427 7.32843 1.67157C8.07857 2.42172 8.5 3.43913 8.5 4.5Z" stroke="#1E3A5F" strokeLinecap="round" strokeLinejoin="round" />
-                <path d="M4.5 6.00024C5.32843 6.00024 6 5.32867 6 4.50024C6 3.67182 5.32843 3.00024 4.5 3.00024C3.67157 3.00024 3 3.67182 3 4.50024C3 5.32867 3.67157 6.00024 4.5 6.00024Z" stroke="#1E3A5F" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              <span className="flex-1 text-[10px] text-black truncate">{item.location}</span>
-              {mapCoords && (
-                <svg width="5" height="9" viewBox="0 0 5 9" fill="none" className="shrink-0">
-                  <path d="M0.5 0.5L4.5 4.5L0.5 8.5" stroke="#1E3A5F" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              )}
-            </a>
-          </div>
-
-          <Divider />
+              <Divider />
+            </>
+          )}
 
           {/* AI 매칭 */}
           <div className="mt-4">

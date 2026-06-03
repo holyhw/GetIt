@@ -22,6 +22,7 @@ export type RegistrationDetail = RegistrationItem & {
   userId: number;
   userName: string;
   userProfileImageUrl: string | null;
+  items?: { crop_image_url: string | null; vlm_result: { caption: string } | null }[];
 };
 
 export type PagedResponse<T> = {

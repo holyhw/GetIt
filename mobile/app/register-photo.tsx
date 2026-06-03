@@ -11,6 +11,8 @@ import {
   Platform,
   ActivityIndicator,
   Keyboard,
+  Animated,
+  Easing,
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
@@ -24,6 +26,72 @@ import { registerStore } from "../utils/registerStore";
 import type { PreAnalysisStatus, ReferenceImage } from "../types/preAnalysis";
 
 const API_BASE_URL = "https://api.getitsju.com";
+
+const ANALYSIS_MESSAGES = ["이미지 분석 중...", "물건 특징 추출 중...", "설명 작성 중..."];
+
+function AnalysisLoadingOverlay({ themeColor, onCancel }: { themeColor: string; onCancel: () => void }) {
+  const ring1 = useRef(new Animated.Value(0)).current;
+  const ring2 = useRef(new Animated.Value(0)).current;
+  const ring3 = useRef(new Animated.Value(0)).current;
+  const textOpacity = useRef(new Animated.Value(1)).current;
+  const [msgIndex, setMsgIndex] = useState(0);
+
+  useEffect(() => {
+    const radarAnim = Animated.loop(
+      Animated.stagger(700, [ring1, ring2, ring3].map((ring) =>
+        Animated.sequence([
+          Animated.timing(ring, { toValue: 1, duration: 2100, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+          Animated.timing(ring, { toValue: 0, duration: 0, useNativeDriver: true }),
+        ])
+      ))
+    );
+    radarAnim.start();
+
+    let idx = 0;
+    const cycleText = () => {
+      Animated.timing(textOpacity, { toValue: 0, duration: 280, useNativeDriver: true }).start(() => {
+        idx = (idx + 1) % ANALYSIS_MESSAGES.length;
+        setMsgIndex(idx);
+        Animated.timing(textOpacity, { toValue: 1, duration: 280, useNativeDriver: true }).start();
+      });
+    };
+    const interval = setInterval(cycleText, 2100);
+    return () => { radarAnim.stop(); clearInterval(interval); };
+  }, []);
+
+  return (
+    <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.45)", alignItems: "center", justifyContent: "center", zIndex: 9999 }}>
+      <View style={{ backgroundColor: "#fff", borderRadius: 28, paddingHorizontal: 36, paddingVertical: 40, alignItems: "center", width: 320, shadowColor: "#000", shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.15, shadowRadius: 24, elevation: 12 }}>
+        {/* 링 애니메이션 */}
+        <View style={{ width: 140, height: 140, alignItems: "center", justifyContent: "center", marginBottom: 28 }}>
+          {[ring1, ring2, ring3].map((ring, i) => (
+            <Animated.View key={i} style={{
+              position: "absolute", width: 140, height: 140, borderRadius: 70,
+              borderWidth: 1.5, borderColor: themeColor,
+              opacity: ring.interpolate({ inputRange: [0, 0.08, 0.65, 1], outputRange: [0, 0.7, 0.2, 0] }),
+              transform: [{ scale: ring.interpolate({ inputRange: [0, 1], outputRange: [0.15, 1] }) }],
+            }} />
+          ))}
+          <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: themeColor, alignItems: "center", justifyContent: "center", shadowColor: themeColor, shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.5, shadowRadius: 20, elevation: 8 }}>
+            <Text style={{ fontSize: 28 }}>✨</Text>
+          </View>
+        </View>
+
+        <Text style={{ fontSize: 20, fontWeight: "700", color: "#000", letterSpacing: -0.4 }}>물건 정보 생성 중</Text>
+        <Animated.Text style={{ fontSize: 13, color: themeColor, marginTop: 6, letterSpacing: -0.2, fontWeight: "500", opacity: textOpacity }}>
+          {ANALYSIS_MESSAGES[msgIndex]}
+        </Animated.Text>
+        <Text style={{ fontSize: 13, color: "#434343", marginTop: 4, letterSpacing: -0.2 }}>
+          조금만 기다려 주세요!
+        </Text>
+
+        <TouchableOpacity onPress={onCancel} style={{ marginTop: 24, paddingHorizontal: 24, paddingVertical: 8, borderRadius: 20, borderWidth: 1, borderColor: "#E5E7EB" }}>
+          <Text style={{ fontSize: 13, color: "#919191" }}>취소</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+}
 
 function ReferenceImageOverlay({
   image,
@@ -204,13 +272,6 @@ export default function RegisterPhotoScreen() {
     }
 
     registerStore.setPhoto(photo);
-
-    if (isFound) {
-      router.replace(
-        `/register-detail?type=${type}&majorCategory=${encodeURIComponent(majorCategory ?? "")}&minorCategory=${encodeURIComponent(minorCategory ?? "")}&text=${encodeURIComponent(text.trim())}`,
-      );
-      return;
-    }
 
     setAnalyzing(true);
 
@@ -612,53 +673,16 @@ export default function RegisterPhotoScreen() {
 
         {/* AI 분석 중 로딩 오버레이 */}
         {analyzing && !showImageSelection && (
-          <View
-            style={{
-              position: "absolute",
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              backgroundColor: "rgba(10,18,42,0.88)",
-              alignItems: "center",
-              justifyContent: "center",
-              zIndex: 9999,
+          <AnalysisLoadingOverlay
+            themeColor={themeColor}
+            onCancel={() => {
+              if (pollingRef.current) clearInterval(pollingRef.current);
+              setAnalyzing(false);
+              setPreAnalysisId(null);
+              preAnalysisIdRef.current = null;
+              analysisStatusRef.current = "PROCESSING";
             }}
-          >
-            <TouchableOpacity
-              onPress={() => {
-                if (pollingRef.current) clearInterval(pollingRef.current);
-                setAnalyzing(false);
-                setPreAnalysisId(null);
-                preAnalysisIdRef.current = null;
-                analysisStatusRef.current = "PROCESSING";
-              }}
-              style={{ position: "absolute", top: 60, right: 24 }}
-            >
-              <Text style={{ color: "rgba(255,255,255,0.6)", fontSize: 24 }}>✕</Text>
-            </TouchableOpacity>
-            <ActivityIndicator size="large" color="#FF7A00" />
-            <Text
-              style={{
-                color: "#fff",
-                fontSize: 16,
-                fontWeight: "600",
-                marginTop: 16,
-                letterSpacing: -0.3,
-              }}
-            >
-              AI 분석 중...
-            </Text>
-            <Text
-              style={{
-                color: "rgba(255,255,255,0.45)",
-                fontSize: 12,
-                marginTop: 8,
-              }}
-            >
-              잠시만 기다려주세요
-            </Text>
-          </View>
+          />
         )}
 
         {/* 참고 이미지 선택 오버레이 */}

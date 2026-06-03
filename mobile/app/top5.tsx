@@ -95,16 +95,20 @@ function CardItem({ item, index, scrollX }: CardProps) {
         </View>
         <View style={{ paddingHorizontal: 16, paddingTop: 10, paddingBottom: 12 }}>
           <Text style={{ fontSize: 16, fontWeight: "600", lineHeight: 22, color: "#000", marginBottom: 10 }}>{item.title}</Text>
-          <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}>
-            <PinIcon width={9} height={11} style={{ marginRight: 4 }} />
-            <Text style={{ fontSize: 12, fontWeight: "600", lineHeight: 17, color: "#434343", marginRight: 6 }}>습득 장소</Text>
-            <Text style={{ fontSize: 10, lineHeight: 15, color: "#000", flex: 1 }} numberOfLines={1}>{item.location}</Text>
-          </View>
-          <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <CalendarIcon width={10} height={11} style={{ marginRight: 4 }} />
-            <Text style={{ fontSize: 12, fontWeight: "600", lineHeight: 17, color: "#434343", marginRight: 6 }}>습득 시간</Text>
-            <Text style={{ fontSize: 10, lineHeight: 15, color: "#000" }}>{date}</Text>
-          </View>
+          {!!item.location && (
+            <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}>
+              <PinIcon width={9} height={11} style={{ marginRight: 4 }} />
+              <Text style={{ fontSize: 12, fontWeight: "600", lineHeight: 17, color: "#434343", marginRight: 6 }}>습득 장소</Text>
+              <Text style={{ fontSize: 10, lineHeight: 15, color: "#000", flex: 1 }} numberOfLines={1}>{item.location}</Text>
+            </View>
+          )}
+          {!!date && (
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+              <CalendarIcon width={10} height={11} style={{ marginRight: 4 }} />
+              <Text style={{ fontSize: 12, fontWeight: "600", lineHeight: 17, color: "#434343", marginRight: 6 }}>습득 시간</Text>
+              <Text style={{ fontSize: 10, lineHeight: 15, color: "#000" }}>{date}</Text>
+            </View>
+          )}
         </View>
       </View>
     </Animated.View>

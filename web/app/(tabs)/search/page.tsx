@@ -41,7 +41,11 @@ function ItemCard({ item, onClick }: { item: RegistrationItem; onClick: () => vo
         {!!item.description && (
           <p className="text-xs text-[#434343] line-clamp-2 leading-[17px] tracking-[-0.2px]">{item.description}</p>
         )}
-        <p className="text-[11px] text-app-gray tracking-[-0.2px] truncate">{item.location} · {date}</p>
+        {(!!item.location || !!date) && (
+          <p className="text-[11px] text-app-gray tracking-[-0.2px] truncate">
+            {[item.location, date].filter(Boolean).join(" · ")}
+          </p>
+        )}
       </div>
     </button>
   );
@@ -101,7 +105,7 @@ export default function SearchPage() {
         page: String(pageNum),
         size: "15",
       });
-      if (cat) { params.set("majorCategory", cat.major); params.set("minorCategory", cat.minor); }
+      if (cat) { params.set("majorCategory", cat.major); if (cat.minor) params.set("minorCategory", cat.minor); }
       if (date.start) params.set("startDate", date.start);
       if (date.end) params.set("endDate", date.end);
       const data = await api.get<PagedResponse<RegistrationItem>>(
@@ -172,7 +176,7 @@ export default function SearchPage() {
     inputRef.current?.focus();
   };
 
-  const categoryLabel = categoryFilter ? `${categoryFilter.major} > ${categoryFilter.minor}` : "카테고리";
+  const categoryLabel = categoryFilter ? (categoryFilter.minor ? `${categoryFilter.major} > ${categoryFilter.minor}` : categoryFilter.major) : "카테고리";
   const isCategoryActive = categoryFilter !== null;
   const isDateActive = !!(dateFilter.start || dateFilter.end);
 

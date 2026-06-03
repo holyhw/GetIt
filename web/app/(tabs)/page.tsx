@@ -38,7 +38,7 @@ export default function HomePage() {
     const params = new URLSearchParams({ page: String(pageNum), size: String(PAGE_SIZE) });
     if (categoryFilter) {
       params.set("majorCategory", categoryFilter.major);
-      params.set("minorCategory", categoryFilter.minor);
+      if (categoryFilter.minor) params.set("minorCategory", categoryFilter.minor);
     }
     if (dateFilter.start) params.set("startDate", dateFilter.start);
     if (dateFilter.end) params.set("endDate", dateFilter.end);
@@ -91,7 +91,7 @@ export default function HomePage() {
   }, [hasNext, loading, loadingMore, fetchItems, page]);
 
   const categoryLabel = categoryFilter
-    ? `${categoryFilter.major} > ${categoryFilter.minor}`
+    ? categoryFilter.minor ? `${categoryFilter.major} > ${categoryFilter.minor}` : categoryFilter.major
     : "카테고리";
   const isCategoryActive = categoryFilter !== null;
   const isDateActive = !!(dateFilter.start || dateFilter.end);
@@ -249,8 +249,8 @@ function ItemCard({ item, onClick }: { item: RegistrationItem; onClick: () => vo
         {!!item.description && (
           <p className="text-xs text-black line-clamp-2 leading-[18px]">{item.description}</p>
         )}
-        <p className="text-xs text-app-gray truncate">{item.location}</p>
-        <p className="text-xs text-app-gray">{formattedDate}</p>
+        {!!item.location && <p className="text-xs text-app-gray truncate">{item.location}</p>}
+        {!!formattedDate && <p className="text-xs text-app-gray">{formattedDate}</p>}
       </div>
     </button>
   );

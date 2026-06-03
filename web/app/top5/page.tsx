@@ -54,20 +54,21 @@ function Top5Content() {
   const type = searchParams.get("type") as "found" | "lost" | null;
   const fromRegistration = searchParams.get("fromRegistration");
 
-  const [data, setData] = useState<MatchResultResponse[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [data, setData] = useState<MatchResultResponse[]>(() => {
+    if (!id) {
+      const stored = matchStore.get();
+      matchStore.clear();
+      return stored?.matchResults ?? [];
+    }
+    return [];
+  });
+  const [loading, setLoading] = useState(!!id);
   const [currentIndex, setCurrentIndex] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!id) {
-      const stored = matchStore.get();
-      setData(stored?.matchResults ?? []);
-      matchStore.clear();
-      return;
-    }
+    if (!id) return;
     if (!token) return;
-    setLoading(true);
     const endpoint = type === "found"
       ? `/api/registration/${id}/matched-lost`
       : `/api/registration/${id}/matches`;
@@ -167,21 +168,25 @@ function Top5Content() {
                   </div>
                   <div className="px-4 pt-2.5 pb-3">
                     <p className="text-base font-semibold leading-[22px] text-black mb-2.5">{item.title}</p>
-                    <div className="flex items-center gap-1 mb-2">
-                      <svg width="9" height="11" viewBox="0 0 9 11" fill="none" className="shrink-0">
-                        <path d="M8.5 4.5C8.5 6.9965 5.7305 9.5965 4.5 10.5C3.2695 9.5965 0.5 6.9965 0.5 4.5C0.5 2.01 2.237 0.5 4.5 0.5C6.763 0.5 8.5 2.01 8.5 4.5Z" stroke="#1E3A5F" strokeLinecap="round" strokeLinejoin="round" />
-                        <circle cx="4.5" cy="4.5" r="1.5" stroke="#1E3A5F" strokeLinecap="round" />
-                      </svg>
-                      <span className="text-xs font-semibold text-[#434343] mr-1.5">습득 장소</span>
-                      <span className="text-[10px] text-black flex-1 truncate">{item.location}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <svg width="10" height="11" viewBox="0 0 10 11" fill="none" className="shrink-0">
-                        <path d="M3 0.5V2.5M7 0.5V2.5M8.5 1.5H1.5C0.948 1.5 0.5 1.948 0.5 2.5V9.5C0.5 10.052 0.948 10.5 1.5 10.5H8.5C9.052 10.5 9.5 10.052 9.5 9.5V2.5C9.5 1.948 9.052 1.5 8.5 1.5ZM0.5 4.5H9.5" stroke="#1E3A5F" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                      <span className="text-xs font-semibold text-[#434343] mr-1.5">습득 시간</span>
-                      <span className="text-[10px] text-black">{date}</span>
-                    </div>
+                    {!!item.location && (
+                      <div className="flex items-center gap-1 mb-2">
+                        <svg width="9" height="11" viewBox="0 0 9 11" fill="none" className="shrink-0">
+                          <path d="M8.5 4.5C8.5 6.9965 5.7305 9.5965 4.5 10.5C3.2695 9.5965 0.5 6.9965 0.5 4.5C0.5 2.01 2.237 0.5 4.5 0.5C6.763 0.5 8.5 2.01 8.5 4.5Z" stroke="#1E3A5F" strokeLinecap="round" strokeLinejoin="round" />
+                          <circle cx="4.5" cy="4.5" r="1.5" stroke="#1E3A5F" strokeLinecap="round" />
+                        </svg>
+                        <span className="text-xs font-semibold text-[#434343] mr-1.5">습득 장소</span>
+                        <span className="text-[10px] text-black flex-1 truncate">{item.location}</span>
+                      </div>
+                    )}
+                    {!!date && (
+                      <div className="flex items-center gap-1">
+                        <svg width="10" height="11" viewBox="0 0 10 11" fill="none" className="shrink-0">
+                          <path d="M3 0.5V2.5M7 0.5V2.5M8.5 1.5H1.5C0.948 1.5 0.5 1.948 0.5 2.5V9.5C0.5 10.052 0.948 10.5 1.5 10.5H8.5C9.052 10.5 9.5 10.052 9.5 9.5V2.5C9.5 1.948 9.052 1.5 8.5 1.5ZM0.5 4.5H9.5" stroke="#1E3A5F" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                        <span className="text-xs font-semibold text-[#434343] mr-1.5">습득 시간</span>
+                        <span className="text-[10px] text-black">{date}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -229,19 +234,23 @@ function Top5Content() {
                         <p className="text-sm font-semibold text-black truncate">{item.title}</p>
                       </div>
                       <div className="flex items-center gap-3 text-xs text-[#434343]">
-                        <span className="flex items-center gap-1">
-                          <svg width="8" height="10" viewBox="0 0 9 11" fill="none" className="shrink-0">
-                            <path d="M8.5 4.5C8.5 6.9965 5.7305 9.5965 4.5 10.5C3.2695 9.5965 0.5 6.9965 0.5 4.5C0.5 2.01 2.237 0.5 4.5 0.5C6.763 0.5 8.5 2.01 8.5 4.5Z" stroke="#1E3A5F" strokeLinecap="round" strokeLinejoin="round" />
-                            <circle cx="4.5" cy="4.5" r="1.5" stroke="#1E3A5F" strokeLinecap="round" />
-                          </svg>
-                          {item.location}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <svg width="9" height="10" viewBox="0 0 10 11" fill="none" className="shrink-0">
-                            <path d="M3 0.5V2.5M7 0.5V2.5M8.5 1.5H1.5C0.948 1.5 0.5 1.948 0.5 2.5V9.5C0.5 10.052 0.948 10.5 1.5 10.5H8.5C9.052 10.5 9.5 10.052 9.5 9.5V2.5C9.5 1.948 9.052 1.5 8.5 1.5ZM0.5 4.5H9.5" stroke="#1E3A5F" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
-                          {date}
-                        </span>
+                        {!!item.location && (
+                          <span className="flex items-center gap-1">
+                            <svg width="8" height="10" viewBox="0 0 9 11" fill="none" className="shrink-0">
+                              <path d="M8.5 4.5C8.5 6.9965 5.7305 9.5965 4.5 10.5C3.2695 9.5965 0.5 6.9965 0.5 4.5C0.5 2.01 2.237 0.5 4.5 0.5C6.763 0.5 8.5 2.01 8.5 4.5Z" stroke="#1E3A5F" strokeLinecap="round" strokeLinejoin="round" />
+                              <circle cx="4.5" cy="4.5" r="1.5" stroke="#1E3A5F" strokeLinecap="round" />
+                            </svg>
+                            {item.location}
+                          </span>
+                        )}
+                        {!!date && (
+                          <span className="flex items-center gap-1">
+                            <svg width="9" height="10" viewBox="0 0 10 11" fill="none" className="shrink-0">
+                              <path d="M3 0.5V2.5M7 0.5V2.5M8.5 1.5H1.5C0.948 1.5 0.5 1.948 0.5 2.5V9.5C0.5 10.052 0.948 10.5 1.5 10.5H8.5C9.052 10.5 9.5 10.052 9.5 9.5V2.5C9.5 1.948 9.052 1.5 8.5 1.5ZM0.5 4.5H9.5" stroke="#1E3A5F" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                            {date}
+                          </span>
+                        )}
                       </div>
                     </div>
                     <div className="shrink-0">

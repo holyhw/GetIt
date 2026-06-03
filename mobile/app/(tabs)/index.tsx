@@ -263,8 +263,8 @@ function ItemCard({ item, onPress }: { item: RegistrationItem; onPress?: () => v
         </View>
         <Text style={{ fontSize: 16, fontWeight: "600", color: "#000" }} numberOfLines={1}>{item.title}</Text>
         {!!item.description && <Text style={{ fontSize: 12, color: "#000", lineHeight: 18 }} numberOfLines={2}>{item.description}</Text>}
-        <Text style={{ fontSize: 12, color: "#919191" }} numberOfLines={1}>{item.location}</Text>
-        <Text style={{ fontSize: 12, color: "#919191" }} numberOfLines={1}>{formattedDate}</Text>
+        {!!item.location && <Text style={{ fontSize: 12, color: "#919191" }} numberOfLines={1}>{item.location}</Text>}
+        {!!formattedDate && <Text style={{ fontSize: 12, color: "#919191" }} numberOfLines={1}>{formattedDate}</Text>}
       </View>
     </TouchableOpacity>
   );

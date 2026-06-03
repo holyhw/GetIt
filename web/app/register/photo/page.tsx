@@ -8,6 +8,7 @@ import type { PreAnalysisStatus, ReferenceImage } from "@/types/match";
 import TopHeader from "@/components/TopHeader";
 
 const API_BASE = "https://api.getitsju.com";
+const ANALYSIS_MESSAGES = ["이미지 분석 중...", "물건 특징 추출 중...", "설명 작성 중..."];
 
 function ReferenceImageOverlay({ image, imageAction, onUse, onRefresh, onSkip }: {
   image: ReferenceImage | null;
@@ -75,6 +76,8 @@ function RegisterPhotoContent() {
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [text, setText] = useState("");
   const [analyzing, setAnalyzing] = useState(false);
+  const [analysisMsgIdx, setAnalysisMsgIdx] = useState(0);
+  const analysisMsgIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [preAnalysisId, setPreAnalysisId] = useState<number | null>(null);
   const [referenceImage, setReferenceImage] = useState<ReferenceImage | null>(null);
   const [showImageSelection, setShowImageSelection] = useState(false);
@@ -137,16 +140,14 @@ function RegisterPhotoContent() {
 
     registerStore.setPhoto(photoUrl, photoFile);
 
-    if (isFound) {
-      const params = new URLSearchParams({ type, majorCategory, minorCategory, text: text.trim() });
-      router.replace(`/register/detail?${params.toString()}`);
-      return;
-    }
-
     setAnalyzing(true);
+    setAnalysisMsgIdx(0);
+    analysisMsgIntervalRef.current = setInterval(() => {
+      setAnalysisMsgIdx((i) => (i + 1) % ANALYSIS_MESSAGES.length);
+    }, 2100);
     try {
       const formData = new FormData();
-      formData.append("itemType", "LOST");
+      formData.append("itemType", isFound ? "FOUND" : "LOST");
       if (majorCategory) formData.append("majorCategory", majorCategory);
       if (minorCategory) formData.append("minorCategory", minorCategory);
       if (text.trim()) formData.append("text", text.trim());
@@ -323,14 +324,32 @@ function RegisterPhotoContent() {
 
       {/* AI 분석 로딩 */}
       {analyzing && !showImageSelection && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50">
-          <div className="bg-white rounded-2xl px-8 py-7 flex flex-col items-center w-[280px] shadow-xl">
-            <div className="w-10 h-10 border-2 border-orange border-t-transparent rounded-full animate-spin mb-4" />
-            <p className="text-black text-base font-semibold tracking-[-0.3px]">AI 분석 중...</p>
-            <p className="text-app-gray text-xs mt-1.5">잠시만 기다려주세요</p>
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/45">
+          <div className="bg-white rounded-3xl px-10 py-11 flex flex-col items-center w-[360px] shadow-2xl">
+            {/* 링 애니메이션 */}
+            <div className="relative w-[140px] h-[140px] flex items-center justify-center mb-7">
+              {[0, 1, 2].map((i) => (
+                <div key={i} className="absolute rounded-full animate-ping"
+                  style={{ width: 60, height: 60, border: `1.5px solid ${themeColor}`, animationDelay: `${i * 0.7}s`, animationDuration: "2.1s" }} />
+              ))}
+              <div className="w-16 h-16 rounded-full flex items-center justify-center text-3xl"
+                style={{ backgroundColor: themeColor, boxShadow: `0 0 24px ${themeColor}80` }}>
+                ✨
+              </div>
+            </div>
+
+            <p className="text-[20px] font-bold text-black tracking-[-0.4px]">물건 정보 생성 중</p>
+            <p className="text-sm font-medium mt-2 tracking-[-0.2px]" style={{ color: themeColor }}>{ANALYSIS_MESSAGES[analysisMsgIdx]}</p>
+            <p className="text-[13px] text-app-gray mt-1">조금만 기다려 주세요!</p>
+
             <button
-              onClick={() => { if (pollingRef.current) clearInterval(pollingRef.current); setAnalyzing(false); setPreAnalysisId(null); }}
-              className="mt-5 text-xs text-app-gray cursor-pointer bg-transparent border-none hover:text-black transition-colors"
+              onClick={() => {
+                if (pollingRef.current) clearInterval(pollingRef.current);
+                if (analysisMsgIntervalRef.current) clearInterval(analysisMsgIntervalRef.current);
+                setAnalyzing(false);
+                setPreAnalysisId(null);
+              }}
+              className="mt-6 px-6 py-2 rounded-full border border-app-border text-[13px] text-app-gray cursor-pointer bg-transparent hover:bg-app-gray-light transition-colors"
             >
               취소
             </button>

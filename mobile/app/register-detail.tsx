@@ -32,9 +32,9 @@ const DateTimePicker =
     : null;
 
 const MATCHING_MESSAGES = [
-  "분실물 정보 분석 중...",
-  "유사한 습득물 검색 중...",
-  "매칭 결과 생성 중...",
+  "등록된 습득물 탐색 중...",
+  "유사도 분석 중...",
+  "결과 정리 중...",
 ];
 
 function MatchingLoadingOverlay({ onCancel }: { onCancel: () => void }) {
@@ -92,118 +92,32 @@ function MatchingLoadingOverlay({ onCancel }: { onCancel: () => void }) {
   }, []);
 
   return (
-    <View
-      style={{
-        position: "absolute",
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: "rgba(10,18,42,0.97)",
-        alignItems: "center",
-        justifyContent: "center",
-        zIndex: 9999,
-      }}
-    >
-      {/* Radar rings */}
-      <View
-        style={{
-          width: 220,
-          height: 220,
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        {[ring1, ring2, ring3].map((ring, i) => (
-          <Animated.View
-            key={i}
-            style={{
-              position: "absolute",
-              width: 220,
-              height: 220,
-              borderRadius: 110,
-              borderWidth: 1.5,
-              borderColor: "#FF7A00",
-              opacity: ring.interpolate({
-                inputRange: [0, 0.08, 0.65, 1],
-                outputRange: [0, 0.75, 0.25, 0],
-              }),
-              transform: [
-                {
-                  scale: ring.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [0.12, 1],
-                  }),
-                },
-              ],
-            }}
-          />
-        ))}
-        {/* Center badge */}
-        <View
-          style={{
-            width: 82,
-            height: 82,
-            borderRadius: 41,
-            backgroundColor: "#FF7A00",
-            alignItems: "center",
-            justifyContent: "center",
-            shadowColor: "#FF7A00",
-            shadowOffset: { width: 0, height: 0 },
-            shadowOpacity: 0.7,
-            shadowRadius: 28,
-            elevation: 14,
-          }}
-        >
-          <Text style={{ fontSize: 36 }}>🔍</Text>
+    <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.45)", alignItems: "center", justifyContent: "center", zIndex: 9999 }}>
+      <View style={{ backgroundColor: "#fff", borderRadius: 28, paddingHorizontal: 36, paddingVertical: 40, alignItems: "center", width: 320, shadowColor: "#000", shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.15, shadowRadius: 24, elevation: 12 }}>
+        <View style={{ width: 140, height: 140, alignItems: "center", justifyContent: "center", marginBottom: 28 }}>
+          {[ring1, ring2, ring3].map((ring, i) => (
+            <Animated.View key={i} style={{
+              position: "absolute", width: 140, height: 140, borderRadius: 70,
+              borderWidth: 1.5, borderColor: "#FF7A00",
+              opacity: ring.interpolate({ inputRange: [0, 0.08, 0.65, 1], outputRange: [0, 0.7, 0.2, 0] }),
+              transform: [{ scale: ring.interpolate({ inputRange: [0, 1], outputRange: [0.15, 1] }) }],
+            }} />
+          ))}
+          <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: "#FF7A00", alignItems: "center", justifyContent: "center", shadowColor: "#FF7A00", shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.5, shadowRadius: 20, elevation: 8 }}>
+            <Text style={{ fontSize: 28 }}>🔍</Text>
+          </View>
         </View>
-      </View>
 
-      <Text
-        style={{
-          fontSize: 22,
-          fontWeight: "700",
-          color: "#ffffff",
-          marginTop: 36,
-          letterSpacing: -0.5,
-        }}
-      >
-        분실물 매칭 중
-      </Text>
-      <Animated.Text
-        style={{
-          fontSize: 14,
-          color: "#FF7A00",
-          marginTop: 10,
-          letterSpacing: -0.3,
-          opacity: textOpacity,
-        }}
-      >
-        {MATCHING_MESSAGES[msgIndex]}
-      </Animated.Text>
-      <Text
-        style={{ fontSize: 11, color: "rgba(255,255,255,0.28)", marginTop: 8 }}
-      >
-        잠시만 기다려주세요
-      </Text>
-      <Text
-        style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginTop: 32, textAlign: "center", letterSpacing: -0.2 }}
-      >
-        나가도 결과는 알림으로 알려드려요
-      </Text>
-      <TouchableOpacity
-        onPress={onCancel}
-        style={{
-          marginTop: 12,
-          paddingHorizontal: 28,
-          paddingVertical: 10,
-          borderRadius: 20,
-          borderWidth: 1,
-          borderColor: "rgba(255,255,255,0.25)",
-        }}
-      >
-        <Text style={{ color: "rgba(255,255,255,0.7)", fontSize: 13, fontWeight: "600" }}>홈으로</Text>
-      </TouchableOpacity>
+        <Text style={{ fontSize: 20, fontWeight: "700", color: "#000", letterSpacing: -0.4 }}>GET IT이 찾아드릴게요</Text>
+        <Animated.Text style={{ fontSize: 13, color: "#FF7A00", marginTop: 6, letterSpacing: -0.2, fontWeight: "500", opacity: textOpacity }}>
+          {MATCHING_MESSAGES[msgIndex]}
+        </Animated.Text>
+        <Text style={{ fontSize: 13, color: "#434343", marginTop: 4, letterSpacing: -0.2 }}>나가도 알림으로 받아볼 수 있어요</Text>
+
+        <TouchableOpacity onPress={onCancel} style={{ marginTop: 24, paddingHorizontal: 24, paddingVertical: 8, borderRadius: 20, borderWidth: 1, borderColor: "#E5E7EB" }}>
+          <Text style={{ fontSize: 13, color: "#919191" }}>홈으로</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -322,11 +236,16 @@ export default function RegisterDetailScreen() {
   const [loading, setLoading] = useState(false);
   const [preAnalysisId, setPreAnalysisId] = useState<number | null>(null);
   const preAnalysisIdRef = useRef<number | null>(null);
+  const cancelledRef = useRef(false);
   const [analysisStatus, setAnalysisStatus] =
     useState<PreAnalysisStatus>("PROCESSING");
   const analysisStatusRef = useRef<PreAnalysisStatus>("PROCESSING");
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [pollingTrigger, setPollingTrigger] = useState(0);
+  const [description, setDescription] = useState(initialText ?? "");
+  const [editedCaption, setEditedCaption] = useState("");
+  const [aiCaptionLoaded, setAiCaptionLoaded] = useState(false);
+  const [aiCaption, setAiCaption] = useState<string | null>(null);
 
   const isFound = type === "found";
   const themeColor = isFound ? "#1E3A5F" : "#FF7A00";
@@ -378,6 +297,15 @@ export default function RegisterDetailScreen() {
       analysisStatusRef.current = "COMPLETED";
       setAnalysisStatus("COMPLETED");
       registerStore.clear();
+      fetch(`${API_BASE_URL}/api/ai/pre-analysis/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then((r) => r.json())
+        .then((data) => {
+          const caption = data.result?.vlmResult?.caption;
+          if (caption) setAiCaption(caption);
+        })
+        .catch(() => {});
       return;
     }
 
@@ -453,6 +381,10 @@ export default function RegisterDetailScreen() {
           setAnalysisStatus(status);
           clearInterval(pollingRef.current!);
           pollingRef.current = null;
+          if (status === "COMPLETED") {
+            const caption = data.result?.vlmResult?.caption;
+            if (caption) setAiCaption(caption);
+          }
         }
       } catch {}
     };
@@ -463,6 +395,13 @@ export default function RegisterDetailScreen() {
       if (pollingRef.current) clearInterval(pollingRef.current);
     };
   }, [preAnalysisId, token, pollingTrigger]);
+
+  useEffect(() => {
+    if (aiCaption) {
+      setEditedCaption(aiCaption);
+      setAiCaptionLoaded(true);
+    }
+  }, [aiCaption]);
 
   const waitForPreAnalysisId = (): Promise<number | null> =>
     new Promise((resolve) => {
@@ -504,10 +443,6 @@ export default function RegisterDetailScreen() {
       Alert.alert("제목을 입력해주세요.");
       return;
     }
-    if (!location.trim()) {
-      Alert.alert("위치를 입력해주세요.");
-      return;
-    }
 
     setLoading(true);
     try {
@@ -533,7 +468,7 @@ export default function RegisterDetailScreen() {
         title: title.trim(),
         majorCategory: majorCategory ?? "",
         minorCategory: minorCategory ?? "",
-        location: location.trim(),
+        ...(location.trim() && { location: location.trim() }),
         ...(selectedPlace && {
           latitude: selectedPlace.lat,
           longitude: selectedPlace.lng,
@@ -545,7 +480,8 @@ export default function RegisterDetailScreen() {
         const d = String(date.getDate()).padStart(2, "0");
         body.occurredDate = `${y}-${m}-${d}`;
       }
-      if (initialText?.trim()) body.description = initialText.trim();
+      if (description.trim()) body.description = description.trim();
+      if (editedCaption.trim()) body.caption = editedCaption.trim();
 
       const path = isFound
         ? `/api/ai/pre-analysis/${pId}/registration/found`
@@ -563,6 +499,7 @@ export default function RegisterDetailScreen() {
       if (!res.ok) throw new Error(`오류: ${res.status}`);
       const data = await res.json();
 
+      if (cancelledRef.current) return;
       if (isFound) {
         router.replace(`/detail?id=${data.result.id}&type=found`);
       } else {
@@ -708,6 +645,34 @@ export default function RegisterDetailScreen() {
               placeholder="예: 검은색 Kodak 모자"
             />
 
+            {/* AI 분석 캡션 */}
+            <View style={{ marginBottom: 18 }}>
+              <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8, gap: 6 }}>
+                <Text style={{ fontSize: 13, fontWeight: "700", color: "#000" }}>AI 분석</Text>
+                {analysisStatus === "PROCESSING" ? (
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                    <ActivityIndicator size="small" color={themeColor} style={{ transform: [{ scale: 0.7 }] }} />
+                    <Text style={{ fontSize: 10, color: themeColor, fontWeight: "600" }}>분석 중...</Text>
+                  </View>
+                ) : aiCaptionLoaded ? (
+                  <View style={{ backgroundColor: themeColor + "20", borderRadius: 4, paddingHorizontal: 6, paddingVertical: 2 }}>
+                    <Text style={{ fontSize: 10, fontWeight: "700", color: themeColor }}>✨ AI 생성</Text>
+                  </View>
+                ) : null}
+              </View>
+              <View style={{ backgroundColor: "#E5E7EB", borderWidth: 1, borderColor: "#D9D9D9", borderRadius: 10, paddingHorizontal: 14, paddingVertical: 10 }}>
+                <TextInput
+                  value={editedCaption}
+                  onChangeText={(v) => { setEditedCaption(v); if (aiCaptionLoaded) setAiCaptionLoaded(false); }}
+                  placeholder={analysisStatus === "PROCESSING" ? "AI가 분석하고 있어요..." : "AI 분석 결과가 여기에 표시됩니다"}
+                  placeholderTextColor="#919191"
+                  multiline
+                  scrollEnabled={false}
+                  style={{ fontSize: 14, color: "#000", padding: 0, textAlignVertical: "top", minHeight: 80 }}
+                />
+              </View>
+            </View>
+
             {/* 위치 */}
             <View style={{ marginBottom: 14 }}>
               <View
@@ -717,12 +682,10 @@ export default function RegisterDetailScreen() {
                   marginBottom: 6,
                 }}
               >
-                <Text
-                  style={{ fontSize: 13, fontWeight: "700", color: "#000" }}
-                >
+                <Text style={{ fontSize: 13, fontWeight: "700", color: "#000" }}>
                   {isFound ? "습득 위치" : "분실 위치"}
                 </Text>
-                <RequiredDot width={5} height={5} style={{ marginLeft: 2 }} />
+                <Text style={{ fontSize: 11, fontWeight: "700", color: "#919191", marginLeft: 4 }}>(선택)</Text>
               </View>
               <TouchableOpacity
                 onPress={() => setShowLocationModal(true)}
@@ -765,12 +728,10 @@ export default function RegisterDetailScreen() {
                   marginBottom: 6,
                 }}
               >
-                <Text
-                  style={{ fontSize: 13, fontWeight: "700", color: "#000" }}
-                >
+                <Text style={{ fontSize: 13, fontWeight: "700", color: "#000" }}>
                   {isFound ? "습득 날짜" : "분실 날짜"}
                 </Text>
-                <RequiredDot width={5} height={5} style={{ marginLeft: 2 }} />
+                <Text style={{ fontSize: 11, fontWeight: "700", color: "#919191", marginLeft: 4 }}>(선택)</Text>
               </View>
 
               {Platform.OS === "web" ? (
@@ -925,7 +886,7 @@ export default function RegisterDetailScreen() {
         />
 
         {/* 분실물 매칭 로딩 오버레이 */}
-        {loading && !isFound && <MatchingLoadingOverlay onCancel={() => { setLoading(false); router.replace("/(tabs)"); }} />}
+        {loading && !isFound && <MatchingLoadingOverlay onCancel={() => { cancelledRef.current = true; setLoading(false); router.replace("/(tabs)"); }} />}
 
         {/* iOS 날짜 피커 바텀시트 */}
         {Platform.OS === "ios" && showPicker && DateTimePicker && (
