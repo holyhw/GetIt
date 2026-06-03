@@ -456,10 +456,12 @@ export default function DetailScreen() {
             }}>
               <View style={{ flex: 1, marginRight: 12 }}>
                 <Text style={{ fontSize: 13, fontWeight: "700", color: "#000", marginBottom: 4, letterSpacing: -0.32 }}>
-                  {item.matched ? "유사도 Top5 결과가 준비됐어요!" : "유사도 Top5를 확인해보세요!"}
+                  {isLost
+                    ? (item.matched ? "유사도 Top5 결과가 준비됐어요!" : "유사도 Top5를 확인해보세요!")
+                    : (item.matched ? "비슷한 분실물 신고가 있어요!" : "비슷한 분실물 신고가 있어요!")}
                 </Text>
                 <Text style={{ fontSize: 11, color: "#757575", lineHeight: 15, letterSpacing: -0.32 }}>
-                  {"AI가 분석한 가장 유사한 5개 결과를\n확인해보세요."}
+                  {isLost ? "AI가 분석한 가장 유사한 5개 결과를\n확인해보세요." : "AI가 분석한 유사한 분실물을 확인해보세요."}
                 </Text>
               </View>
 

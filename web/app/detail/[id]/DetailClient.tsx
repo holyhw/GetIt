@@ -384,10 +384,12 @@ export default function DetailClient() {
             <div className="bg-white rounded-[10px] p-3.5 flex items-center justify-between shadow-sm">
               <div className="flex-1 mr-3">
                 <p className="text-[13px] font-bold text-black mb-1 tracking-[-0.32px]">
-                  {item.matched ? "유사도 Top5 결과가 준비됐어요!" : "유사도 Top5를 확인해보세요!"}
+                  {isLost
+                    ? (item.matched ? "유사도 Top5 결과가 준비됐어요!" : "유사도 Top5를 확인해보세요!")
+                    : "비슷한 분실물 신고가 있어요!"}
                 </p>
                 <p className="text-[11px] text-[#757575] leading-[15px] tracking-[-0.32px]">
-                  AI가 분석한 가장 유사한 5개 결과를 확인해보세요.
+                  {isLost ? "AI가 분석한 가장 유사한 5개 결과를 확인해보세요." : "AI가 분석한 유사한 분실물을 확인해보세요."}
                 </p>
               </div>
               <button
