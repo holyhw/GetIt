@@ -54,6 +54,34 @@ function Top5Content() {
   const type = searchParams.get("type") as "found" | "lost" | null;
   const fromRegistration = searchParams.get("fromRegistration");
 
+  const [chatLoading, setChatLoading] = useState(false);
+
+  const handleChat = async (registrationId: number) => {
+    if (!token) { router.push("/login"); return; }
+    setChatLoading(true);
+    try {
+      const res = await fetch("https://api.getitsju.com/api/chat/rooms", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ targetRegistrationId: registrationId }),
+      });
+      const d = await res.json();
+      const room = d.result;
+      const params = new URLSearchParams({
+        name: room.otherUserName,
+        title: room.targetTitle,
+        itemType: room.targetItemType,
+        registrationId: String(room.targetRegistrationId),
+      });
+      if (room.otherUserProfileImageUrl) params.set("profileImage", room.otherUserProfileImageUrl);
+      router.push(`/chat/${room.id}?${params.toString()}`);
+    } catch {
+      alert("채팅방을 열 수 없습니다.");
+    } finally {
+      setChatLoading(false);
+    }
+  };
+
   const [data, setData] = useState<MatchResultResponse[]>(() => {
     if (!id) {
       const stored = matchStore.get();
@@ -246,8 +274,9 @@ function Top5Content() {
       <div className="fixed bottom-0 left-0 right-0 bg-app-bg z-10 flex justify-center">
       <div className="w-full max-w-[500px] flex px-[37px] pt-3 pb-6 gap-3">
         <button
-          onClick={() => router.push("/chat")}
-          className="flex-1 h-[46px] rounded-[10px] border border-navy bg-white flex items-center justify-center gap-1.5 text-sm font-semibold text-navy cursor-pointer"
+          onClick={() => currentItem && handleChat(currentItem.registrationId)}
+          disabled={chatLoading}
+          className="flex-1 h-[46px] rounded-[10px] border border-navy bg-white flex items-center justify-center gap-1.5 text-sm font-semibold text-navy cursor-pointer disabled:opacity-60"
         >
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
             <path d="M1.79 12.47C1.91 12.77 1.94 13.1 1.87 13.41L1.02 16.04C0.96 16.29 1.07 16.56 1.25 16.78C1.35 16.88 1.47 16.94 1.6 16.98C1.74 17.01 1.87 17.01 2.01 16.97L4.74 16.17C5.03 16.12 5.33 16.14 5.61 16.25C7.32 17.05 9.26 17.22 11.08 16.73C12.9 16.24 14.49 15.12 15.57 13.57C16.64 12.02 17.14 10.14 16.97 8.27C16.79 6.39 15.96 4.63 14.62 3.31C13.28 1.98 11.51 1.17 9.64 1.03C7.76 0.88 5.88 1.39 4.35 2.49C2.82 3.59 1.72 5.19 1.25 7.02C0.78 8.84 0.97 10.77 1.79 12.47Z" stroke="#1E3A5F" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
