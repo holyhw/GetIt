@@ -395,7 +395,17 @@ export default function ChatRoomPage() {
             </button>
             <div className="h-px bg-[#F0F0F0] mx-6" />
             <button
-              onClick={() => { setShowMenu(false); router.push("/chat"); }}
+              onClick={async () => {
+                setShowMenu(false);
+                if (!confirm("채팅방을 나가면 대화 내용이 모두 삭제됩니다. 나가시겠어요?")) return;
+                try {
+                  await fetch(`${API_BASE}/api/chat/rooms/${roomId}`, {
+                    method: "DELETE",
+                    headers: { Authorization: `Bearer ${token}` },
+                  });
+                } catch {}
+                router.replace("/chat");
+              }}
               className="w-full px-6 py-4 text-left cursor-pointer bg-transparent border-none">
               <span className="text-base text-[#434343]">채팅방 나가기</span>
             </button>

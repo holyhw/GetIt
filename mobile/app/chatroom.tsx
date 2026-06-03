@@ -350,7 +350,27 @@ export default function ChatRoomScreen() {
               <Text style={{ fontSize: 16, color: "#FF3B30" }}>신고하기</Text>
             </TouchableOpacity>
             <View style={{ height: 1, backgroundColor: "#F0F0F0", marginHorizontal: 24 }} />
-            <TouchableOpacity onPress={() => { setShowMenu(false); router.back(); }} style={{ paddingHorizontal: 24, paddingVertical: 16 }}>
+            <TouchableOpacity
+              onPress={() => {
+                setShowMenu(false);
+                Alert.alert("채팅방 나가기", "채팅방을 나가면 대화 내용이 모두 삭제됩니다. 나가시겠어요?", [
+                  { text: "취소", style: "cancel" },
+                  {
+                    text: "나가기", style: "destructive",
+                    onPress: async () => {
+                      try {
+                        await fetch(`${API_BASE_URL}/api/chat/rooms/${roomId}`, {
+                          method: "DELETE",
+                          headers: { Authorization: `Bearer ${token}` },
+                        });
+                      } catch {}
+                      router.replace("/(tabs)/chat");
+                    },
+                  },
+                ]);
+              }}
+              style={{ paddingHorizontal: 24, paddingVertical: 16 }}
+            >
               <Text style={{ fontSize: 16, color: "#434343" }}>채팅방 나가기</Text>
             </TouchableOpacity>
           </View>
