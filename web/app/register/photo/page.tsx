@@ -83,6 +83,7 @@ function RegisterPhotoContent() {
   const [showImageSelection, setShowImageSelection] = useState(false);
   const [imageAction, setImageAction] = useState<"use" | "refresh" | "skip" | null>(null);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [pollingKey, setPollingKey] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const navigateToDetail = (pId: number, refUrl?: string, skip?: boolean) => {
@@ -124,7 +125,7 @@ function RegisterPhotoContent() {
     pollingRef.current = setInterval(poll, 2000);
     return () => { if (pollingRef.current) clearInterval(pollingRef.current); };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [preAnalysisId, token]);
+  }, [preAnalysisId, token, pollingKey]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -179,9 +180,24 @@ function RegisterPhotoContent() {
     }
   };
 
-  const handleUseImage = () => {
-    if (!referenceImage || !preAnalysisId) return;
-    navigateToDetail(preAnalysisId, referenceImage.imageUrl);
+  const handleUseImage = async () => {
+    if (!referenceImage || !preAnalysisId || !token) return;
+    setImageAction("use");
+    try {
+      await fetch(`${API_BASE}/api/ai/pre-analysis/${preAnalysisId}/reference-image`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ imageUrl: referenceImage.imageUrl }),
+      });
+    } catch {}
+    setImageAction(null);
+    setShowImageSelection(false);
+    if (analysisMsgIntervalRef.current) clearInterval(analysisMsgIntervalRef.current);
+    setAnalysisMsgIdx(0);
+    analysisMsgIntervalRef.current = setInterval(() => {
+      setAnalysisMsgIdx((i) => (i + 1) % ANALYSIS_MESSAGES.length);
+    }, 2100);
+    setPollingKey((k) => k + 1);
   };
 
   const handleRefreshImage = async () => {
@@ -195,9 +211,23 @@ function RegisterPhotoContent() {
     finally { setImageAction(null); }
   };
 
-  const handleSkipImage = () => {
-    if (!preAnalysisId) return;
-    navigateToDetail(preAnalysisId, undefined, true);
+  const handleSkipImage = async () => {
+    if (!preAnalysisId || !token) return;
+    setImageAction("skip");
+    try {
+      await fetch(`${API_BASE}/api/ai/pre-analysis/${preAnalysisId}/reference-image/skip`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+    } catch {}
+    setImageAction(null);
+    setShowImageSelection(false);
+    if (analysisMsgIntervalRef.current) clearInterval(analysisMsgIntervalRef.current);
+    setAnalysisMsgIdx(0);
+    analysisMsgIntervalRef.current = setInterval(() => {
+      setAnalysisMsgIdx((i) => (i + 1) % ANALYSIS_MESSAGES.length);
+    }, 2100);
+    setPollingKey((k) => k + 1);
   };
 
   return (

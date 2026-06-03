@@ -324,11 +324,20 @@ export default function RegisterPhotoScreen() {
     }
   };
 
-  const handleUseImage = () => {
-    if (!referenceImage || !preAnalysisId) return;
-    router.replace(
-      `/register-detail?type=${type}&majorCategory=${encodeURIComponent(majorCategory ?? "")}&minorCategory=${encodeURIComponent(minorCategory ?? "")}&text=${encodeURIComponent(text.trim())}&preAnalysisId=${preAnalysisId}&referenceImageUrl=${encodeURIComponent(referenceImage.imageUrl)}`,
-    );
+  const handleUseImage = async () => {
+    if (!referenceImage || !preAnalysisId || !token) return;
+    setImageAction("use");
+    try {
+      await fetch(`${API_BASE_URL}/api/ai/pre-analysis/${preAnalysisId}/reference-image`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ imageUrl: referenceImage.imageUrl }),
+      });
+    } catch {}
+    setImageAction(null);
+    setShowImageSelection(false);
+    analysisStatusRef.current = "PROCESSING";
+    setPollingTrigger((t) => t + 1);
   };
 
   const handleRefreshImage = async () => {
@@ -348,11 +357,19 @@ export default function RegisterPhotoScreen() {
     }
   };
 
-  const handleSkipImage = () => {
-    if (!preAnalysisId) return;
-    router.replace(
-      `/register-detail?type=${type}&majorCategory=${encodeURIComponent(majorCategory ?? "")}&minorCategory=${encodeURIComponent(minorCategory ?? "")}&text=${encodeURIComponent(text.trim())}&preAnalysisId=${preAnalysisId}&skipImage=true`,
-    );
+  const handleSkipImage = async () => {
+    if (!preAnalysisId || !token) return;
+    setImageAction("skip");
+    try {
+      await fetch(`${API_BASE_URL}/api/ai/pre-analysis/${preAnalysisId}/reference-image/skip`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+    } catch {}
+    setImageAction(null);
+    setShowImageSelection(false);
+    analysisStatusRef.current = "PROCESSING";
+    setPollingTrigger((t) => t + 1);
   };
 
   return (
