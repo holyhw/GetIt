@@ -70,7 +70,7 @@ function EditContent() {
     if (!location.trim()) { alert("위치를 입력해주세요."); return; }
 
     const params = new URLSearchParams({ title: title.trim() });
-    if (category) { params.append("majorCategory", category.major); params.append("minorCategory", category.minor); }
+    if (category) { params.append("majorCategory", category.major); if (category.minor) params.append("minorCategory", category.minor); }
     if (location.trim()) params.append("location", location.trim());
     if (selectedLat) params.append("latitude", String(selectedLat));
     if (selectedLng) params.append("longitude", String(selectedLng));
