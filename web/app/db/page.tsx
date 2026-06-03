@@ -40,8 +40,8 @@ export default function DbPage() {
       return all;
     };
 
-    const [found, lost] = await Promise.all([fetchEndpoint("found"), fetchEndpoint("lost")]);
-    return { items: [...found, ...lost], total: found.length + lost.length };
+    const found = await fetchEndpoint("found");
+    return { items: found, total: found.length };
   }, []);
 
   useEffect(() => {
