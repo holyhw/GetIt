@@ -147,7 +147,7 @@ export default function DetailClient() {
     : (isLost ? "분실" : "습득");
   const category = `${item.majorCategory ?? ""} > ${item.minorCategory ?? ""}`;
 
-  const handleBack = () => fromRegistration ? router.replace("/") : router.back();
+  const handleBack = () => router.replace("/");
 
   const handleChat = async () => {
     if (!token) { router.push("/login"); return; }

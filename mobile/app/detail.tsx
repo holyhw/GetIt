@@ -151,7 +151,7 @@ export default function DetailScreen() {
     try {
       await api.delete(`/api/registration/${item!.id}`, token);
       setShowDeleteConfirm(false);
-      router.canGoBack() ? router.back() : router.replace("/(tabs)");
+      router.replace("/(tabs)");
     } catch (e: any) {
       setDeleteError("매칭 결과가 있어 삭제할 수 없습니다.");
       setShowDeleteConfirm(false);
@@ -208,7 +208,7 @@ export default function DetailScreen() {
         <meta name="twitter:description" content={item.description ?? ""} />
         <meta name="twitter:image" content={item.imageUrl ?? ""} />
       </Head>
-      <OverlayButton left={24} onPress={() => router.canGoBack() ? router.back() : router.replace("/(tabs)")}>
+      <OverlayButton left={24} onPress={() => router.replace("/(tabs)")}>
         <DetailBackIcon width={30} height={30} />
       </OverlayButton>
       <OverlayButton left={293} onPress={handleShare}>
