@@ -13,6 +13,7 @@ import {
   Keyboard,
   Animated,
   Easing,
+  PanResponder,
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
@@ -28,6 +29,105 @@ import type { PreAnalysisStatus, ReferenceImage } from "../types/preAnalysis";
 const API_BASE_URL = "https://api.getitsju.com";
 
 const ANALYSIS_MESSAGES = ["이미지 분석 중...", "물건 특징 추출 중...", "설명 작성 중..."];
+
+const THUMB_SIZE = 26;
+
+function WeightSlider({
+  imageWeight,
+  themeColor,
+  onChange,
+}: {
+  imageWeight: number;
+  themeColor: string;
+  onChange: (v: number) => void;
+}) {
+  const [trackWidth, setTrackWidth] = useState(0);
+  const screenX = useRef(0);
+  const trackRef = useRef<View>(null);
+
+  const update = (pageX: number) => {
+    if (trackWidth === 0) return;
+    const raw = (pageX - screenX.current) / trackWidth;
+    const clamped = Math.min(0.9, Math.max(0.1, raw));
+    onChange(Math.round(clamped * 10) / 10);
+  };
+
+  const pan = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderGrant: (e) => update(e.nativeEvent.pageX),
+      onPanResponderMove: (e) => update(e.nativeEvent.pageX),
+    }),
+  ).current;
+
+  const filled = trackWidth > 0 ? imageWeight * trackWidth : 0;
+  const thumbLeft = trackWidth > 0 ? imageWeight * trackWidth - THUMB_SIZE / 2 : 0;
+
+  return (
+    <View style={{ marginTop: 4 }}>
+      <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 10 }}>
+        <Text style={{ fontSize: 11, fontWeight: "600", color: "#919191" }}>텍스트 중심</Text>
+        <Text style={{ fontSize: 11, fontWeight: "600", color: "#919191" }}>이미지 중심</Text>
+      </View>
+
+      <View
+        ref={trackRef}
+        onLayout={() => {
+          trackRef.current?.measure((_fx, _fy, w, _h, px) => {
+            screenX.current = px;
+            setTrackWidth(w);
+          });
+        }}
+        {...pan.panHandlers}
+        style={{ height: THUMB_SIZE + 8, justifyContent: "center" }}
+      >
+        {/* 트랙 배경 */}
+        <View style={{ height: 4, borderRadius: 2, backgroundColor: "#E5E7EB", overflow: "visible" }}>
+          {/* 채워진 부분 */}
+          {trackWidth > 0 && (
+            <View
+              style={{
+                position: "absolute",
+                left: 0,
+                width: filled,
+                height: 4,
+                borderRadius: 2,
+                backgroundColor: themeColor,
+              }}
+            />
+          )}
+        </View>
+        {/* 썸 */}
+        {trackWidth > 0 && (
+          <View
+            style={{
+              position: "absolute",
+              left: thumbLeft,
+              width: THUMB_SIZE,
+              height: THUMB_SIZE,
+              borderRadius: THUMB_SIZE / 2,
+              backgroundColor: "#fff",
+              borderWidth: 2.5,
+              borderColor: themeColor,
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.15,
+              shadowRadius: 4,
+              elevation: 4,
+            }}
+          />
+        )}
+      </View>
+
+      <View style={{ alignItems: "center", marginTop: 6 }}>
+        <Text style={{ fontSize: 12, fontWeight: "700", color: themeColor }}>
+          이미지 {Math.round(imageWeight * 100)}% · 텍스트 {Math.round((1 - imageWeight) * 100)}%
+        </Text>
+      </View>
+    </View>
+  );
+}
 
 function AnalysisLoadingOverlay({ themeColor, onCancel }: { themeColor: string; onCancel: () => void }) {
   const ring1 = useRef(new Animated.Value(0)).current;
@@ -181,6 +281,7 @@ export default function RegisterPhotoScreen() {
 
   const [photo, setPhoto] = useState<string | null>(null);
   const [text, setText] = useState("");
+  const [imageWeight, setImageWeight] = useState(0.7);
 
   const [analyzing, setAnalyzing] = useState(false);
   const [preAnalysisId, setPreAnalysisId] = useState<number | null>(null);
@@ -199,8 +300,9 @@ export default function RegisterPhotoScreen() {
     Platform.OS === "web" ? window.alert(msg) : Alert.alert(msg);
 
   const navigateToDetail = (pId: number) => {
+    const textWeight = parseFloat((1 - imageWeight).toFixed(1));
     router.replace(
-      `/register-detail?type=${type}&majorCategory=${encodeURIComponent(majorCategory ?? "")}&minorCategory=${encodeURIComponent(minorCategory ?? "")}&text=${encodeURIComponent(text.trim())}&preAnalysisId=${pId}`,
+      `/register-detail?type=${type}&majorCategory=${encodeURIComponent(majorCategory ?? "")}&minorCategory=${encodeURIComponent(minorCategory ?? "")}&text=${encodeURIComponent(text.trim())}&preAnalysisId=${pId}&textWeight=${textWeight}&imageWeight=${imageWeight}`,
     );
   };
 
@@ -577,6 +679,35 @@ export default function RegisterPhotoScreen() {
               </View>
             )}
           </View>
+
+          {/* 매칭 기준 (분실물만) */}
+          {!isFound && (
+            <View
+              style={{
+                backgroundColor: "#fff",
+                borderRadius: 10,
+                padding: 12,
+                marginBottom: 10,
+                shadowColor: "#000",
+                shadowOffset: { width: -2, height: 2 },
+                shadowOpacity: 0.05,
+                shadowRadius: 4,
+                elevation: 2,
+              }}
+            >
+              <View style={{ marginBottom: 4 }}>
+                <Text style={{ fontSize: 13, fontWeight: "700", color: "#000" }}>매칭 기준</Text>
+                <Text style={{ fontSize: 11, color: "#919191", marginTop: 2 }}>
+                  사진과 설명 중 무엇을 더 중요하게 볼지 설정해요
+                </Text>
+              </View>
+              <WeightSlider
+                imageWeight={imageWeight}
+                themeColor={themeColor}
+                onChange={setImageWeight}
+              />
+            </View>
+          )}
 
           {/* 물건 설명 */}
           <View

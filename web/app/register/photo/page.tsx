@@ -75,6 +75,7 @@ function RegisterPhotoContent() {
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [text, setText] = useState("");
+  const [imageWeight, setImageWeight] = useState(0.7);
   const [analyzing, setAnalyzing] = useState(false);
   const [analysisMsgIdx, setAnalysisMsgIdx] = useState(0);
   const analysisMsgIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -87,12 +88,15 @@ function RegisterPhotoContent() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const navigateToDetail = (pId: number, refUrl?: string, skip?: boolean) => {
+    const textWeight = parseFloat((1 - imageWeight).toFixed(1));
     const params = new URLSearchParams({
       type,
       majorCategory,
       minorCategory,
       text: text.trim(),
       preAnalysisId: String(pId),
+      textWeight: String(textWeight),
+      imageWeight: String(imageWeight),
     });
     if (refUrl) params.set("referenceImageUrl", encodeURIComponent(refUrl));
     if (skip) params.set("skipImage", "true");
@@ -303,6 +307,34 @@ function RegisterPhotoContent() {
             )}
             <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
           </div>
+
+          {/* 매칭 기준 (분실물만) */}
+          {!isFound && (
+            <div className="bg-white rounded-[10px] p-3 mb-2.5 shadow-sm">
+              <p className="text-[13px] font-bold text-black mb-0.5">매칭 기준</p>
+              <p className="text-xs text-app-gray mb-4">사진과 설명 중 무엇을 더 중요하게 볼지 설정해요</p>
+              <div className="flex justify-between text-[11px] font-semibold text-app-gray mb-2">
+                <span>텍스트 중심</span>
+                <span>이미지 중심</span>
+              </div>
+              <input
+                type="range"
+                min={1}
+                max={9}
+                step={1}
+                value={Math.round(imageWeight * 10)}
+                onChange={(e) => setImageWeight(parseInt(e.target.value) / 10)}
+                className="w-full h-1 rounded-full outline-none cursor-pointer appearance-none"
+                style={{
+                  background: `linear-gradient(to right, ${themeColor} ${imageWeight * 100}%, #E5E7EB ${imageWeight * 100}%)`,
+                  accentColor: themeColor,
+                }}
+              />
+              <p className="text-center text-xs font-bold mt-2" style={{ color: themeColor }}>
+                이미지 {Math.round(imageWeight * 100)}% · 텍스트 {Math.round((1 - imageWeight) * 100)}%
+              </p>
+            </div>
+          )}
 
           {/* 물건 설명 카드 */}
           <div className="bg-white rounded-[10px] p-3 shadow-sm">

@@ -23,6 +23,8 @@ function RegisterDetailContent() {
   const preAnalysisIdParam = searchParams.get("preAnalysisId");
   const referenceImageUrl = searchParams.get("referenceImageUrl");
   const skipImage = searchParams.get("skipImage");
+  const textWeightParam = searchParams.get("textWeight");
+  const imageWeightParam = searchParams.get("imageWeight");
 
   const isFound = type === "found";
   const themeColor = isFound ? "#1E3A5F" : "#FF7A00";
@@ -181,6 +183,10 @@ function RegisterDetailContent() {
         ...(description.trim() && { description: description.trim() }),
         ...(editedCaption.trim() && { caption: editedCaption.trim() }),
         ...(date && { occurredDate: date }),
+        ...(!isFound && {
+          textWeight: textWeightParam ? parseFloat(textWeightParam) : 0.3,
+          imageWeight: imageWeightParam ? parseFloat(imageWeightParam) : 0.7,
+        }),
       };
 
       const path = isFound

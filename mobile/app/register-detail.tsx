@@ -213,6 +213,8 @@ export default function RegisterDetailScreen() {
     preAnalysisId: preAnalysisIdParam,
     referenceImageUrl,
     skipImage,
+    textWeight: textWeightParam,
+    imageWeight: imageWeightParam,
   } = useLocalSearchParams<{
     type: "found" | "lost";
     majorCategory: string;
@@ -221,6 +223,8 @@ export default function RegisterDetailScreen() {
     preAnalysisId?: string;
     referenceImageUrl?: string;
     skipImage?: string;
+    textWeight?: string;
+    imageWeight?: string;
   }>();
   const { token } = useAuth();
 
@@ -482,6 +486,10 @@ export default function RegisterDetailScreen() {
       }
       if (description.trim()) body.description = description.trim();
       if (editedCaption.trim()) body.caption = editedCaption.trim();
+      if (!isFound) {
+        body.textWeight = textWeightParam ? parseFloat(textWeightParam) : 0.3;
+        body.imageWeight = imageWeightParam ? parseFloat(imageWeightParam) : 0.7;
+      }
 
       const path = isFound
         ? `/api/ai/pre-analysis/${pId}/registration/found`
