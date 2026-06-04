@@ -319,8 +319,8 @@ function RegisterPhotoContent() {
               </div>
               <input
                 type="range"
-                min={1}
-                max={9}
+                min={0}
+                max={10}
                 step={1}
                 value={Math.round(imageWeight * 10)}
                 onChange={(e) => setImageWeight(parseInt(e.target.value) / 10)}

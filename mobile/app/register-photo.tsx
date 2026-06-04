@@ -48,7 +48,7 @@ function WeightSlider({
   const update = (pageX: number) => {
     if (trackWidth === 0) return;
     const raw = (pageX - screenX.current) / trackWidth;
-    const clamped = Math.min(0.9, Math.max(0.1, raw));
+    const clamped = Math.min(1.0, Math.max(0.0, raw));
     onChange(Math.round(clamped * 10) / 10);
   };
 
